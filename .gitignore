@@ -1,0 +1,9 @@
+backend/**/__pycache__/
+backend/.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+*.pyc
+data/*.backup.json
+exports/*
+!exports/.gitkeep

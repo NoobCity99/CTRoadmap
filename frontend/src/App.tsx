@@ -5,6 +5,7 @@ import {
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
@@ -18,13 +19,12 @@ import {
   GitBranch,
   LayoutDashboard,
   Loader2,
-  Plus,
   Save,
   Search,
   Settings,
   Upload
 } from "lucide-react";
-import { type CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector } from "./components/Inspector";
 import { TileNode } from "./components/TileNode";
 import { loadAtlas, saveAtlas } from "./lib/api";
@@ -33,13 +33,32 @@ import { createSeedAtlas } from "./lib/seed";
 import type { Atlas, LayoutTemplate, Link, LinkType, Selection, Tile, TileType, View } from "./types/atlas";
 
 const nodeTypes = { tileNode: TileNode };
+const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
+
+type PositionNodeChange = Extract<NodeChange, { type: "position" }> & {
+  position: NonNullable<Extract<NodeChange, { type: "position" }>["position"]>;
+};
+
+function isPositionNodeChange(change: NodeChange): change is PositionNodeChange {
+  return change.type === "position" && "id" in change && Boolean(change.position);
+}
 
 function App() {
+  return (
+    <ReactFlowProvider>
+      <AtlasEditor />
+    </ReactFlowProvider>
+  );
+}
+
+function AtlasEditor() {
+  const { screenToFlowPosition } = useReactFlow();
+  const canvasRef = useRef<HTMLElement | null>(null);
+  const lastPaletteDragAt = useRef(0);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
-  const [newTileType, setNewTileType] = useState<TileType>("node");
   const [hiddenTypes, setHiddenTypes] = useState<Set<TileType>>(new Set());
   const [hiddenLinks, setHiddenLinks] = useState<Set<LinkType>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,12 +172,10 @@ function App() {
   }, [atlas]);
 
   const handleCreateTile = useCallback(
-    (parentId?: string) => {
+    (type: TileType, position?: { x: number; y: number }, parentId?: string) => {
       if (!atlas) return;
       const title = window.prompt("Tile title");
       if (!title) return;
-      const type = parentId ? chooseTileType(newTileType) : newTileType;
-      if (!type) return;
       const tileId = createId(type, title, atlas.tiles.map((tile) => tile.id));
       const parentTile = parentId ? atlas.tiles.find((tile) => tile.id === parentId) : null;
       const tile: Tile = {
@@ -166,7 +183,9 @@ function App() {
         type,
         title,
         parent: parentId ?? null,
-        position: parentTile ? { x: parentTile.position.x + 280, y: parentTile.position.y + 120 } : { x: 180 + atlas.tiles.length * 24, y: 160 + atlas.tiles.length * 18 },
+        position: parentTile
+          ? { x: parentTile.position.x + 280, y: parentTile.position.y + 120 }
+          : position ?? { x: 180 + atlas.tiles.length * 24, y: 160 + atlas.tiles.length * 18 },
         size: { width: 240, height: 132 },
         fields: { ...DEFAULT_FIELDS[type] },
         notes: "",
@@ -191,7 +210,64 @@ function App() {
       setSelection({ kind: "tile", id: tileId });
       setStatus(parentId ? "Subtile created" : "Tile created");
     },
-    [atlas, newTileType, updateAtlas]
+    [atlas, updateAtlas]
+  );
+
+  const getViewportCenterPosition = useCallback(() => {
+    const bounds = canvasRef.current?.getBoundingClientRect();
+    if (!bounds) return undefined;
+    return screenToFlowPosition({
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2
+    });
+  }, [screenToFlowPosition]);
+
+  const handlePaletteClick = useCallback(
+    (type: TileType) => {
+      if (Date.now() - lastPaletteDragAt.current < 250) return;
+      handleCreateTile(type, getViewportCenterPosition());
+    },
+    [getViewportCenterPosition, handleCreateTile]
+  );
+
+  const handlePaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>, type: TileType) => {
+    event.dataTransfer.setData(TILE_DRAG_MIME, type);
+    event.dataTransfer.effectAllowed = "copy";
+  }, []);
+
+  const handlePaletteDragEnd = useCallback(() => {
+    lastPaletteDragAt.current = Date.now();
+  }, []);
+
+  const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!event.dataTransfer.types.includes(TILE_DRAG_MIME)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const handleCanvasDrop = useCallback(
+    (event: DragEvent<HTMLElement>) => {
+      const type = event.dataTransfer.getData(TILE_DRAG_MIME) as TileType;
+      if (!TILE_TYPES.includes(type)) return;
+      event.preventDefault();
+      handleCreateTile(
+        type,
+        screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY
+        })
+      );
+    },
+    [handleCreateTile, screenToFlowPosition]
+  );
+
+  const handleAddSubtile = useCallback(
+    (parentId: string) => {
+      const type = chooseTileType("service");
+      if (!type) return;
+      handleCreateTile(type, undefined, parentId);
+    },
+    [handleCreateTile]
   );
 
   const handleConnect = useCallback(
@@ -199,7 +275,7 @@ function App() {
       if (!atlas || !connection.source || !connection.target) return;
       const type = chooseLinkType("depends_on");
       if (!type) return;
-      const label = window.prompt("Relationship label", type.replaceAll("_", " ")) ?? type;
+      const label = window.prompt("Relationship label", type.replace(/_/g, " ")) ?? type;
       const link: Link = {
         id: createId("link", `${connection.source}_${connection.target}_${type}`, atlas.links.map((candidate) => candidate.id)),
         from: connection.source,
@@ -219,13 +295,13 @@ function App() {
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
       if (layoutTemplate !== "canvas_topology") return;
-      const positionChanges = changes.filter((change) => change.type === "position" && change.position);
+      const positionChanges = changes.filter(isPositionNodeChange);
       if (!positionChanges.length) return;
       updateAtlas((current) => ({
         ...current,
         tiles: current.tiles.map((tile) => {
           const change = positionChanges.find((candidate) => candidate.id === tile.id);
-          return change?.type === "position" && change.position ? { ...tile, position: change.position } : tile;
+          return change ? { ...tile, position: change.position } : tile;
         })
       }));
     },
@@ -347,8 +423,7 @@ function App() {
   const BrandIcon = BRAND_ICON;
 
   return (
-    <ReactFlowProvider>
-      <div className="app-shell">
+    <div className="app-shell">
         <header className="topbar">
           <div className="brand">
             <div className="brand__mark">
@@ -359,16 +434,6 @@ function App() {
               <span>Local Infrastructure Atlas</span>
             </div>
           </div>
-          <button className="primary-button" onClick={() => handleCreateTile()}>
-            <Plus size={18} /> New Tile
-          </button>
-          <select className="toolbar-select" value={newTileType} onChange={(event) => setNewTileType(event.target.value as TileType)}>
-            {TILE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {TILE_TYPE_CONFIG[type].label}
-              </option>
-            ))}
-          </select>
           <button className="toolbar-button" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />} Save
           </button>
@@ -403,9 +468,13 @@ function App() {
                 return (
                   <button
                     key={type}
-                    className={`palette-item ${newTileType === type ? "palette-item--active" : ""}`}
+                    className="palette-item"
                     style={{ "--tile-accent": config.color } as CSSProperties}
-                    onClick={() => setNewTileType(type)}
+                    draggable
+                    onClick={() => handlePaletteClick(type)}
+                    onDragStart={(event) => handlePaletteDragStart(event, type)}
+                    onDragEnd={handlePaletteDragEnd}
+                    title={`Click to create ${config.label}; drag onto the map to place it.`}
                   >
                     <Icon size={19} />
                     {config.label}
@@ -463,7 +532,12 @@ function App() {
             </div>
           </aside>
 
-          <section className={`canvas-frame canvas-frame--${layoutTemplate}`}>
+          <section
+            ref={canvasRef}
+            className={`canvas-frame canvas-frame--${layoutTemplate}`}
+            onDragOver={handleCanvasDragOver}
+            onDrop={handleCanvasDrop}
+          >
             <div className="view-tabs">
               {atlas.views.map((view) => (
                 <button key={view.id} className={activeViewId === view.id ? "active" : ""} onClick={() => handleSelectView(view)}>
@@ -501,13 +575,12 @@ function App() {
             selection={selection}
             onUpdateTile={handleUpdateTile}
             onDeleteTile={handleDeleteTile}
-            onAddSubtile={handleCreateTile}
+            onAddSubtile={handleAddSubtile}
             onUpdateLink={handleUpdateLink}
             onDeleteLink={handleDeleteLink}
           />
         </main>
       </div>
-    </ReactFlowProvider>
   );
 }
 

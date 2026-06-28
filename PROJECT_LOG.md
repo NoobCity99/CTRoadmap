@@ -17,10 +17,12 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-28 | `data/atlas.json` is the canonical source of truth. | Keeps the app local-first, readable, and backup-friendly. |
 | 2026-06-28 | The MVP does not execute shell, SSH, Docker, or validation commands. | Preserves the atlas/documentation scope and avoids unsafe automation paths. |
 | 2026-06-28 | Export controls are scaffolded but disabled in the MVP UI. | Keeps the user-facing layout aligned with the planned product without implementing Phase 2 behavior early. |
+| 2026-06-28 | Tile creation should live in the left Tile Palette, not the top toolbar. | The top `New Tile` button and tile-type dropdown duplicated the palette; palette buttons now create tiles by click or drag/drop. |
 
 ## Bugs And Fixes
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-06-28 | Docker frontend build failed because `LinkType.replaceAll` required a newer string lib and `NodeChange.id` was read before narrowing the React Flow union. | Replaced `replaceAll` with regex `replace` and added a typed position-change guard before reading `id` or `position`. |
 | 2026-06-28 | Local backend dependency install failed under Python 3.14 because pinned `pydantic-core` does not support that interpreter yet. | Kept Docker on Python 3.12 and documented Python 3.12/3.13 for local backend development. |
 | 2026-06-28 | Local Node/NPM validation is blocked because this WSL environment reports WSL 1 unsupported for Node. | Frontend files were statically reviewed; build should be run in Docker or a supported Node environment. |

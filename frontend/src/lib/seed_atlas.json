@@ -1,0 +1,665 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "name": "CTRoadmap",
+    "description": "Local infrastructure atlas",
+    "updated_at": "2026-06-29T09:15:47.290828+00:00"
+  },
+  "tiles": [
+    {
+      "id": "node_server1",
+      "type": "node",
+      "title": "server1",
+      "parent": null,
+      "position": {
+        "x": 202.99122516766514,
+        "y": -421.1141824114866
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "mount_samba",
+      "type": "mount",
+      "title": "/samba",
+      "parent": null,
+      "position": {
+        "x": 374.8951157957937,
+        "y": -171.93977712599155
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "path": "",
+        "source": "",
+        "options": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "node_micro_server",
+      "type": "node",
+      "title": "mini server",
+      "parent": null,
+      "position": {
+        "x": -263.21351765281594,
+        "y": -429.58857689950713
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "flow_wake_sleep",
+      "type": "flow",
+      "title": "WAKE/SLEEP",
+      "parent": null,
+      "position": {
+        "x": -687.9072400778009,
+        "y": 188.42137017125603
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "trigger": "wake button",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "url_url",
+      "type": "url",
+      "title": "STATUS PAGE",
+      "parent": "node_micro_server",
+      "position": {
+        "x": -687.7214584706297,
+        "y": -73.58760489299743
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "url": "10.0.0.252",
+        "protocol": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": [
+        "wake"
+      ]
+    },
+    {
+      "id": "node_server_2",
+      "type": "node",
+      "title": "server 2",
+      "parent": null,
+      "position": {
+        "x": -762.0398475134772,
+        "y": -430.2820628022017
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_ssh_key",
+      "type": "secret_ref",
+      "title": "SSH KEY",
+      "parent": null,
+      "position": {
+        "x": -265.6553688869465,
+        "y": 237.59231665458992
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "host": "",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_ssh_key_micro",
+      "type": "secret_ref",
+      "title": "SSH KEY MICRO",
+      "parent": null,
+      "position": {
+        "x": 201.3545749261495,
+        "y": 237.00876026846203
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "host": "SERVER 1",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_back_ups",
+      "type": "drive",
+      "title": "back ups",
+      "parent": null,
+      "position": {
+        "x": 375.55959676819924,
+        "y": 20.21280783321329
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "script_diagnostic",
+      "type": "script",
+      "title": "diagnostic",
+      "parent": null,
+      "position": {
+        "x": 682.0945567741911,
+        "y": -167.0275646059971
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "path": "",
+        "language": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "mount_backups",
+      "type": "mount",
+      "title": "backups",
+      "parent": "node_server_2",
+      "position": {
+        "x": -980.7747891362906,
+        "y": -248.50373099017474
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "path": "",
+        "source": "",
+        "options": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_bk1",
+      "type": "drive",
+      "title": "BK1",
+      "parent": "mount_backups",
+      "position": {
+        "x": -978.0007271980279,
+        "y": -80.67298372527723
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_bk2",
+      "type": "drive",
+      "title": "BK2",
+      "parent": "mount_backups",
+      "position": {
+        "x": -978.0007271980279,
+        "y": 84.38370160135749
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "url_vlan",
+      "type": "url",
+      "title": "VLAN",
+      "parent": null,
+      "position": {
+        "x": -263.2135176528159,
+        "y": -666.0885768995072
+      },
+      "size": {
+        "width": 240,
+        "height": 132
+      },
+      "lifecycle": "live",
+      "fields": {
+        "url": "666.6.6.666",
+        "protocol": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    }
+  ],
+  "links": [
+    {
+      "id": "link_flow_wake_sleep_node_server1_calls",
+      "from": "flow_wake_sleep",
+      "to": "node_server1",
+      "type": "calls",
+      "from_port": null,
+      "to_port": null,
+      "lifecycle": "live",
+      "label": "magic packet",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_micro_server_url_url_hosts",
+      "from": "node_micro_server",
+      "to": "url_url",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_micro_server_url_url",
+      "from": "node_micro_server",
+      "to": "url_url",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_url_url_flow_wake_sleep_runs",
+      "from": "url_url",
+      "to": "flow_wake_sleep",
+      "type": "runs",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "runs",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_mount_samba_contains",
+      "from": "node_server1",
+      "to": "mount_samba",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_micro_server_secret_ref_ssh_key_contains",
+      "from": "node_micro_server",
+      "to": "secret_ref_ssh_key",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "holds",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_secret_ref_ssh_key_micro_hosts",
+      "from": "node_server1",
+      "to": "secret_ref_ssh_key_micro",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_mount_samba_drive_back_ups_contains",
+      "from": "mount_samba",
+      "to": "drive_back_ups",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_secret_ref_ssh_key_secret_ref_ssh_key_micro_validates_with",
+      "from": "secret_ref_ssh_key",
+      "to": "secret_ref_ssh_key_micro",
+      "type": "validates_with",
+      "from_port": "out",
+      "to_port": "in",
+      "lifecycle": "live",
+      "label": "paired",
+      "notes": "",
+      "directional": false
+    },
+    {
+      "id": "link_node_server1_script_diagnostic_hosts",
+      "from": "node_server1",
+      "to": "script_diagnostic",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_backups_drive_bk1",
+      "from": "mount_backups",
+      "to": "drive_bk1",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_backups_drive_bk2",
+      "from": "mount_backups",
+      "to": "drive_bk2",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server_2_mount_backups",
+      "from": "node_server_2",
+      "to": "mount_backups",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_url_vlan_node_micro_server_calls",
+      "from": "url_vlan",
+      "to": "node_micro_server",
+      "type": "calls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": ".",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_url_vlan_node_server_2_calls",
+      "from": "url_vlan",
+      "to": "node_server_2",
+      "type": "calls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": ",",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_url_vlan_node_server1_calls",
+      "from": "url_vlan",
+      "to": "node_server1",
+      "type": "calls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": ",",
+      "notes": "",
+      "directional": true
+    }
+  ],
+  "views": [
+    {
+      "id": "physical",
+      "title": "Physical",
+      "description": "Hardware, cabling, drives, and mounts",
+      "visible_types": [
+        "node",
+        "drive",
+        "mount"
+      ],
+      "visible_links": [
+        "contains",
+        "mounted_at",
+        "runs",
+        "hosts",
+        "related_to"
+      ],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "layered_hierarchy"
+    },
+    {
+      "id": "services",
+      "title": "Services",
+      "description": "Applications, daemons, and containers",
+      "visible_types": [
+        "node",
+        "service",
+        "container",
+        "url",
+        "check"
+      ],
+      "visible_links": [
+        "runs",
+        "hosts",
+        "depends_on",
+        "exposes_url",
+        "validates_with"
+      ],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "canvas_topology"
+    },
+    {
+      "id": "storage",
+      "title": "Storage",
+      "description": "Storage devices and paths",
+      "visible_types": [
+        "node",
+        "drive",
+        "mount",
+        "service",
+        "container"
+      ],
+      "visible_links": [
+        "uses_storage",
+        "mounted_at",
+        "backs_up_to",
+        "contains"
+      ],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "canvas_topology"
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Secret references, configs, and access dependencies",
+      "visible_types": [
+        "node",
+        "script",
+        "config",
+        "secret_ref",
+        "flow",
+        "check"
+      ],
+      "visible_links": [
+        "requires_key",
+        "requires_config",
+        "validates_with",
+        "fails_if"
+      ],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "canvas_topology"
+    },
+    {
+      "id": "flows",
+      "title": "Flows",
+      "description": "Operational functions and process flows",
+      "visible_types": [
+        "flow",
+        "script",
+        "service",
+        "url",
+        "check",
+        "secret_ref",
+        "config"
+      ],
+      "visible_links": [
+        "calls",
+        "controls",
+        "requires_key",
+        "requires_config",
+        "fails_if"
+      ],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "layered_hierarchy"
+    },
+    {
+      "id": "everything",
+      "title": "Everything",
+      "description": "All atlas objects and relationships",
+      "visible_types": [],
+      "visible_links": [],
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layout_template": "canvas_topology"
+    }
+  ]
+}

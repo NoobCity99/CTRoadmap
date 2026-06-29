@@ -37,6 +37,7 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Planning work should persist as atlas data. | Planned objects are stored as `lifecycle: planned` on normal tiles and links instead of a temporary overlay or separate file. |
 | 2026-06-29 | Live View remains editable for live objects. | Planning Mode edits only planned objects, while Live View can still maintain current live atlas data and promote planned work. |
 | 2026-06-28 | Beta users should install from a published Docker image instead of cloning the repo. | The first release target is a Docker-image-based install using `ghcr.io/noobcity99/ctroadmap:beta`. |
+| 2026-06-29 | Optional sample seed data should be stored as atlas JSON instead of hardcoded TypeScript. | Keeps the seed file aligned with exported atlas data and makes future seed replacement straightforward. |
 
 ## Release Changes
 

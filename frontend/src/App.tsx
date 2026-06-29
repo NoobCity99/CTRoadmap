@@ -9,6 +9,7 @@ import {
   useReactFlow,
   type Connection,
   type Edge,
+  type FitViewOptions,
   type Node,
   type NodeChange
 } from "@xyflow/react";
@@ -67,6 +68,7 @@ import type {
 
 const nodeTypes = { tileNode: TileNode };
 const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
+const FIT_VIEW_OPTIONS: FitViewOptions = { padding: 0.28, duration: 450 };
 
 type SearchResult =
   | { kind: "tile"; id: string; title: string; detail: string }
@@ -81,7 +83,7 @@ function App() {
 }
 
 function AtlasEditor() {
-  const { screenToFlowPosition, setCenter } = useReactFlow();
+  const { fitView, screenToFlowPosition, setCenter } = useReactFlow();
   const canvasRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isNodeDragging = useRef(false);
@@ -92,7 +94,6 @@ function AtlasEditor() {
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
-  const [collapsedTileIds, setCollapsedTileIds] = useState<Set<string>>(() => new Set(readStoredStringArray("ctroadmap.collapsedTileIds")));
   const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
@@ -104,6 +105,7 @@ function AtlasEditor() {
   const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
   const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+  const [isInteractive, setIsInteractive] = useState(true);
 
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
     setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
@@ -153,10 +155,6 @@ function AtlasEditor() {
   }, [appendDebugEvent]);
 
   useEffect(() => {
-    window.localStorage.setItem("ctroadmap.collapsedTileIds", JSON.stringify(Array.from(collapsedTileIds)));
-  }, [collapsedTileIds]);
-
-  useEffect(() => {
     storeThemePalette(themePaletteId);
   }, [themePaletteId]);
 
@@ -176,20 +174,6 @@ function AtlasEditor() {
     }
     return grouped;
   }, [atlas]);
-
-  const collapsedDescendantIds = useMemo(() => {
-    const descendants = new Set<string>();
-    function addChildren(parentId: string) {
-      for (const child of childrenByParent.get(parentId) ?? []) {
-        descendants.add(child.id);
-        addChildren(child.id);
-      }
-    }
-    for (const tileId of collapsedTileIds) {
-      addChildren(tileId);
-    }
-    return descendants;
-  }, [childrenByParent, collapsedTileIds]);
 
   const searchResults = useMemo<SearchResult[]>(() => {
     if (!atlas) return [];
@@ -233,9 +217,9 @@ function AtlasEditor() {
       const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
       const searchable = `${tile.title} ${tile.type} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
       const allowedBySearch = !query || searchable.includes(query);
-      return allowedByView && allowedBySearch && !collapsedDescendantIds.has(tile.id);
+      return allowedByView && allowedBySearch;
     });
-  }, [activeView, atlas, collapsedDescendantIds, searchTerm]);
+  }, [activeView, atlas, searchTerm]);
 
   const visibleTileIds = useMemo(() => new Set(visibleTiles.map((tile) => tile.id)), [visibleTiles]);
 
@@ -249,18 +233,6 @@ function AtlasEditor() {
     });
   }, [activeView, atlas, searchTerm, visibleTileIds]);
 
-  const handleToggleCollapse = useCallback((tileId: string) => {
-    setCollapsedTileIds((current) => {
-      const next = new Set(current);
-      if (next.has(tileId)) {
-        next.delete(tileId);
-      } else {
-        next.add(tileId);
-      }
-      return next;
-    });
-  }, []);
-
   const derivedNodes: Node[] = useMemo(() => {
     if (!atlas) return [];
     const layoutPositions = layoutTemplate === "layered_hierarchy" ? computeLayeredPositions(visibleTiles) : new Map<string, { x: number; y: number }>();
@@ -272,19 +244,16 @@ function AtlasEditor() {
         id: tile.id,
         type: "tileNode",
         position,
-        draggable: layoutTemplate === "canvas_topology",
+        draggable: isInteractive && layoutTemplate === "canvas_topology",
         data: {
           tile,
           parentTitle,
           accentColor: getTileColor(tile.type, themePaletteId),
-          childCount: childrenByParent.get(tile.id)?.length ?? 0,
-          hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
-          isCollapsed: collapsedTileIds.has(tile.id),
-          onToggleCollapse: handleToggleCollapse
+          hasChildren: Boolean(childrenByParent.get(tile.id)?.length)
         }
       };
     });
-  }, [atlas, childrenByParent, collapsedTileIds, handleToggleCollapse, layoutTemplate, themePaletteId, visibleTiles]);
+  }, [atlas, childrenByParent, isInteractive, layoutTemplate, themePaletteId, visibleTiles]);
 
   useEffect(() => {
     if (isNodeDragging.current) return;
@@ -333,31 +302,9 @@ function AtlasEditor() {
       search_active: Boolean(searchTerm.trim()),
       visible_type_filters: activeView?.visible_types.length ?? 0,
       visible_link_filters: activeView?.visible_links.length ?? 0,
-      collapsed_count: collapsedTileIds.size,
       ...extra
     }),
-    [activeView, atlas, collapsedTileIds.size, layoutTemplate, searchTerm, visibleLinks.length, visibleTiles.length]
-  );
-
-  const expandAncestors = useCallback(
-    (tileId: string) => {
-      if (!atlas) return;
-      const idsToExpand = new Set<string>();
-      let current = atlas.tiles.find((tile) => tile.id === tileId);
-      while (current?.parent) {
-        idsToExpand.add(current.parent);
-        current = atlas.tiles.find((tile) => tile.id === current?.parent);
-      }
-      if (!idsToExpand.size) return;
-      setCollapsedTileIds((currentCollapsed) => {
-        const next = new Set(currentCollapsed);
-        for (const id of idsToExpand) {
-          next.delete(id);
-        }
-        return next;
-      });
-    },
-    [atlas]
+    [activeView, atlas, layoutTemplate, searchTerm, visibleLinks.length, visibleTiles.length]
   );
 
   const selectTileAndFocus = useCallback(
@@ -365,11 +312,14 @@ function AtlasEditor() {
       if (!atlas) return;
       const tile = atlas.tiles.find((candidate) => candidate.id === tileId);
       if (!tile) return;
-      expandAncestors(tileId);
+      const renderedNode = flowNodes.find((node) => node.id === tileId);
+      const position = renderedNode?.position ?? tile.position;
+      const width = renderedNode?.width ?? tile.size?.width ?? 248;
+      const height = renderedNode?.height ?? tile.size?.height ?? 128;
       setSelection({ kind: "tile", id: tileId });
-      setCenter(tile.position.x + 124, tile.position.y + 64, { zoom: 1, duration: 500 });
+      setCenter(position.x + width / 2, position.y + height / 2, { zoom: 1, duration: 500 });
     },
-    [atlas, expandAncestors, setCenter]
+    [atlas, flowNodes, setCenter]
   );
 
   const selectSearchResult = useCallback(
@@ -378,14 +328,9 @@ function AtlasEditor() {
         selectTileAndFocus(result.id);
         return;
       }
-      const link = atlas?.links.find((candidate) => candidate.id === result.id);
-      if (link) {
-        expandAncestors(link.from);
-        expandAncestors(link.to);
-      }
       setSelection({ kind: "link", id: result.id });
     },
-    [atlas, expandAncestors, selectTileAndFocus]
+    [selectTileAndFocus]
   );
 
   const handlePaletteChange = useCallback(
@@ -578,25 +523,35 @@ function AtlasEditor() {
   );
 
   const handlePaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>, type: TileType) => {
+    if (!isInteractive) {
+      event.preventDefault();
+      return;
+    }
     event.dataTransfer.setData(TILE_DRAG_MIME, type);
     event.dataTransfer.effectAllowed = "copy";
-  }, []);
+  }, [isInteractive]);
 
   const handlePaletteDragEnd = useCallback(() => {
     lastPaletteDragAt.current = Date.now();
   }, []);
 
   const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!isInteractive) return;
     if (!Array.from(event.dataTransfer.types).includes(TILE_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
-  }, []);
+  }, [isInteractive]);
 
   const handleCanvasDrop = useCallback(
     (event: DragEvent<HTMLElement>) => {
       const type = event.dataTransfer.getData(TILE_DRAG_MIME) as TileType;
       if (!TILE_TYPES.includes(type)) return;
       event.preventDefault();
+      if (!isInteractive) {
+        setStatus("Interactivity locked");
+        appendDebugEvent("canvas.locked_drop", "Tile drop blocked while interactivity is locked", "warning", getCanvasDebugContext({ type }));
+        return;
+      }
       handleCreateTile(
         type,
         screenToFlowPosition({
@@ -605,7 +560,7 @@ function AtlasEditor() {
         })
       );
     },
-    [handleCreateTile, screenToFlowPosition]
+    [appendDebugEvent, getCanvasDebugContext, handleCreateTile, isInteractive, screenToFlowPosition]
   );
 
   const handleAddSubtile = useCallback(
@@ -619,6 +574,11 @@ function AtlasEditor() {
 
   const handleConnect = useCallback(
     (connection: Connection) => {
+      if (!isInteractive) {
+        setStatus("Interactivity locked");
+        appendDebugEvent("canvas.locked_connect", "Relationship creation blocked while interactivity is locked", "warning", getCanvasDebugContext());
+        return;
+      }
       if (!atlas || !connection.source || !connection.target) return;
       const sourceTile = atlas.tiles.find((tile) => tile.id === connection.source);
       const targetTile = atlas.tiles.find((tile) => tile.id === connection.target);
@@ -647,26 +607,33 @@ function AtlasEditor() {
       setStatus("Relationship created");
       appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort });
     },
-    [appendDebugEvent, atlas, updateAtlas]
+    [appendDebugEvent, atlas, getCanvasDebugContext, isInteractive, updateAtlas]
   );
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
+      if (!isInteractive) return;
       setFlowNodes((current) => applyNodeChanges(changes, current));
     },
-    []
+    [isInteractive]
   );
 
   const handleNodeDragStart = useCallback(
     (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
+      if (!isInteractive) return;
       isNodeDragging.current = true;
       appendDebugEvent("tile.drag_start", "Tile drag started", "info", getCanvasDebugContext({ tile_id: node.id, dragged_count: draggedNodes.length }));
     },
-    [appendDebugEvent, getCanvasDebugContext]
+    [appendDebugEvent, getCanvasDebugContext, isInteractive]
   );
 
   const handleNodeDragStop = useCallback(
     (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
+      if (!isInteractive) {
+        isNodeDragging.current = false;
+        setFlowNodes(derivedNodes);
+        return;
+      }
       isNodeDragging.current = false;
       if (layoutTemplate !== "canvas_topology") {
         setFlowNodes(derivedNodes);
@@ -692,7 +659,31 @@ function AtlasEditor() {
         })
       );
     },
-    [appendDebugEvent, derivedNodes, getCanvasDebugContext, layoutTemplate, updateAtlas]
+    [appendDebugEvent, derivedNodes, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
+  );
+
+  const handleCanvasDoubleClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.closest(".react-flow__pane, .react-flow__renderer")) return;
+      if (target.closest(".react-flow__node, .react-flow__edge, .react-flow__controls, .react-flow__minimap, button, input, textarea, select")) return;
+      void fitView(FIT_VIEW_OPTIONS);
+      appendDebugEvent("canvas.fit_view", "Blank canvas double-click fit view", "info", getCanvasDebugContext({ trigger: "double_click" }));
+    },
+    [appendDebugEvent, fitView, getCanvasDebugContext]
+  );
+
+  const handleInteractiveChange = useCallback(
+    (interactiveStatus: boolean) => {
+      setIsInteractive(interactiveStatus);
+      isNodeDragging.current = false;
+      if (!interactiveStatus) {
+        setFlowNodes(derivedNodes);
+      }
+      appendDebugEvent("canvas.interactivity", interactiveStatus ? "Canvas interactivity unlocked" : "Canvas interactivity locked", "info", getCanvasDebugContext({ interactive: interactiveStatus }));
+    },
+    [appendDebugEvent, derivedNodes, getCanvasDebugContext]
   );
 
   const handleReactFlowError = useCallback(
@@ -1200,6 +1191,7 @@ function AtlasEditor() {
             className={`canvas-frame canvas-frame--${layoutTemplate}`}
             onDragOver={handleCanvasDragOver}
             onDrop={handleCanvasDrop}
+            onDoubleClick={handleCanvasDoubleClick}
           >
             <div className="view-tabs">
               {atlas.views.map((view) => (
@@ -1220,13 +1212,18 @@ function AtlasEditor() {
               onEdgeClick={(_, edge) => setSelection({ kind: "link", id: edge.id })}
               onError={handleReactFlowError}
               onPaneClick={() => setSelection(null)}
+              nodesDraggable={isInteractive && layoutTemplate === "canvas_topology"}
+              nodesConnectable={isInteractive}
+              elementsSelectable
               fitView
+              fitViewOptions={FIT_VIEW_OPTIONS}
+              zoomOnDoubleClick={false}
               minZoom={0.2}
               maxZoom={1.8}
             >
               <Background color="var(--canvas-grid-line)" gap={20} size={1} />
               <MiniMap pannable zoomable nodeColor={(node) => getTileColor((node.data.tile as Tile).type, themePaletteId)} />
-              <Controls />
+              <Controls fitViewOptions={FIT_VIEW_OPTIONS} onInteractiveChange={handleInteractiveChange} />
             </ReactFlow>
             <div className="status-strip">
               <span>{status}</span>
@@ -1369,15 +1366,6 @@ function toggleViewSelection<T extends string>(current: T[], all: readonly T[], 
   if (selected.size === 0) return current;
   if (selected.size === all.length) return [];
   return all.filter((item) => selected.has(item));
-}
-
-function readStoredStringArray(key: string): string[] {
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return [];
-  }
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

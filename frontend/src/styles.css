@@ -555,22 +555,6 @@ button:disabled {
   color: var(--tile-accent);
 }
 
-.tile-node__collapse {
-  min-width: 42px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: 1px solid color-mix(in srgb, var(--tile-accent) 46%, transparent);
-  color: var(--tile-accent);
-  background: rgba(2, 8, 18, 0.72);
-  border-radius: 999px;
-  padding: 0 8px;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
 .tile-node__handle {
   width: 11px;
   height: 11px;

@@ -33,11 +33,13 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Parent collapse/expand state is local UI state for this pass. | It improves canvas navigation without changing canonical topology data. |
 | 2026-06-29 | Search results should be actionable from the left panel. | Users need direct selection/focus of matching tiles and relationships, including items hidden under collapsed parents. |
 | 2026-06-29 | Hierarchy and communication should use separate visual linkage paths. | Parent/child containment remains bottom-to-top, while calls/flows/dependencies use right-side `OUT` to left-side `IN` handles. |
+| 2026-06-29 | Collapse/expand controls should be removed from the canvas. | Testing showed hiding descendants is not necessary, and always-visible hierarchy avoids stale local collapse state hiding tiles. |
 
 ## Bugs And Fixes
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-06-29 | Layered template node clicks could pan to a blank area because focus used saved canvas coordinates instead of the rendered layered position. | Tile focus now centers on the current rendered React Flow node position with saved position as a fallback. |
 | 2026-06-29 | Flow tile step action previews overflowed the tile when a flow had more than two steps. | Changed the flow tile `steps` preview to display only the numeric step count. |
 | 2026-06-29 | Flow tiles displayed `[object Object]` for step data on the canvas because node field previews stringified the `steps` object array directly. | Added tile field preview formatting that renders flow step `action` text and uses safe summaries for other object or array fields. |
 | 2026-06-29 | Dragging an existing tile could blank the canvas until refresh because React Flow controlled node updates were being written through canonical atlas state on every drag tick, and the debug export did not capture drag/error context. | Moved drag movement into local React Flow node state, commit final positions to the atlas on drag stop, and added drag/anomaly/error debug events. |
@@ -50,3 +52,6 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Non-hierarchy links visually reused the same top/bottom handle path as parent/child links. | Added optional link port metadata plus IN/OUT handles so relationship routing persists across save/load. |
 | 2026-06-29 | Top-bar search required backspacing to clear a query. | Added an inline clear button that resets search and keeps focus in the search input. |
 | 2026-06-29 | Persistent IN/OUT port labels obstructed tile content. | Changed port labels to appear only when hovering or focusing the matching connection handle. |
+| 2026-06-29 | Fit View framed the atlas too tightly. | Added shared padded fit-view options for initial fit and the Controls fit button. |
+| 2026-06-29 | Double-clicking blank canvas zoomed into the clicked area instead of fitting the full view. | Disabled React Flow double-click zoom and mapped blank-canvas double-click to padded Fit View. |
+| 2026-06-29 | Interactivity lock prevented link creation but still allowed tile movement. | Added app-owned interactivity state that locks both node dragging and link creation while preserving selection and inspector editing. |

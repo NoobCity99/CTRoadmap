@@ -1,22 +1,18 @@
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import type { CSSProperties } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import type { Tile } from "../types/atlas";
 
 export interface TileNodeData extends Record<string, unknown> {
   accentColor?: string;
-  childCount?: number;
   hasChildren?: boolean;
-  isCollapsed?: boolean;
-  onToggleCollapse?: (tileId: string) => void;
   tile: Tile;
   parentTitle?: string;
 }
 
 export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, childCount = 0, hasChildren, isCollapsed, onToggleCollapse, tile, parentTitle } = data as TileNodeData;
+  const { accentColor, hasChildren, tile, parentTitle } = data as TileNodeData;
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
@@ -40,19 +36,6 @@ export function TileNode({ data, selected }: NodeProps) {
           <div className="tile-node__title">{tile.title}</div>
           <div className="tile-node__type">{config.label}</div>
         </div>
-        {hasChildren ? (
-          <button
-            className="tile-node__collapse"
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggleCollapse?.(tile.id);
-            }}
-            title={isCollapsed ? "Expand children" : "Collapse children"}
-          >
-            {isCollapsed ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
-            {childCount}
-          </button>
-        ) : null}
       </div>
       {parentTitle ? <div className="tile-node__parent">inside {parentTitle}</div> : null}
       {fieldEntries.length > 0 ? (

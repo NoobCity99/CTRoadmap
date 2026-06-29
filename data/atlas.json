@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-06-29T00:38:52.509926+00:00"
+    "updated_at": "2026-06-29T04:55:34.074176+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "server1",
       "parent": null,
       "position": {
-        "x": 56.78112987697372,
-        "y": -142.96537326695557
+        "x": 202.99122516766514,
+        "y": -421.1141824114866
       },
       "size": {
         "width": 240.0,
@@ -35,8 +35,8 @@
       "title": "/samba",
       "parent": null,
       "position": {
-        "x": 376.0183341010231,
-        "y": -138.0191419919846
+        "x": 374.8951157957937,
+        "y": -171.93977712599155
       },
       "size": {
         "width": 240.0,
@@ -56,8 +56,8 @@
       "title": "micro server",
       "parent": null,
       "position": {
-        "x": 256.6247222392837,
-        "y": -625.6319153817717
+        "x": -263.21351765281594,
+        "y": -429.58857689950713
       },
       "size": {
         "width": 240.0,
@@ -79,8 +79,8 @@
       "title": "WAKE/SLEEP",
       "parent": null,
       "position": {
-        "x": -201.59973584628744,
-        "y": -429.296630256013
+        "x": -693.3255841588325,
+        "y": 188.42137017125603
       },
       "size": {
         "width": 240.0,
@@ -92,24 +92,251 @@
       },
       "notes": "",
       "tags": []
+    },
+    {
+      "id": "url_url",
+      "type": "url",
+      "title": "STATUS PAGE",
+      "parent": "node_micro_server",
+      "position": {
+        "x": -687.7214584706297,
+        "y": -73.58760489299743
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "url": "10.0.0.252",
+        "protocol": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": [
+        "wake"
+      ]
+    },
+    {
+      "id": "node_server_2",
+      "type": "node",
+      "title": "server 2",
+      "parent": null,
+      "position": {
+        "x": -762.0398475134772,
+        "y": -430.2820628022017
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_ssh_key",
+      "type": "secret_ref",
+      "title": "SSH KEY",
+      "parent": null,
+      "position": {
+        "x": -265.6553688869465,
+        "y": 237.59231665458992
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "host": "",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_ssh_key_micro",
+      "type": "secret_ref",
+      "title": "SSH KEY MICRO",
+      "parent": null,
+      "position": {
+        "x": 201.3545749261495,
+        "y": 237.00876026846203
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "host": "SERVER 1",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_back_ups",
+      "type": "drive",
+      "title": "back ups",
+      "parent": null,
+      "position": {
+        "x": 375.55959676819924,
+        "y": 20.21280783321329
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "script_diagnostic",
+      "type": "script",
+      "title": "diagnostic",
+      "parent": null,
+      "position": {
+        "x": 682.0945567741911,
+        "y": -167.0275646059971
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "path": "",
+        "language": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
     }
   ],
   "links": [
-    {
-      "id": "link_node_micro_server_flow_wake_sleep_depends_on",
-      "from": "node_micro_server",
-      "to": "flow_wake_sleep",
-      "type": "hosts",
-      "label": "runs",
-      "notes": "",
-      "directional": true
-    },
     {
       "id": "link_flow_wake_sleep_node_server1_calls",
       "from": "flow_wake_sleep",
       "to": "node_server1",
       "type": "calls",
+      "from_port": null,
+      "to_port": null,
       "label": "magic packet",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_micro_server_url_url_hosts",
+      "from": "node_micro_server",
+      "to": "url_url",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_micro_server_url_url",
+      "from": "node_micro_server",
+      "to": "url_url",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_url_url_flow_wake_sleep_runs",
+      "from": "url_url",
+      "to": "flow_wake_sleep",
+      "type": "runs",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "runs",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_mount_samba_contains",
+      "from": "node_server1",
+      "to": "mount_samba",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_micro_server_secret_ref_ssh_key_contains",
+      "from": "node_micro_server",
+      "to": "secret_ref_ssh_key",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "holds",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_secret_ref_ssh_key_micro_hosts",
+      "from": "node_server1",
+      "to": "secret_ref_ssh_key_micro",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_mount_samba_drive_back_ups_contains",
+      "from": "mount_samba",
+      "to": "drive_back_ups",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_secret_ref_ssh_key_secret_ref_ssh_key_micro_validates_with",
+      "from": "secret_ref_ssh_key",
+      "to": "secret_ref_ssh_key_micro",
+      "type": "validates_with",
+      "from_port": "out",
+      "to_port": "in",
+      "label": "paired",
+      "notes": "",
+      "directional": false
+    },
+    {
+      "id": "link_node_server1_script_diagnostic_hosts",
+      "from": "node_server1",
+      "to": "script_diagnostic",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "label": "hosts",
       "notes": "",
       "directional": true
     }

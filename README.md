@@ -132,6 +132,18 @@ Delete/Backspace Delete selected tile or relationship
 /                Focus search
 Escape           Clear selection
 ```
+<table>
+  <tr>
+    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
+    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
+  </tr>
+  <tr>
+    <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
+    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
+  </tr>
+</table>
+
+
 
 ## API
 

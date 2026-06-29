@@ -1,10 +1,11 @@
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileType } from "../types/atlas";
+import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
+  mode: AppMode;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
   onDeleteTile: (tileId: string) => void;
@@ -12,17 +13,22 @@ interface InspectorProps {
   onAddSubtile: (parentId: string) => void;
   onUpdateLink: (link: Link) => void;
   onDeleteLink: (linkId: string) => void;
+  onPromoteTile: (tileId: string) => void;
+  onPromoteLink: (linkId: string) => void;
 }
 
 export function Inspector({
   atlas,
+  mode,
   selection,
   onUpdateTile,
   onDeleteTile,
   onDuplicateTile,
   onAddSubtile,
   onUpdateLink,
-  onDeleteLink
+  onDeleteLink,
+  onPromoteTile,
+  onPromoteLink
 }: InspectorProps) {
   const selectedTile = selection?.kind === "tile" ? atlas.tiles.find((tile) => tile.id === selection.id) : null;
   const selectedLink = selection?.kind === "link" ? atlas.links.find((link) => link.id === selection.id) : null;
@@ -33,6 +39,8 @@ export function Inspector({
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
     const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(([key]) => !(selectedTile.type === "flow" && key === "steps"));
+    const lifecycle = resolveLifecycle(selectedTile);
+    const editable = isLifecycleEditable(lifecycle, mode);
 
     return (
       <aside className="inspector">
@@ -42,12 +50,17 @@ export function Inspector({
           <div>
             <input
               className="title-input"
+              disabled={!editable}
               value={selectedTile.title}
               onChange={(event) => onUpdateTile({ ...selectedTile, title: event.target.value })}
             />
-            <span>{config.label}</span>
+            <span>{config.label} · {lifecycle.toUpperCase()}</span>
           </div>
         </div>
+        {!editable ? (
+          <ReadOnlyModeNotice lifecycle={lifecycle} mode={mode} kind="tile" onGoLive={lifecycle === "planned" && mode === "live" ? () => onPromoteTile(selectedTile.id) : undefined} />
+        ) : null}
+        <fieldset disabled={!editable} className="inspector__fieldset">
         <label>
           Type
           <select
@@ -140,6 +153,7 @@ export function Inspector({
         <button className="danger-button" onClick={() => onDeleteTile(selectedTile.id)}>
           <Trash2 size={16} /> Delete Tile
         </button>
+        </fieldset>
       </aside>
     );
   }
@@ -147,6 +161,9 @@ export function Inspector({
   if (selectedLink) {
     const fromTile = atlas.tiles.find((tile) => tile.id === selectedLink.from);
     const toTile = atlas.tiles.find((tile) => tile.id === selectedLink.to);
+    const lifecycle = resolveLifecycle(selectedLink);
+    const editable = isLifecycleEditable(lifecycle, mode);
+    const canPromoteLink = lifecycle === "planned" && resolveLifecycle(fromTile) === "live" && resolveLifecycle(toTile) === "live";
 
     return (
       <aside className="inspector">
@@ -155,10 +172,20 @@ export function Inspector({
           <div>
             <div className="title-input title-input--readonly">{selectedLink.label || selectedLink.type}</div>
             <span>
-              {fromTile?.title ?? selectedLink.from} to {toTile?.title ?? selectedLink.to}
+              {fromTile?.title ?? selectedLink.from} to {toTile?.title ?? selectedLink.to} · {lifecycle.toUpperCase()}
             </span>
           </div>
         </div>
+        {!editable ? (
+          <ReadOnlyModeNotice
+            lifecycle={lifecycle}
+            mode={mode}
+            kind="relationship"
+            onGoLive={lifecycle === "planned" && mode === "live" && canPromoteLink ? () => onPromoteLink(selectedLink.id) : undefined}
+            blockedReason={lifecycle === "planned" && mode === "live" && !canPromoteLink ? "Promote both endpoint tiles before promoting this relationship." : undefined}
+          />
+        ) : null}
+        <fieldset disabled={!editable} className="inspector__fieldset">
         <label>
           From
           <select
@@ -251,6 +278,7 @@ export function Inspector({
         <button className="danger-button" onClick={() => onDeleteLink(selectedLink.id)}>
           <Trash2 size={16} /> Delete Link
         </button>
+        </fieldset>
       </aside>
     );
   }
@@ -432,6 +460,44 @@ function getDescendantIds(tiles: Tile[], tileId: string): Set<string> {
     }
   }
   return descendants;
+}
+
+function ReadOnlyModeNotice({
+  blockedReason,
+  kind,
+  lifecycle,
+  mode,
+  onGoLive
+}: {
+  blockedReason?: string;
+  kind: "tile" | "relationship";
+  lifecycle: "live" | "planned";
+  mode: AppMode;
+  onGoLive?: () => void;
+}) {
+  const message =
+    lifecycle === "planned" && mode === "live"
+      ? `This planned ${kind} is locked in Live View.`
+      : `This live ${kind} is reference-only in Planning Mode.`;
+  return (
+    <div className="inspector__readonly">
+      <strong>{message}</strong>
+      {blockedReason ? <span>{blockedReason}</span> : null}
+      {onGoLive ? (
+        <button className="ghost-button" onClick={onGoLive}>
+          Go Live
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function resolveLifecycle(item: Tile | Link | null | undefined): "live" | "planned" {
+  return item?.lifecycle === "planned" ? "planned" : "live";
+}
+
+function isLifecycleEditable(lifecycle: "live" | "planned", mode: AppMode): boolean {
+  return mode === "planning" ? lifecycle === "planned" : lifecycle === "live";
 }
 
 function resolveSourcePort(link: Link): LinkSourcePort {

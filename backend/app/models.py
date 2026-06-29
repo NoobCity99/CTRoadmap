@@ -42,6 +42,7 @@ LinkType = Literal[
 LayoutTemplate = Literal["canvas_topology", "layered_hierarchy"]
 LinkSourcePort = Literal["out", "child"]
 LinkTargetPort = Literal["in", "parent"]
+Lifecycle = Literal["live", "planned"]
 
 
 class Position(BaseModel):
@@ -69,6 +70,7 @@ class Tile(BaseModel):
     parent: str | None = None
     position: Position = Field(default_factory=Position)
     size: Size | None = None
+    lifecycle: Lifecycle = "live"
     fields: dict[str, Any] = Field(default_factory=dict)
     notes: str = ""
     tags: list[str] = Field(default_factory=list)
@@ -95,6 +97,7 @@ class Link(BaseModel):
     type: LinkType
     from_port: LinkSourcePort | None = None
     to_port: LinkTargetPort | None = None
+    lifecycle: Lifecycle = "live"
     label: str = ""
     notes: str = ""
     directional: bool = True

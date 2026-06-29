@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-06-29T04:55:34.074176+00:00"
+    "updated_at": "2026-06-29T05:54:50.715334+00:00"
   },
   "tiles": [
     {
@@ -19,6 +19,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "role": "",
         "hostname": "",
@@ -42,6 +43,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "path": "",
         "source": "",
@@ -63,6 +65,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "role": "",
         "hostname": "",
@@ -86,6 +89,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "trigger": "wake button",
         "purpose": ""
@@ -106,6 +110,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "url": "10.0.0.252",
         "protocol": "",
@@ -129,6 +134,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "role": "",
         "hostname": "",
@@ -152,6 +158,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "host": "",
         "path": "",
@@ -175,6 +182,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "host": "SERVER 1",
         "path": "",
@@ -198,6 +206,7 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "capacity": "",
         "filesystem": "",
@@ -220,9 +229,78 @@
         "width": 240.0,
         "height": 132.0
       },
+      "lifecycle": "live",
       "fields": {
         "path": "",
         "language": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "mount_backups",
+      "type": "mount",
+      "title": "backups",
+      "parent": "node_server_2",
+      "position": {
+        "x": -980.7747891362906,
+        "y": -248.50373099017474
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "path": "",
+        "source": "",
+        "options": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_bk1",
+      "type": "drive",
+      "title": "BK1",
+      "parent": "mount_backups",
+      "position": {
+        "x": -978.0007271980279,
+        "y": -80.67298372527723
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_bk2",
+      "type": "drive",
+      "title": "BK2",
+      "parent": "mount_backups",
+      "position": {
+        "x": -978.0007271980279,
+        "y": 84.38370160135749
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "planned",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
         "purpose": ""
       },
       "notes": "",
@@ -237,6 +315,7 @@
       "type": "calls",
       "from_port": null,
       "to_port": null,
+      "lifecycle": "live",
       "label": "magic packet",
       "notes": "",
       "directional": true
@@ -248,6 +327,7 @@
       "type": "hosts",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "hosts",
       "notes": "",
       "directional": true
@@ -259,6 +339,7 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "contains",
       "notes": "",
       "directional": true
@@ -270,6 +351,7 @@
       "type": "runs",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "runs",
       "notes": "",
       "directional": true
@@ -281,6 +363,7 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "contains",
       "notes": "",
       "directional": true
@@ -292,6 +375,7 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "holds",
       "notes": "",
       "directional": true
@@ -303,6 +387,7 @@
       "type": "hosts",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "hosts",
       "notes": "",
       "directional": true
@@ -314,6 +399,7 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "contains",
       "notes": "",
       "directional": true
@@ -325,6 +411,7 @@
       "type": "validates_with",
       "from_port": "out",
       "to_port": "in",
+      "lifecycle": "live",
       "label": "paired",
       "notes": "",
       "directional": false
@@ -336,7 +423,44 @@
       "type": "hosts",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
       "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_backups_drive_bk1",
+      "from": "mount_backups",
+      "to": "drive_bk1",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_backups_drive_bk2",
+      "from": "mount_backups",
+      "to": "drive_bk2",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server_2_mount_backups",
+      "from": "node_server_2",
+      "to": "mount_backups",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "planned",
+      "label": "contains",
       "notes": "",
       "directional": true
     }

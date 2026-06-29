@@ -54,7 +54,9 @@ import type {
   DebugEvent,
   ExportFormat,
   ExportResult,
+  AppMode,
   LayoutTemplate,
+  Lifecycle,
   Link,
   LinkSourcePort,
   LinkTargetPort,
@@ -99,6 +101,7 @@ function AtlasEditor() {
   const [selection, setSelection] = useState<Selection>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appMode, setAppMode] = useState<AppMode>("live");
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [isSaving, setIsSaving] = useState(false);
@@ -163,6 +166,25 @@ function AtlasEditor() {
     return atlas.views.find((view) => view.id === activeViewId) ?? atlas.views[0] ?? null;
   }, [atlas, activeViewId]);
 
+  const lifecycleCounts = useMemo(() => {
+    const counts = {
+      liveTiles: 0,
+      plannedTiles: 0,
+      liveLinks: 0,
+      plannedLinks: 0
+    };
+    if (!atlas) return counts;
+    for (const tile of atlas.tiles) {
+      if (resolveLifecycle(tile) === "planned") counts.plannedTiles += 1;
+      else counts.liveTiles += 1;
+    }
+    for (const link of atlas.links) {
+      if (resolveLifecycle(link) === "planned") counts.plannedLinks += 1;
+      else counts.liveLinks += 1;
+    }
+    return counts;
+  }, [atlas]);
+
   const childrenByParent = useMemo(() => {
     const grouped = new Map<string, Tile[]>();
     if (!atlas) return grouped;
@@ -182,19 +204,19 @@ function AtlasEditor() {
     const tileMatches = atlas.tiles
       .filter((tile) => {
         const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
-        const searchable = `${tile.title} ${tile.type} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
+        const searchable = `${tile.title} ${tile.type} ${resolveLifecycle(tile)} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
         return allowedByView && searchable.includes(query);
       })
       .map<SearchResult>((tile) => ({
         kind: "tile",
         id: tile.id,
         title: tile.title,
-        detail: `${TILE_TYPE_CONFIG[tile.type].label} tile`
+        detail: `${resolveLifecycle(tile)} ${TILE_TYPE_CONFIG[tile.type].label} tile`
       }));
     const linkMatches = atlas.links
       .filter((link) => {
         const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
-        const searchable = `${link.type} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
+        const searchable = `${link.type} ${resolveLifecycle(link)} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
         return allowedByView && searchable.includes(query);
       })
       .map<SearchResult>((link) => {
@@ -204,7 +226,7 @@ function AtlasEditor() {
           kind: "link",
           id: link.id,
           title: link.label || link.type,
-          detail: `${source} -> ${target}`
+          detail: `${resolveLifecycle(link)}: ${source} -> ${target}`
         };
       });
     return [...tileMatches, ...linkMatches].slice(0, 30);
@@ -215,7 +237,7 @@ function AtlasEditor() {
     const query = searchTerm.trim().toLowerCase();
     return atlas.tiles.filter((tile) => {
       const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
-      const searchable = `${tile.title} ${tile.type} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
+      const searchable = `${tile.title} ${tile.type} ${resolveLifecycle(tile)} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
       const allowedBySearch = !query || searchable.includes(query);
       return allowedByView && allowedBySearch;
     });
@@ -227,7 +249,7 @@ function AtlasEditor() {
     if (!atlas) return [];
     return atlas.links.filter((link) => {
       const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
-      const searchable = `${link.type} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
+      const searchable = `${link.type} ${resolveLifecycle(link)} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
       const allowedBySearch = !searchTerm.trim() || searchable.includes(searchTerm.trim().toLowerCase()) || visibleTileIds.has(link.from) || visibleTileIds.has(link.to);
       return allowedByView && allowedBySearch && visibleTileIds.has(link.from) && visibleTileIds.has(link.to);
     });
@@ -240,20 +262,24 @@ function AtlasEditor() {
     return visibleTiles.map((tile) => {
       const parentTitle = tile.parent ? atlas.tiles.find((candidate) => candidate.id === tile.parent)?.title : undefined;
       const position = layoutPositions.get(tile.id) ?? tile.position;
+      const lifecycle = resolveLifecycle(tile);
+      const editable = isLifecycleEditable(lifecycle, appMode);
       return {
         id: tile.id,
         type: "tileNode",
         position,
-        draggable: isInteractive && layoutTemplate === "canvas_topology",
+        draggable: isInteractive && editable && layoutTemplate === "canvas_topology",
         data: {
           tile,
           parentTitle,
           accentColor: getTileColor(tile.type, themePaletteId),
-          hasChildren: Boolean(childrenByParent.get(tile.id)?.length)
+          hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
+          lifecycle,
+          isMuted: !editable
         }
       };
     });
-  }, [atlas, childrenByParent, isInteractive, layoutTemplate, themePaletteId, visibleTiles]);
+  }, [appMode, atlas, childrenByParent, isInteractive, layoutTemplate, themePaletteId, visibleTiles]);
 
   useEffect(() => {
     if (isNodeDragging.current) return;
@@ -261,30 +287,36 @@ function AtlasEditor() {
   }, [derivedNodes]);
 
   const edges: Edge[] = useMemo(() => {
-    return visibleLinks.map((link) => ({
-      id: link.id,
-      source: link.from,
-      target: link.to,
-      sourceHandle: resolveSourcePort(link),
-      targetHandle: resolveTargetPort(link),
-      label: link.label || link.type,
-      animated: ["calls", "controls", "fails_if"].includes(link.type),
-      markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
-      style: {
-        stroke: getLinkColor(link.type, themePaletteId),
-        strokeWidth: 2
-      },
-      labelStyle: {
-        fill: "#f8fafc",
-        fontSize: 12,
-        fontWeight: 700
-      },
-      labelBgStyle: {
-        fill: "rgba(5, 10, 22, 0.88)",
-        fillOpacity: 0.9
-      }
-    }));
-  }, [themePaletteId, visibleLinks]);
+    return visibleLinks.map((link) => {
+      const lifecycle = resolveLifecycle(link);
+      const editable = isLifecycleEditable(lifecycle, appMode);
+      const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
+      return {
+        id: link.id,
+        source: link.from,
+        target: link.to,
+        sourceHandle: resolveSourcePort(link),
+        targetHandle: resolveTargetPort(link),
+        label,
+        animated: editable && ["calls", "controls", "fails_if"].includes(link.type),
+        markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
+        style: {
+          stroke: editable ? getLinkColor(link.type, themePaletteId) : "rgba(148, 163, 184, 0.55)",
+          strokeWidth: editable ? 2 : 1.5,
+          opacity: editable ? 1 : 0.55
+        },
+        labelStyle: {
+          fill: editable ? "#f8fafc" : "#94a3b8",
+          fontSize: 12,
+          fontWeight: 700
+        },
+        labelBgStyle: {
+          fill: "rgba(5, 10, 22, 0.88)",
+          fillOpacity: 0.9
+        }
+      };
+    });
+  }, [appMode, themePaletteId, visibleLinks]);
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
     setAtlas((current) => (current ? updater(current) : current));
@@ -300,11 +332,16 @@ function AtlasEditor() {
       total_tiles: atlas?.tiles.length ?? 0,
       total_links: atlas?.links.length ?? 0,
       search_active: Boolean(searchTerm.trim()),
+      app_mode: appMode,
+      live_tiles: lifecycleCounts.liveTiles,
+      planned_tiles: lifecycleCounts.plannedTiles,
+      live_links: lifecycleCounts.liveLinks,
+      planned_links: lifecycleCounts.plannedLinks,
       visible_type_filters: activeView?.visible_types.length ?? 0,
       visible_link_filters: activeView?.visible_links.length ?? 0,
       ...extra
     }),
-    [activeView, atlas, layoutTemplate, searchTerm, visibleLinks.length, visibleTiles.length]
+    [activeView, appMode, atlas, layoutTemplate, lifecycleCounts, searchTerm, visibleLinks.length, visibleTiles.length]
   );
 
   const selectTileAndFocus = useCallback(
@@ -477,6 +514,7 @@ function AtlasEditor() {
           : position ?? { x: 180 + atlas.tiles.length * 24, y: 160 + atlas.tiles.length * 18 },
         size: { width: 240, height: 132 },
         fields: { ...DEFAULT_FIELDS[type] },
+        lifecycle: appMode === "planning" ? "planned" : "live",
         notes: "",
         tags: []
       };
@@ -488,6 +526,7 @@ function AtlasEditor() {
             type: "contains",
             from_port: "child",
             to_port: "parent",
+            lifecycle: appMode === "planning" ? "planned" : "live",
             label: "contains",
             notes: "",
             directional: true
@@ -500,9 +539,9 @@ function AtlasEditor() {
       }));
       setSelection({ kind: "tile", id: tileId });
       setStatus(parentId ? "Subtile created" : "Tile created");
-      appendDebugEvent(parentId ? "tile.create_subtile" : "tile.create", parentId ? "Subtile created" : "Tile created", "info", { type, parent: parentId ?? null });
+      appendDebugEvent(parentId ? "tile.create_subtile" : "tile.create", parentId ? "Subtile created" : "Tile created", "info", { type, parent: parentId ?? null, lifecycle: tile.lifecycle });
     },
-    [appendDebugEvent, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const getViewportCenterPosition = useCallback(() => {
@@ -582,6 +621,12 @@ function AtlasEditor() {
       if (!atlas || !connection.source || !connection.target) return;
       const sourceTile = atlas.tiles.find((tile) => tile.id === connection.source);
       const targetTile = atlas.tiles.find((tile) => tile.id === connection.target);
+      if (!sourceTile || !targetTile) return;
+      if (!canConnectTiles(sourceTile, targetTile, appMode)) {
+        setStatus(appMode === "planning" ? "Connect from planned work only" : "Planned items are locked in Live View");
+        appendDebugEvent("canvas.blocked_connect", "Relationship creation blocked by lifecycle mode", "warning", getCanvasDebugContext({ source: sourceTile.id, target: targetTile.id, mode: appMode }));
+        return;
+      }
       const fromPort = asSourcePort(connection.sourceHandle);
       const toPort = asTargetPort(connection.targetHandle);
       const type = chooseLinkType(defaultLinkType(sourceTile, targetTile, fromPort, toPort));
@@ -598,6 +643,7 @@ function AtlasEditor() {
         type,
         from_port: fromPort,
         to_port: toPort,
+        lifecycle: appMode === "planning" ? "planned" : "live",
         label,
         notes: "",
         directional: true
@@ -605,26 +651,27 @@ function AtlasEditor() {
       updateAtlas((current) => ({ ...current, links: [...current.links, link] }));
       setSelection({ kind: "link", id: link.id });
       setStatus("Relationship created");
-      appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort });
+      appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort, lifecycle: link.lifecycle });
     },
-    [appendDebugEvent, atlas, getCanvasDebugContext, isInteractive, updateAtlas]
+    [appendDebugEvent, appMode, atlas, getCanvasDebugContext, isInteractive, updateAtlas]
   );
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
       if (!isInteractive) return;
-      setFlowNodes((current) => applyNodeChanges(changes, current));
+      setFlowNodes((current) => applyNodeChanges(changes.filter((change) => isEditableNodeChange(change, current, appMode)), current));
     },
-    [isInteractive]
+    [appMode, isInteractive]
   );
 
   const handleNodeDragStart = useCallback(
     (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
       if (!isInteractive) return;
+      if (!draggedNodes.some((draggedNode) => isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))) return;
       isNodeDragging.current = true;
       appendDebugEvent("tile.drag_start", "Tile drag started", "info", getCanvasDebugContext({ tile_id: node.id, dragged_count: draggedNodes.length }));
     },
-    [appendDebugEvent, getCanvasDebugContext, isInteractive]
+    [appendDebugEvent, appMode, getCanvasDebugContext, isInteractive]
   );
 
   const handleNodeDragStop = useCallback(
@@ -639,7 +686,15 @@ function AtlasEditor() {
         setFlowNodes(derivedNodes);
         return;
       }
-      const positionsById = new Map(draggedNodes.map((draggedNode) => [draggedNode.id, draggedNode.position]));
+      const positionsById = new Map(
+        draggedNodes
+          .filter((draggedNode) => isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))
+          .map((draggedNode) => [draggedNode.id, draggedNode.position])
+      );
+      if (!positionsById.size) {
+        setFlowNodes(derivedNodes);
+        return;
+      }
       updateAtlas((current) => ({
         ...current,
         tiles: current.tiles.map((tile) => {
@@ -659,7 +714,7 @@ function AtlasEditor() {
         })
       );
     },
-    [appendDebugEvent, derivedNodes, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, derivedNodes, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
   );
 
   const handleCanvasDoubleClick = useCallback(
@@ -695,6 +750,10 @@ function AtlasEditor() {
 
   const handleUpdateTile = useCallback(
     (tile: Tile) => {
+      if (!isLifecycleEditable(resolveLifecycle(tile), appMode)) {
+        setStatus("Selection is read-only in this mode");
+        return;
+      }
       updateAtlas((current) => {
         const previous = current.tiles.find((candidate) => candidate.id === tile.id);
         let links = current.links;
@@ -710,6 +769,7 @@ function AtlasEditor() {
                 type: "contains",
                 from_port: "child",
                 to_port: "parent",
+                lifecycle: resolveLifecycle(tile),
                 label: "contains",
                 notes: "",
                 directional: true
@@ -726,11 +786,16 @@ function AtlasEditor() {
       setStatus("Tile updated");
       appendDebugEvent("tile.update", "Tile updated", "info", { id: tile.id, type: tile.type });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, appMode, updateAtlas]
   );
 
   const handleDeleteTile = useCallback(
     (tileId: string) => {
+      const tile = atlas?.tiles.find((candidate) => candidate.id === tileId);
+      if (tile && !isLifecycleEditable(resolveLifecycle(tile), appMode)) {
+        setStatus("Selection is read-only in this mode");
+        return;
+      }
       if (!window.confirm("Delete this tile and its relationships?")) return;
       updateAtlas((current) => ({
         ...current,
@@ -741,7 +806,7 @@ function AtlasEditor() {
       setStatus("Tile deleted");
       appendDebugEvent("tile.delete", "Tile deleted", "warning", { id: tileId });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const handleDuplicateTile = useCallback(
@@ -749,6 +814,10 @@ function AtlasEditor() {
       if (!atlas) return;
       const source = atlas.tiles.find((tile) => tile.id === tileId);
       if (!source) return;
+      if (!isLifecycleEditable(resolveLifecycle(source), appMode)) {
+        setStatus("Selection is read-only in this mode");
+        return;
+      }
       const title = `${source.title} Copy`;
       const duplicateId = createId(source.type, title, atlas.tiles.map((tile) => tile.id));
       const duplicate: Tile = {
@@ -760,6 +829,7 @@ function AtlasEditor() {
           y: source.position.y + 36
         },
         fields: cloneFields(source.fields),
+        lifecycle: appMode === "planning" ? "planned" : resolveLifecycle(source),
         tags: [...(source.tags ?? [])],
         notes: source.notes ?? ""
       };
@@ -771,11 +841,15 @@ function AtlasEditor() {
       setStatus("Tile duplicated");
       appendDebugEvent("tile.duplicate", "Tile duplicated", "info", { source: tileId, duplicate: duplicateId, type: source.type });
     },
-    [appendDebugEvent, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const handleUpdateLink = useCallback(
     (link: Link) => {
+      if (!isLifecycleEditable(resolveLifecycle(link), appMode)) {
+        setStatus("Selection is read-only in this mode");
+        return;
+      }
       updateAtlas((current) => ({
         ...current,
         links: current.links.map((candidate) => (candidate.id === link.id ? link : candidate))
@@ -783,17 +857,63 @@ function AtlasEditor() {
       setStatus("Relationship updated");
       appendDebugEvent("link.update", "Relationship updated", "info", { id: link.id, type: link.type });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, appMode, updateAtlas]
   );
 
   const handleDeleteLink = useCallback(
     (linkId: string) => {
+      const link = atlas?.links.find((candidate) => candidate.id === linkId);
+      if (link && !isLifecycleEditable(resolveLifecycle(link), appMode)) {
+        setStatus("Selection is read-only in this mode");
+        return;
+      }
       updateAtlas((current) => ({ ...current, links: current.links.filter((link) => link.id !== linkId) }));
       setSelection(null);
       setStatus("Relationship deleted");
       appendDebugEvent("link.delete", "Relationship deleted", "warning", { id: linkId });
     },
+    [appendDebugEvent, appMode, atlas, updateAtlas]
+  );
+
+  const handlePromoteTile = useCallback(
+    (tileId: string) => {
+      updateAtlas((current) => {
+        const liveAfterPromotion = new Set(current.tiles.filter((tile) => resolveLifecycle(tile) === "live" || tile.id === tileId).map((tile) => tile.id));
+        return {
+          ...current,
+          tiles: current.tiles.map((tile) => (tile.id === tileId ? { ...tile, lifecycle: "live" as Lifecycle } : tile)),
+          links: current.links.map((link) =>
+            resolveLifecycle(link) === "planned" && (link.from === tileId || link.to === tileId) && liveAfterPromotion.has(link.from) && liveAfterPromotion.has(link.to)
+              ? { ...link, lifecycle: "live" as Lifecycle }
+              : link
+          )
+        };
+      });
+      setStatus("Planned tile promoted to live");
+      appendDebugEvent("planning.promote_tile", "Planned tile promoted to live", "info", { tile_id: tileId });
+    },
     [appendDebugEvent, updateAtlas]
+  );
+
+  const handlePromoteLink = useCallback(
+    (linkId: string) => {
+      if (!atlas) return;
+      const link = atlas.links.find((candidate) => candidate.id === linkId);
+      if (!link) return;
+      const source = atlas.tiles.find((tile) => tile.id === link.from);
+      const target = atlas.tiles.find((tile) => tile.id === link.to);
+      if (resolveLifecycle(source) !== "live" || resolveLifecycle(target) !== "live") {
+        setStatus("Promote endpoint tiles before promoting this relationship");
+        return;
+      }
+      updateAtlas((current) => ({
+        ...current,
+        links: current.links.map((candidate) => (candidate.id === linkId ? { ...candidate, lifecycle: "live" as Lifecycle } : candidate))
+      }));
+      setStatus("Planned relationship promoted to live");
+      appendDebugEvent("planning.promote_link", "Planned relationship promoted to live", "info", { link_id: linkId });
+    },
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const handleSelectView = useCallback(
@@ -1034,6 +1154,18 @@ function AtlasEditor() {
           <button className="toolbar-button" onClick={() => void handleExport("mermaid")} disabled={Boolean(isExporting)}>
             {isExporting === "mermaid" ? <Loader2 className="spin" size={18} /> : <FileCode2 size={18} />} Export Mermaid
           </button>
+          <button
+            className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}
+            onClick={() => {
+              const nextMode: AppMode = appMode === "planning" ? "live" : "planning";
+              setAppMode(nextMode);
+              setSelection(null);
+              setStatus(nextMode === "planning" ? "Planning Mode" : "Live View");
+              appendDebugEvent("planning.mode", nextMode === "planning" ? "Planning Mode enabled" : "Live View enabled", "info", { mode: nextMode });
+            }}
+          >
+            <Plus size={18} /> Planning Mode
+          </button>
           <div className="search-box">
             <Search size={18} />
             <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
@@ -1229,6 +1361,8 @@ function AtlasEditor() {
               <span>{status}</span>
               <span>{visibleTiles.length} tiles</span>
               <span>{visibleLinks.length} links</span>
+              <span>{appMode === "planning" ? "Planning Mode" : "Live View"}</span>
+              {lifecycleCounts.plannedTiles || lifecycleCounts.plannedLinks ? <span>{lifecycleCounts.plannedTiles} planned tiles / {lifecycleCounts.plannedLinks} planned links</span> : null}
               {searchTerm.trim() ? <span>{searchResults.length} search results</span> : null}
               {brokenLinkCount > 0 ? <strong>{brokenLinkCount} broken links</strong> : <span>No broken links</span>}
               {warnings.length > 0 ? <strong>{warnings.length} warnings</strong> : null}
@@ -1240,6 +1374,7 @@ function AtlasEditor() {
 
           <Inspector
             atlas={atlas}
+            mode={appMode}
             selection={selection}
             onUpdateTile={handleUpdateTile}
             onDeleteTile={handleDeleteTile}
@@ -1247,6 +1382,8 @@ function AtlasEditor() {
             onAddSubtile={handleAddSubtile}
             onUpdateLink={handleUpdateLink}
             onDeleteLink={handleDeleteLink}
+            onPromoteTile={handlePromoteTile}
+            onPromoteLink={handlePromoteLink}
           />
         </main>
         {settingsOpen ? (
@@ -1299,6 +1436,27 @@ function resolveSourcePort(link: Link): LinkSourcePort {
 
 function resolveTargetPort(link: Link): LinkTargetPort {
   return link.to_port ?? (link.type === "contains" ? "parent" : "in");
+}
+
+function resolveLifecycle(item: Tile | Link | undefined | null): Lifecycle {
+  return item?.lifecycle === "planned" ? "planned" : "live";
+}
+
+function isLifecycleEditable(lifecycle: Lifecycle, mode: AppMode): boolean {
+  return mode === "planning" ? lifecycle === "planned" : lifecycle === "live";
+}
+
+function canConnectTiles(sourceTile: Tile, targetTile: Tile, mode: AppMode): boolean {
+  if (mode === "planning") {
+    return resolveLifecycle(sourceTile) === "planned" || resolveLifecycle(targetTile) === "planned";
+  }
+  return resolveLifecycle(sourceTile) === "live" && resolveLifecycle(targetTile) === "live";
+}
+
+function isEditableNodeChange(change: NodeChange, nodes: Node[], mode: AppMode): boolean {
+  if (!("id" in change)) return true;
+  const node = nodes.find((candidate) => candidate.id === change.id);
+  return isLifecycleEditable(resolveLifecycle(node?.data?.tile as Tile | undefined), mode);
 }
 
 function asSourcePort(value: string | null | undefined): LinkSourcePort {

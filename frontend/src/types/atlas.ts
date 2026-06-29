@@ -36,6 +36,8 @@ export type ThemePaletteId = "cyber" | "aurora" | "ember";
 export type DebugSeverity = "info" | "warning" | "error";
 export type LinkSourcePort = "out" | "child";
 export type LinkTargetPort = "in" | "parent";
+export type Lifecycle = "live" | "planned";
+export type AppMode = "live" | "planning";
 
 export interface FlowStep {
   order: number;
@@ -73,6 +75,7 @@ export interface Tile {
   parent?: string | null;
   position: Position;
   size?: Size | null;
+  lifecycle?: Lifecycle;
   fields: Record<string, unknown>;
   notes?: string;
   tags?: string[];
@@ -85,6 +88,7 @@ export interface Link {
   type: LinkType;
   from_port?: LinkSourcePort | null;
   to_port?: LinkTargetPort | null;
+  lifecycle?: Lifecycle;
   label?: string;
   notes?: string;
   directional?: boolean;

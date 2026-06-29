@@ -7,12 +7,14 @@ import type { Tile } from "../types/atlas";
 export interface TileNodeData extends Record<string, unknown> {
   accentColor?: string;
   hasChildren?: boolean;
+  isMuted?: boolean;
+  lifecycle?: "live" | "planned";
   tile: Tile;
   parentTitle?: string;
 }
 
 export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, hasChildren, tile, parentTitle } = data as TileNodeData;
+  const { accentColor, hasChildren, isMuted, lifecycle = "live", tile, parentTitle } = data as TileNodeData;
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
@@ -21,6 +23,8 @@ export function TileNode({ data, selected }: NodeProps) {
   return (
     <div
       className={`tile-node tile-node--${tile.type} ${parentTitle ? "tile-node--child" : ""} ${hasChildren ? "tile-node--parent" : ""} ${
+        isMuted ? "tile-node--muted" : ""
+      } ${
         selected ? "tile-node--selected" : ""
       }`}
       style={{ "--tile-accent": accentColor ?? config.color } as CSSProperties}
@@ -36,6 +40,7 @@ export function TileNode({ data, selected }: NodeProps) {
           <div className="tile-node__title">{tile.title}</div>
           <div className="tile-node__type">{config.label}</div>
         </div>
+        <div className={lifecycle === "planned" ? "tile-node__lifecycle tile-node__lifecycle--planned" : "tile-node__lifecycle"}>{lifecycle}</div>
       </div>
       {parentTitle ? <div className="tile-node__parent">inside {parentTitle}</div> : null}
       {fieldEntries.length > 0 ? (

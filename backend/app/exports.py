@@ -79,7 +79,8 @@ def render_markdown(atlas: Atlas) -> str:
         lines.extend([f"## {section_title(tile_type)}", ""])
         for tile in sorted(tiles, key=lambda item: item.title.lower()):
             parent = tile_by_id.get(tile.parent) if tile.parent else None
-            lines.extend([f"### {tile.title}", "", f"- ID: `{tile.id}`", f"- Type: `{tile.type}`"])
+            lifecycle = resolve_lifecycle(tile)
+            lines.extend([f"### {tile.title}", "", f"- ID: `{tile.id}`", f"- Type: `{tile.type}`", f"- Lifecycle: `{lifecycle}`"])
             if parent:
                 lines.append(f"- Parent: {parent.title}")
             if tile.tags:
@@ -146,14 +147,18 @@ def render_mermaid(atlas: Atlas) -> str:
         return "\n".join(lines) + "\n"
 
     for tile in atlas.tiles:
-        lines.append(f'    {node_ids[tile.id]}["{escape_mermaid(tile.title)}"]')
+        title = f"{tile.title} (planned)" if resolve_lifecycle(tile) == "planned" else tile.title
+        lines.append(f'    {node_ids[tile.id]}["{escape_mermaid(title)}"]')
 
     for link in atlas.links:
         source = node_ids.get(link.from_)
         target = node_ids.get(link.to)
         if not source or not target:
             continue
-        label = escape_mermaid(link.label or link.type)
+        label_text = link.label or link.type
+        if resolve_lifecycle(link) == "planned":
+            label_text = f"{label_text} (planned)"
+        label = escape_mermaid(label_text)
         connector = "-->" if link.directional else "---"
         lines.append(f'    {source} {connector}|"{label}"| {target}')
 
@@ -180,7 +185,12 @@ def describe_link(link: Link, tile_by_id: dict[str, Tile]) -> str:
     label = link.label or link.type.replace("_", " ")
     arrow = "->" if link.directional else "--"
     route = f" [{resolve_source_port(link)} -> {resolve_target_port(link)}]"
-    return f"{source_title} {arrow} {target_title}: {label} (`{link.type}`){route}"
+    lifecycle = f" `{resolve_lifecycle(link)}`"
+    return f"{source_title} {arrow} {target_title}: {label} (`{link.type}`){route}{lifecycle}"
+
+
+def resolve_lifecycle(item: Tile | Link) -> str:
+    return getattr(item, "lifecycle", "live") or "live"
 
 
 def resolve_source_port(link: Link) -> str:

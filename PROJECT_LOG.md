@@ -34,6 +34,8 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Search results should be actionable from the left panel. | Users need direct selection/focus of matching tiles and relationships, including items hidden under collapsed parents. |
 | 2026-06-29 | Hierarchy and communication should use separate visual linkage paths. | Parent/child containment remains bottom-to-top, while calls/flows/dependencies use right-side `OUT` to left-side `IN` handles. |
 | 2026-06-29 | Collapse/expand controls should be removed from the canvas. | Testing showed hiding descendants is not necessary, and always-visible hierarchy avoids stale local collapse state hiding tiles. |
+| 2026-06-29 | Planning work should persist as atlas data. | Planned objects are stored as `lifecycle: planned` on normal tiles and links instead of a temporary overlay or separate file. |
+| 2026-06-29 | Live View remains editable for live objects. | Planning Mode edits only planned objects, while Live View can still maintain current live atlas data and promote planned work. |
 
 ## Bugs And Fixes
 
@@ -55,3 +57,4 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Fit View framed the atlas too tightly. | Added shared padded fit-view options for initial fit and the Controls fit button. |
 | 2026-06-29 | Double-clicking blank canvas zoomed into the clicked area instead of fitting the full view. | Disabled React Flow double-click zoom and mapped blank-canvas double-click to padded Fit View. |
 | 2026-06-29 | Interactivity lock prevented link creation but still allowed tile movement. | Added app-owned interactivity state that locks both node dragging and link creation while preserving selection and inspector editing. |
+| 2026-06-29 | CTRoadmap needed a way to model planned infrastructure separately from current live infrastructure. | Added Planning Mode with lifecycle-aware styling, locking, editing, and Go Live promotion for planned tiles and relationships. |

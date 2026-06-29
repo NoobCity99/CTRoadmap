@@ -5,6 +5,69 @@ CTRoadmap is a local-first infrastructure atlas for documenting nodes, services,
 
 CTRoadmap is a GUI-first editor backed by `data/atlas.json`. It does not execute commands, SSH, Docker calls, or live checks.
 
+## Beta Docker Install
+
+The recommended beta release path is the published Docker image:
+
+```text
+ghcr.io/noobcity99/ctroadmap:beta
+```
+
+Beta users do not need to clone this repository or install Python, Node, or npm.
+
+Requirements:
+
+- Linux server
+- Docker
+- Docker Compose v2
+- curl
+- Port 8088 reachable if accessing CTRoadmap from another machine
+
+Option A, safer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/main/CTR_install.sh -o CTR_install.sh
+chmod +x CTR_install.sh
+./CTR_install.sh
+```
+
+Option B, one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/main/CTR_install.sh | bash
+```
+
+Custom install directory:
+
+```bash
+CTR_INSTALL_DIR=/opt/ctroadmap-beta ./CTR_install.sh
+```
+
+Management commands:
+
+```bash
+cd ~/ctroadmap-beta
+docker compose logs -f
+docker compose down
+docker compose up -d
+docker compose pull && docker compose up -d
+```
+
+Uninstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/main/CTR_uninstall.sh -o CTR_uninstall.sh
+chmod +x CTR_uninstall.sh
+./CTR_uninstall.sh
+```
+
+Persistent data lives in:
+
+```text
+~/ctroadmap-beta/data
+~/ctroadmap-beta/exports
+```
+
 ## Run With Docker
 
 ```bash
@@ -35,30 +98,6 @@ Backup data:
 cp data/atlas.json data/atlas.backup.json
 ```
 
-## Development
-
-Backend:
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cd ..
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8088
-```
-
-Use Python 3.12 or 3.13 for local backend development. The Docker image uses Python 3.12.
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The Vite dev server proxies `/api` to `http://localhost:8088`.
 
 ## Features
 

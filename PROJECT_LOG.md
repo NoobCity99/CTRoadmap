@@ -36,6 +36,13 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Collapse/expand controls should be removed from the canvas. | Testing showed hiding descendants is not necessary, and always-visible hierarchy avoids stale local collapse state hiding tiles. |
 | 2026-06-29 | Planning work should persist as atlas data. | Planned objects are stored as `lifecycle: planned` on normal tiles and links instead of a temporary overlay or separate file. |
 | 2026-06-29 | Live View remains editable for live objects. | Planning Mode edits only planned objects, while Live View can still maintain current live atlas data and promote planned work. |
+| 2026-06-28 | Beta users should install from a published Docker image instead of cloning the repo. | The first release target is a Docker-image-based install using `ghcr.io/noobcity99/ctroadmap:beta`. |
+
+## Release Changes
+
+| Date/Time | Files Created/Changed | Summary | Assumptions | Validation Results |
+|---|---|---|---|---|
+| 2026-06-28 23:56 PDT | Created `CTRBETA_release-compose.yml`, `CTR_install.sh`, `CTR_uninstall.sh`; changed `README.md` and `PROJECT_LOG.md`. | Docker-image-based beta release bootstrap added. | Image will be published as `ghcr.io/noobcity99/ctroadmap:beta`; installer targets Linux with Docker Compose v2. | `bash -n CTR_install.sh` passed; `bash -n CTR_uninstall.sh` passed; `docker compose -f CTRBETA_release-compose.yml config` passed; `git diff --check` passed. |
 
 ## Bugs And Fixes
 

@@ -9,3 +9,5 @@ exports/*
 !exports/.gitkeep
 ImportFeasability.md
 entanglement_audit.md
+Beta_Deploy.md
+README2.md

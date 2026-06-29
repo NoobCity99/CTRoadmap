@@ -68,6 +68,7 @@ The Vite dev server proxies `/api` to `http://localhost:8088`.
 - Edit relationship type, label, notes, endpoints, and directionality.
 - Duplicate tiles from the inspector or with `Ctrl/Cmd+D`.
 - Add ordered flow steps to `flow` tiles from the inspector.
+- PLANNING MODE: Plan nodes & connections before going live, visual distinction while planning.
 - Document non-executing checks with command and expected-result fields.
 - Save and reload the canonical atlas at `data/atlas.json`.
 - Create, edit, delete, and switch saved views.
@@ -76,6 +77,7 @@ The Vite dev server proxies `/api` to `http://localhost:8088`.
 - Download the current atlas JSON from the browser.
 - Export Markdown, YAML, and Mermaid files to `exports/`.
 - Download generated export files from the toolbar.
+- LOCK canvas to prevent accidental changes while navigating.
 - See warnings for broken links and missing required tile data.
 - See warnings for incomplete flows/checks.
 - Load optional CTDC sample data from the toolbar.

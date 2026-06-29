@@ -7,3 +7,5 @@ frontend/dist/
 data/*.backup.json
 exports/*
 !exports/.gitkeep
+ImportFeasability.md
+entanglement_audit.md

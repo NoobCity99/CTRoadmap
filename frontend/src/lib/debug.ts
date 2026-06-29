@@ -1,6 +1,7 @@
 import type { Atlas, DebugEvent, DebugSeverity } from "../types/atlas";
 
 const SECRET_MARKERS = ["secret", "password", "token", "key", "credential"];
+let fallbackDebugIdCounter = 0;
 
 export function createFrontendDebugEvent(
   action: string,
@@ -9,7 +10,7 @@ export function createFrontendDebugEvent(
   context: Record<string, unknown> = {}
 ): DebugEvent {
   return {
-    id: crypto.randomUUID(),
+    id: createDebugEventId(),
     timestamp: new Date().toISOString(),
     source: "frontend",
     severity,
@@ -17,6 +18,24 @@ export function createFrontendDebugEvent(
     message,
     context: sanitizeDebugContext(context)
   };
+}
+
+function createDebugEventId(): string {
+  const cryptoApi = globalThis.crypto;
+  if (typeof cryptoApi?.randomUUID === "function") {
+    return cryptoApi.randomUUID();
+  }
+
+  if (typeof cryptoApi?.getRandomValues === "function") {
+    const values = new Uint32Array(4);
+    cryptoApi.getRandomValues(values);
+    return `debug_${Array.from(values)
+      .map((value) => value.toString(16).padStart(8, "0"))
+      .join("")}`;
+  }
+
+  fallbackDebugIdCounter += 1;
+  return `debug_${Date.now().toString(36)}_${fallbackDebugIdCounter.toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function sanitizeDebugContext(context: Record<string, unknown>): Record<string, unknown> {

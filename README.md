@@ -150,3 +150,7 @@ GET  /api/export/mermaid/download
 ## Project Log
 
 Planning decisions, questions and answers, bugs, and fixes are tracked in `PROJECT_LOG.md`.
+
+## License
+
+CTRoadmap is licensed under the Apache License 2.0. See [LICENSE](LICENSE).

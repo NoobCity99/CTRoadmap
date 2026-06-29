@@ -3,21 +3,138 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": null
+    "updated_at": "2026-06-29T00:38:52.509926+00:00"
   },
-  "tiles": [],
-  "links": [],
+  "tiles": [
+    {
+      "id": "node_server1",
+      "type": "node",
+      "title": "server1",
+      "parent": null,
+      "position": {
+        "x": 56.78112987697372,
+        "y": -142.96537326695557
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "mount_samba",
+      "type": "mount",
+      "title": "/samba",
+      "parent": null,
+      "position": {
+        "x": 376.0183341010231,
+        "y": -138.0191419919846
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "path": "",
+        "source": "",
+        "options": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "node_micro_server",
+      "type": "node",
+      "title": "micro server",
+      "parent": null,
+      "position": {
+        "x": 256.6247222392837,
+        "y": -625.6319153817717
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "flow_wake_sleep",
+      "type": "flow",
+      "title": "WAKE/SLEEP",
+      "parent": null,
+      "position": {
+        "x": -201.59973584628744,
+        "y": -429.296630256013
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "fields": {
+        "trigger": "wake button",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    }
+  ],
+  "links": [
+    {
+      "id": "link_node_micro_server_flow_wake_sleep_depends_on",
+      "from": "node_micro_server",
+      "to": "flow_wake_sleep",
+      "type": "hosts",
+      "label": "runs",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_flow_wake_sleep_node_server1_calls",
+      "from": "flow_wake_sleep",
+      "to": "node_server1",
+      "type": "calls",
+      "label": "magic packet",
+      "notes": "",
+      "directional": true
+    }
+  ],
   "views": [
     {
       "id": "physical",
       "title": "Physical",
       "description": "Hardware, cabling, drives, and mounts",
-      "visible_types": ["node", "drive", "mount"],
-      "visible_links": ["contains", "mounted_at", "runs", "hosts", "related_to"],
+      "visible_types": [
+        "node",
+        "drive",
+        "mount"
+      ],
+      "visible_links": [
+        "contains",
+        "mounted_at",
+        "runs",
+        "hosts",
+        "related_to"
+      ],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "layered_hierarchy"
     },
@@ -25,12 +142,24 @@
       "id": "services",
       "title": "Services",
       "description": "Applications, daemons, and containers",
-      "visible_types": ["node", "service", "container", "url", "check"],
-      "visible_links": ["runs", "hosts", "depends_on", "exposes_url", "validates_with"],
+      "visible_types": [
+        "node",
+        "service",
+        "container",
+        "url",
+        "check"
+      ],
+      "visible_links": [
+        "runs",
+        "hosts",
+        "depends_on",
+        "exposes_url",
+        "validates_with"
+      ],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "canvas_topology"
     },
@@ -38,12 +167,23 @@
       "id": "storage",
       "title": "Storage",
       "description": "Storage devices and paths",
-      "visible_types": ["node", "drive", "mount", "service", "container"],
-      "visible_links": ["uses_storage", "mounted_at", "backs_up_to", "contains"],
+      "visible_types": [
+        "node",
+        "drive",
+        "mount",
+        "service",
+        "container"
+      ],
+      "visible_links": [
+        "uses_storage",
+        "mounted_at",
+        "backs_up_to",
+        "contains"
+      ],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "canvas_topology"
     },
@@ -51,12 +191,24 @@
       "id": "security",
       "title": "Security",
       "description": "Secret references, configs, and access dependencies",
-      "visible_types": ["node", "script", "config", "secret_ref", "flow", "check"],
-      "visible_links": ["requires_key", "requires_config", "validates_with", "fails_if"],
+      "visible_types": [
+        "node",
+        "script",
+        "config",
+        "secret_ref",
+        "flow",
+        "check"
+      ],
+      "visible_links": [
+        "requires_key",
+        "requires_config",
+        "validates_with",
+        "fails_if"
+      ],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "canvas_topology"
     },
@@ -64,12 +216,26 @@
       "id": "flows",
       "title": "Flows",
       "description": "Operational functions and process flows",
-      "visible_types": ["flow", "script", "service", "url", "check", "secret_ref", "config"],
-      "visible_links": ["calls", "controls", "requires_key", "requires_config", "fails_if"],
+      "visible_types": [
+        "flow",
+        "script",
+        "service",
+        "url",
+        "check",
+        "secret_ref",
+        "config"
+      ],
+      "visible_links": [
+        "calls",
+        "controls",
+        "requires_key",
+        "requires_config",
+        "fails_if"
+      ],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "layered_hierarchy"
     },
@@ -80,9 +246,9 @@
       "visible_types": [],
       "visible_links": [],
       "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
       },
       "layout_template": "canvas_topology"
     }

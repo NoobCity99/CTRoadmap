@@ -40,6 +40,8 @@ LinkType = Literal[
 ]
 
 LayoutTemplate = Literal["canvas_topology", "layered_hierarchy"]
+LinkSourcePort = Literal["out", "child"]
+LinkTargetPort = Literal["in", "parent"]
 
 
 class Position(BaseModel):
@@ -72,11 +74,15 @@ class Tile(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def reject_secret_values(self) -> "Tile":
+    def validate_type_specific_fields(self) -> "Tile":
         if self.type == "secret_ref":
             if self.fields.get("stores_secret_value") is True:
                 raise ValueError("secret_ref tiles cannot store secret values")
             scan_for_secret_values(self.fields)
+        if self.type == "check" and is_truthy_execution_flag(self.fields.get("execution_enabled")):
+            raise ValueError("check tiles cannot enable command execution")
+        if self.type == "flow":
+            validate_flow_steps_shape(self.fields.get("steps", []), self.id)
         return self
 
 
@@ -87,6 +93,8 @@ class Link(BaseModel):
     from_: str = Field(alias="from", min_length=1)
     to: str = Field(min_length=1)
     type: LinkType
+    from_port: LinkSourcePort | None = None
+    to_port: LinkTargetPort | None = None
     label: str = ""
     notes: str = ""
     directional: bool = True
@@ -154,6 +162,9 @@ class Atlas(BaseModel):
                 raise ValueError(f"link {link.id} references missing source {link.from_}")
             if link.to not in tile_ids:
                 raise ValueError(f"link {link.id} references missing target {link.to}")
+        for tile in self.tiles:
+            if tile.type == "flow":
+                validate_flow_steps_references(tile.fields.get("steps", []), tile.id, tile_ids)
         if not self.views:
             self.views = default_views()
         return self
@@ -183,6 +194,52 @@ def scan_for_secret_values(value: Any, path: str = "fields") -> None:
     elif isinstance(value, list):
         for index, child in enumerate(value):
             scan_for_secret_values(child, f"{path}[{index}]")
+
+
+def validate_flow_steps_shape(value: Any, tile_id: str) -> None:
+    if value in (None, ""):
+        return
+    if not isinstance(value, list):
+        raise ValueError(f"flow tile {tile_id} fields.steps must be a list")
+    seen_orders: set[int] = set()
+    for index, step in enumerate(value):
+        if not isinstance(step, dict):
+            raise ValueError(f"flow tile {tile_id} step {index + 1} must be an object")
+        order = step.get("order")
+        if not isinstance(order, int) or order < 1:
+            raise ValueError(f"flow tile {tile_id} step {index + 1} must have a positive integer order")
+        if order in seen_orders:
+            raise ValueError(f"flow tile {tile_id} has duplicate flow step order {order}")
+        seen_orders.add(order)
+        if not str(step.get("from", "")).strip():
+            raise ValueError(f"flow tile {tile_id} step {order} must have a source tile")
+        if not str(step.get("to", "")).strip():
+            raise ValueError(f"flow tile {tile_id} step {order} must have a target tile")
+        if not str(step.get("action", "")).strip():
+            raise ValueError(f"flow tile {tile_id} step {order} must have an action")
+
+
+def validate_flow_steps_references(value: Any, tile_id: str, tile_ids: set[str]) -> None:
+    if not isinstance(value, list):
+        return
+    for step in value:
+        if not isinstance(step, dict):
+            continue
+        order = step.get("order", "?")
+        source = str(step.get("from", "")).strip()
+        target = str(step.get("to", "")).strip()
+        if source not in tile_ids:
+            raise ValueError(f"flow tile {tile_id} step {order} references missing source tile {source}")
+        if target not in tile_ids:
+            raise ValueError(f"flow tile {tile_id} step {order} references missing target tile {target}")
+
+
+def is_truthy_execution_flag(value: Any) -> bool:
+    if value is True:
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "on", "enabled"}
+    return False
 
 
 def default_views() -> list[View]:

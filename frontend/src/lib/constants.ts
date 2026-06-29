@@ -99,7 +99,7 @@ export const DEFAULT_FIELDS: Record<TileType, Record<string, unknown>> = {
     allowed_command: "",
     stores_secret_value: false
   },
-  flow: { trigger: "", purpose: "" },
+  flow: { trigger: "", purpose: "", steps: [] },
   url: { url: "", protocol: "", purpose: "" },
   check: { command: "", expected_result: "", execution_enabled: false },
   note: { text: "" }

@@ -1,13 +1,14 @@
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { Atlas, Link, LinkType, Selection, Tile, TileType } from "../types/atlas";
+import type { Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
   onDeleteTile: (tileId: string) => void;
+  onDuplicateTile: (tileId: string) => void;
   onAddSubtile: (parentId: string) => void;
   onUpdateLink: (link: Link) => void;
   onDeleteLink: (linkId: string) => void;
@@ -18,6 +19,7 @@ export function Inspector({
   selection,
   onUpdateTile,
   onDeleteTile,
+  onDuplicateTile,
   onAddSubtile,
   onUpdateLink,
   onDeleteLink
@@ -30,6 +32,7 @@ export function Inspector({
     const Icon = config.icon;
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
+    const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(([key]) => !(selectedTile.type === "flow" && key === "steps"));
 
     return (
       <aside className="inspector">
@@ -91,18 +94,22 @@ export function Inspector({
         </label>
         <div className="field-editor">
           <div className="field-editor__title">Fields</div>
-          {Object.entries(selectedTile.fields ?? {}).map(([key, value]) => (
+          {fieldEntries.map(([key, value]) => (
             <label key={key}>
               {key}
-              <input
-                value={String(value)}
-                onChange={(event) =>
-                  onUpdateTile({
-                    ...selectedTile,
-                    fields: { ...selectedTile.fields, [key]: coerceFieldValue(value, event.target.value) }
-                  })
-                }
-              />
+              {selectedTile.type === "check" && key === "execution_enabled" ? (
+                <input value="false" disabled />
+              ) : (
+                <input
+                  value={String(value)}
+                  onChange={(event) =>
+                    onUpdateTile({
+                      ...selectedTile,
+                      fields: { ...selectedTile.fields, [key]: coerceFieldValue(value, event.target.value) }
+                    })
+                  }
+                />
+              )}
             </label>
           ))}
           <button
@@ -116,6 +123,7 @@ export function Inspector({
             <Plus size={16} /> Add Field
           </button>
         </div>
+        {selectedTile.type === "flow" ? <FlowStepEditor atlas={atlas} tile={selectedTile} onUpdateTile={onUpdateTile} /> : null}
         <label>
           Notes
           <textarea
@@ -125,6 +133,9 @@ export function Inspector({
         </label>
         <button className="ghost-button" onClick={() => onAddSubtile(selectedTile.id)}>
           <Plus size={16} /> Add Subtile
+        </button>
+        <button className="ghost-button" onClick={() => onDuplicateTile(selectedTile.id)}>
+          <Copy size={16} /> Duplicate Tile
         </button>
         <button className="danger-button" onClick={() => onDeleteTile(selectedTile.id)}>
           <Trash2 size={16} /> Delete Tile
@@ -178,13 +189,41 @@ export function Inspector({
           Type
           <select
             value={selectedLink.type}
-            onChange={(event) => onUpdateLink({ ...selectedLink, type: event.target.value as LinkType })}
+            onChange={(event) => {
+              const type = event.target.value as LinkType;
+              onUpdateLink({
+                ...selectedLink,
+                type,
+                from_port: type === "contains" ? "child" : selectedLink.from_port,
+                to_port: type === "contains" ? "parent" : selectedLink.to_port
+              });
+            }}
           >
             {LINK_TYPES.map((type) => (
               <option key={type} value={type}>
                 {type}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          From Port
+          <select
+            value={resolveSourcePort(selectedLink)}
+            onChange={(event) => onUpdateLink({ ...selectedLink, from_port: event.target.value as LinkSourcePort })}
+          >
+            <option value="out">OUT side</option>
+            <option value="child">Child bottom</option>
+          </select>
+        </label>
+        <label>
+          To Port
+          <select
+            value={resolveTargetPort(selectedLink)}
+            onChange={(event) => onUpdateLink({ ...selectedLink, to_port: event.target.value as LinkTargetPort })}
+          >
+            <option value="in">IN side</option>
+            <option value="parent">Parent top</option>
           </select>
         </label>
         <label>
@@ -227,6 +266,152 @@ export function Inspector({
   );
 }
 
+interface FlowStepEditorProps {
+  atlas: Atlas;
+  tile: Tile;
+  onUpdateTile: (tile: Tile) => void;
+}
+
+function FlowStepEditor({ atlas, tile, onUpdateTile }: FlowStepEditorProps) {
+  const steps = normalizeFlowSteps(tile.fields.steps);
+  const relatedLinks = atlas.links.filter((link) => link.from === tile.id || link.to === tile.id);
+  const dependencies = relatedLinks.filter((link) => ["depends_on", "requires_key", "requires_config", "validates_with"].includes(link.type));
+  const failures = relatedLinks.filter((link) => link.type === "fails_if");
+
+  function updateSteps(nextSteps: FlowStep[]) {
+    onUpdateTile({
+      ...tile,
+      fields: {
+        ...tile.fields,
+        steps: nextSteps.map((step, index) => ({ ...step, order: index + 1 }))
+      }
+    });
+  }
+
+  function updateStep(index: number, patch: Partial<FlowStep>) {
+    updateSteps(steps.map((step, stepIndex) => (stepIndex === index ? { ...step, ...patch } : step)));
+  }
+
+  function addStep() {
+    const firstTile = atlas.tiles[0]?.id ?? tile.id;
+    const secondTile = atlas.tiles.find((candidate) => candidate.id !== firstTile)?.id ?? firstTile;
+    updateSteps([
+      ...steps,
+      {
+        order: steps.length + 1,
+        from: firstTile,
+        to: secondTile,
+        action: "Describe action"
+      }
+    ]);
+  }
+
+  function moveStep(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= steps.length) return;
+    const nextSteps = [...steps];
+    const current = nextSteps[index];
+    nextSteps[index] = nextSteps[targetIndex];
+    nextSteps[targetIndex] = current;
+    updateSteps(nextSteps);
+  }
+
+  return (
+    <div className="flow-editor">
+      <div className="field-editor__title">Flow Steps</div>
+      {steps.length ? (
+        steps.map((step, index) => (
+          <div key={`${step.order}_${index}`} className="flow-step-row">
+            <div className="flow-step-row__top">
+              <strong>Step {index + 1}</strong>
+              <div className="flow-step-row__actions">
+                <button className="mini-icon-button" onClick={() => moveStep(index, -1)} disabled={index === 0} title="Move step up">
+                  <ChevronUp size={14} />
+                </button>
+                <button className="mini-icon-button" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title="Move step down">
+                  <ChevronDown size={14} />
+                </button>
+                <button className="mini-icon-button mini-icon-button--danger" onClick={() => updateSteps(steps.filter((_, stepIndex) => stepIndex !== index))} title="Delete step">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+            <label>
+              From
+              <select value={step.from} onChange={(event) => updateStep(index, { from: event.target.value })}>
+                {atlas.tiles.map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              To
+              <select value={step.to} onChange={(event) => updateStep(index, { to: event.target.value })}>
+                {atlas.tiles.map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Action
+              <input value={step.action} onChange={(event) => updateStep(index, { action: event.target.value })} />
+            </label>
+          </div>
+        ))
+      ) : (
+        <div className="flow-empty">No flow steps yet.</div>
+      )}
+      <button className="ghost-button" onClick={addStep}>
+        <Plus size={16} /> Add Flow Step
+      </button>
+      <FlowRelatedList title="Dependencies And Checks" links={dependencies} atlas={atlas} focusTileId={tile.id} />
+      <FlowRelatedList title="Failure Points" links={failures} atlas={atlas} focusTileId={tile.id} />
+    </div>
+  );
+}
+
+function FlowRelatedList({ title, links, atlas, focusTileId }: { title: string; links: Link[]; atlas: Atlas; focusTileId: string }) {
+  return (
+    <div className="flow-related">
+      <div className="flow-related__title">{title}</div>
+      {links.length ? (
+        links.map((link) => {
+          const otherId = link.from === focusTileId ? link.to : link.from;
+          const fromTile = atlas.tiles.find((tile) => tile.id === link.from);
+          const toTile = atlas.tiles.find((tile) => tile.id === link.to);
+          const otherTile = atlas.tiles.find((tile) => tile.id === otherId);
+          return (
+            <div key={link.id} className="flow-related__item">
+              {fromTile?.title ?? link.from} {"->"} {toTile?.title ?? link.to}: {link.label || link.type}
+              {otherTile ? <span>{otherTile.type}</span> : null}
+            </div>
+          );
+        })
+      ) : (
+        <div className="flow-empty">None linked yet.</div>
+      )}
+    </div>
+  );
+}
+
+function normalizeFlowSteps(value: unknown): FlowStep[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((step): step is Record<string, unknown> => Boolean(step) && typeof step === "object")
+    .map((step, index) => ({
+      order: Number(step.order) || index + 1,
+      from: String(step.from ?? ""),
+      to: String(step.to ?? ""),
+      action: String(step.action ?? "")
+    }))
+    .sort((a, b) => a.order - b.order)
+    .map((step, index) => ({ ...step, order: index + 1 }));
+}
+
 function coerceFieldValue(original: unknown, next: string): unknown {
   if (typeof original === "boolean") {
     return next === "true" || next === "1" || next.toLowerCase() === "yes";
@@ -247,4 +432,12 @@ function getDescendantIds(tiles: Tile[], tileId: string): Set<string> {
     }
   }
   return descendants;
+}
+
+function resolveSourcePort(link: Link): LinkSourcePort {
+  return link.from_port ?? (link.type === "contains" ? "child" : "out");
+}
+
+function resolveTargetPort(link: Link): LinkTargetPort {
+  return link.to_port ?? (link.type === "contains" ? "parent" : "in");
 }

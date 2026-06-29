@@ -31,6 +31,30 @@ export type LinkType =
   | "related_to";
 
 export type LayoutTemplate = "canvas_topology" | "layered_hierarchy";
+export type ExportFormat = "markdown" | "yaml" | "mermaid";
+export type ThemePaletteId = "cyber" | "aurora" | "ember";
+export type DebugSeverity = "info" | "warning" | "error";
+export type LinkSourcePort = "out" | "child";
+export type LinkTargetPort = "in" | "parent";
+
+export interface FlowStep {
+  order: number;
+  from: string;
+  to: string;
+  action: string;
+}
+
+export interface FlowFields extends Record<string, unknown> {
+  trigger: string;
+  purpose: string;
+  steps: FlowStep[];
+}
+
+export interface CheckFields extends Record<string, unknown> {
+  command: string;
+  expected_result: string;
+  execution_enabled: false;
+}
 
 export interface Position {
   x: number;
@@ -59,6 +83,8 @@ export interface Link {
   from: string;
   to: string;
   type: LinkType;
+  from_port?: LinkSourcePort | null;
+  to_port?: LinkTargetPort | null;
   label?: string;
   notes?: string;
   directional?: boolean;
@@ -88,6 +114,36 @@ export interface Atlas {
   tiles: Tile[];
   links: Link[];
   views: View[];
+}
+
+export interface ExportResult {
+  format: ExportFormat;
+  filename: string;
+  download_url: string;
+  generated_at: string;
+}
+
+export interface HealthResult {
+  status: string;
+  app: string;
+}
+
+export interface DebugEvent {
+  id: string;
+  timestamp: string;
+  source: "frontend" | "backend";
+  severity: DebugSeverity;
+  action: string;
+  message: string;
+  context?: Record<string, unknown>;
+}
+
+export interface AtlasWarning {
+  id: string;
+  severity: "warning" | "error";
+  message: string;
+  targetKind: "tile" | "link" | "atlas";
+  targetId?: string;
 }
 
 export type Selection =

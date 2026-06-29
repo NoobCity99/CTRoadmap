@@ -1,4 +1,5 @@
 import {
+  applyNodeChanges,
   Background,
   Controls,
   MarkerType,
@@ -19,29 +20,57 @@ import {
   GitBranch,
   LayoutDashboard,
   Loader2,
+  Plus,
   Save,
   Search,
   Settings,
-  Upload
+  Trash2,
+  Upload,
+  X
 } from "lucide-react";
 import { type CSSProperties, type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector } from "./components/Inspector";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { TileNode } from "./components/TileNode";
-import { loadAtlas, saveAtlas } from "./lib/api";
-import { BRAND_ICON, DEFAULT_FIELDS, LINK_COLOR, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
+import {
+  clearBackendDebugLog,
+  downloadAtlasJson,
+  downloadExport,
+  generateExport,
+  importAtlasFile,
+  loadAtlas,
+  loadBackendDebugLog,
+  loadHealth,
+  saveAtlas
+} from "./lib/api";
+import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
+import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
 import { createSeedAtlas } from "./lib/seed";
-import type { Atlas, LayoutTemplate, Link, LinkType, Selection, Tile, TileType, View } from "./types/atlas";
+import { getLinkColor, getStoredThemePalette, getTileColor, storeThemePalette } from "./lib/theme";
+import { validateAtlasWarnings } from "./lib/validation";
+import type {
+  Atlas,
+  DebugEvent,
+  ExportFormat,
+  ExportResult,
+  LayoutTemplate,
+  Link,
+  LinkSourcePort,
+  LinkTargetPort,
+  LinkType,
+  Selection,
+  ThemePaletteId,
+  Tile,
+  TileType,
+  View
+} from "./types/atlas";
 
 const nodeTypes = { tileNode: TileNode };
 const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
 
-type PositionNodeChange = Extract<NodeChange, { type: "position" }> & {
-  position: NonNullable<Extract<NodeChange, { type: "position" }>["position"]>;
-};
-
-function isPositionNodeChange(change: NodeChange): change is PositionNodeChange {
-  return change.type === "position" && "id" in change && Boolean(change.position);
-}
+type SearchResult =
+  | { kind: "tile"; id: string; title: string; detail: string }
+  | { kind: "link"; id: string; title: string; detail: string };
 
 function App() {
   return (
@@ -52,18 +81,57 @@ function App() {
 }
 
 function AtlasEditor() {
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, setCenter } = useReactFlow();
   const canvasRef = useRef<HTMLElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const isNodeDragging = useRef(false);
   const lastPaletteDragAt = useRef(0);
+  const lastVisibleTileCount = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const lastWarningCount = useRef<number | null>(null);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [activeViewId, setActiveViewId] = useState("everything");
+  const [backendHealth, setBackendHealth] = useState("unknown");
+  const [collapsedTileIds, setCollapsedTileIds] = useState<Set<string>>(() => new Set(readStoredStringArray("ctroadmap.collapsedTileIds")));
+  const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
-  const [hiddenTypes, setHiddenTypes] = useState<Set<TileType>>(new Set());
-  const [hiddenLinks, setHiddenLinks] = useState<Set<LinkType>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [status, setStatus] = useState("Loading atlas...");
+  const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
+  const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
+  const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+
+  const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
+    setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
+  }, []);
+
+  useEffect(() => {
+    function handleWindowError(event: ErrorEvent) {
+      appendDebugEvent("runtime.error", "Unhandled frontend error", "error", {
+        error: event.message,
+        filename: event.filename,
+        line: event.lineno,
+        column: event.colno
+      });
+    }
+
+    function handleUnhandledRejection(event: PromiseRejectionEvent) {
+      appendDebugEvent("runtime.unhandled_rejection", "Unhandled frontend promise rejection", "error", {
+        error: errorToMessage(event.reason)
+      });
+    }
+
+    window.addEventListener("error", handleWindowError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    return () => {
+      window.removeEventListener("error", handleWindowError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
+  }, [appendDebugEvent]);
 
   useEffect(() => {
     loadAtlas()
@@ -75,29 +143,99 @@ function AtlasEditor() {
           setLayoutTemplate(defaultView.layout_template);
         }
         setStatus("Atlas loaded");
+        appendDebugEvent("atlas.load", "Atlas loaded", "info", atlasSummary(nextAtlas));
       })
       .catch((error) => {
         console.error(error);
         setStatus("Unable to load atlas");
+        appendDebugEvent("atlas.load", "Atlas load failed", "error", { error: error instanceof Error ? error.message : String(error) });
       });
-  }, []);
+  }, [appendDebugEvent]);
+
+  useEffect(() => {
+    window.localStorage.setItem("ctroadmap.collapsedTileIds", JSON.stringify(Array.from(collapsedTileIds)));
+  }, [collapsedTileIds]);
+
+  useEffect(() => {
+    storeThemePalette(themePaletteId);
+  }, [themePaletteId]);
 
   const activeView = useMemo(() => {
     if (!atlas) return null;
     return atlas.views.find((view) => view.id === activeViewId) ?? atlas.views[0] ?? null;
   }, [atlas, activeViewId]);
 
+  const childrenByParent = useMemo(() => {
+    const grouped = new Map<string, Tile[]>();
+    if (!atlas) return grouped;
+    for (const tile of atlas.tiles) {
+      if (!tile.parent) continue;
+      const children = grouped.get(tile.parent) ?? [];
+      children.push(tile);
+      grouped.set(tile.parent, children);
+    }
+    return grouped;
+  }, [atlas]);
+
+  const collapsedDescendantIds = useMemo(() => {
+    const descendants = new Set<string>();
+    function addChildren(parentId: string) {
+      for (const child of childrenByParent.get(parentId) ?? []) {
+        descendants.add(child.id);
+        addChildren(child.id);
+      }
+    }
+    for (const tileId of collapsedTileIds) {
+      addChildren(tileId);
+    }
+    return descendants;
+  }, [childrenByParent, collapsedTileIds]);
+
+  const searchResults = useMemo<SearchResult[]>(() => {
+    if (!atlas) return [];
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+    const tileMatches = atlas.tiles
+      .filter((tile) => {
+        const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
+        const searchable = `${tile.title} ${tile.type} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
+        return allowedByView && searchable.includes(query);
+      })
+      .map<SearchResult>((tile) => ({
+        kind: "tile",
+        id: tile.id,
+        title: tile.title,
+        detail: `${TILE_TYPE_CONFIG[tile.type].label} tile`
+      }));
+    const linkMatches = atlas.links
+      .filter((link) => {
+        const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
+        const searchable = `${link.type} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
+        return allowedByView && searchable.includes(query);
+      })
+      .map<SearchResult>((link) => {
+        const source = atlas.tiles.find((tile) => tile.id === link.from)?.title ?? link.from;
+        const target = atlas.tiles.find((tile) => tile.id === link.to)?.title ?? link.to;
+        return {
+          kind: "link",
+          id: link.id,
+          title: link.label || link.type,
+          detail: `${source} -> ${target}`
+        };
+      });
+    return [...tileMatches, ...linkMatches].slice(0, 30);
+  }, [activeView, atlas, searchTerm]);
+
   const visibleTiles = useMemo(() => {
     if (!atlas) return [];
     const query = searchTerm.trim().toLowerCase();
     return atlas.tiles.filter((tile) => {
       const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
-      const allowedByFilter = !hiddenTypes.has(tile.type);
-      const searchable = `${tile.title} ${tile.type} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
+      const searchable = `${tile.title} ${tile.type} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
       const allowedBySearch = !query || searchable.includes(query);
-      return allowedByView && allowedByFilter && allowedBySearch;
+      return allowedByView && allowedBySearch && !collapsedDescendantIds.has(tile.id);
     });
-  }, [activeView, atlas, hiddenTypes, searchTerm]);
+  }, [activeView, atlas, collapsedDescendantIds, searchTerm]);
 
   const visibleTileIds = useMemo(() => new Set(visibleTiles.map((tile) => tile.id)), [visibleTiles]);
 
@@ -105,12 +243,25 @@ function AtlasEditor() {
     if (!atlas) return [];
     return atlas.links.filter((link) => {
       const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
-      const allowedByFilter = !hiddenLinks.has(link.type);
-      return allowedByView && allowedByFilter && visibleTileIds.has(link.from) && visibleTileIds.has(link.to);
+      const searchable = `${link.type} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
+      const allowedBySearch = !searchTerm.trim() || searchable.includes(searchTerm.trim().toLowerCase()) || visibleTileIds.has(link.from) || visibleTileIds.has(link.to);
+      return allowedByView && allowedBySearch && visibleTileIds.has(link.from) && visibleTileIds.has(link.to);
     });
-  }, [activeView, atlas, hiddenLinks, visibleTileIds]);
+  }, [activeView, atlas, searchTerm, visibleTileIds]);
 
-  const nodes: Node[] = useMemo(() => {
+  const handleToggleCollapse = useCallback((tileId: string) => {
+    setCollapsedTileIds((current) => {
+      const next = new Set(current);
+      if (next.has(tileId)) {
+        next.delete(tileId);
+      } else {
+        next.add(tileId);
+      }
+      return next;
+    });
+  }, []);
+
+  const derivedNodes: Node[] = useMemo(() => {
     if (!atlas) return [];
     const layoutPositions = layoutTemplate === "layered_hierarchy" ? computeLayeredPositions(visibleTiles) : new Map<string, { x: number; y: number }>();
 
@@ -122,21 +273,36 @@ function AtlasEditor() {
         type: "tileNode",
         position,
         draggable: layoutTemplate === "canvas_topology",
-        data: { tile, parentTitle }
+        data: {
+          tile,
+          parentTitle,
+          accentColor: getTileColor(tile.type, themePaletteId),
+          childCount: childrenByParent.get(tile.id)?.length ?? 0,
+          hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
+          isCollapsed: collapsedTileIds.has(tile.id),
+          onToggleCollapse: handleToggleCollapse
+        }
       };
     });
-  }, [atlas, layoutTemplate, visibleTiles]);
+  }, [atlas, childrenByParent, collapsedTileIds, handleToggleCollapse, layoutTemplate, themePaletteId, visibleTiles]);
+
+  useEffect(() => {
+    if (isNodeDragging.current) return;
+    setFlowNodes(derivedNodes);
+  }, [derivedNodes]);
 
   const edges: Edge[] = useMemo(() => {
     return visibleLinks.map((link) => ({
       id: link.id,
       source: link.from,
       target: link.to,
+      sourceHandle: resolveSourcePort(link),
+      targetHandle: resolveTargetPort(link),
       label: link.label || link.type,
       animated: ["calls", "controls", "fails_if"].includes(link.type),
       markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
       style: {
-        stroke: LINK_COLOR[link.type],
+        stroke: getLinkColor(link.type, themePaletteId),
         strokeWidth: 2
       },
       labelStyle: {
@@ -149,11 +315,127 @@ function AtlasEditor() {
         fillOpacity: 0.9
       }
     }));
-  }, [visibleLinks]);
+  }, [themePaletteId, visibleLinks]);
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
     setAtlas((current) => (current ? updater(current) : current));
   }, []);
+
+  const getCanvasDebugContext = useCallback(
+    (extra: Record<string, unknown> = {}) => ({
+      active_view_id: activeView?.id ?? null,
+      active_view_title: activeView?.title ?? "None",
+      layout_template: layoutTemplate,
+      visible_tiles: visibleTiles.length,
+      visible_links: visibleLinks.length,
+      total_tiles: atlas?.tiles.length ?? 0,
+      total_links: atlas?.links.length ?? 0,
+      search_active: Boolean(searchTerm.trim()),
+      visible_type_filters: activeView?.visible_types.length ?? 0,
+      visible_link_filters: activeView?.visible_links.length ?? 0,
+      collapsed_count: collapsedTileIds.size,
+      ...extra
+    }),
+    [activeView, atlas, collapsedTileIds.size, layoutTemplate, searchTerm, visibleLinks.length, visibleTiles.length]
+  );
+
+  const expandAncestors = useCallback(
+    (tileId: string) => {
+      if (!atlas) return;
+      const idsToExpand = new Set<string>();
+      let current = atlas.tiles.find((tile) => tile.id === tileId);
+      while (current?.parent) {
+        idsToExpand.add(current.parent);
+        current = atlas.tiles.find((tile) => tile.id === current?.parent);
+      }
+      if (!idsToExpand.size) return;
+      setCollapsedTileIds((currentCollapsed) => {
+        const next = new Set(currentCollapsed);
+        for (const id of idsToExpand) {
+          next.delete(id);
+        }
+        return next;
+      });
+    },
+    [atlas]
+  );
+
+  const selectTileAndFocus = useCallback(
+    (tileId: string) => {
+      if (!atlas) return;
+      const tile = atlas.tiles.find((candidate) => candidate.id === tileId);
+      if (!tile) return;
+      expandAncestors(tileId);
+      setSelection({ kind: "tile", id: tileId });
+      setCenter(tile.position.x + 124, tile.position.y + 64, { zoom: 1, duration: 500 });
+    },
+    [atlas, expandAncestors, setCenter]
+  );
+
+  const selectSearchResult = useCallback(
+    (result: SearchResult) => {
+      if (result.kind === "tile") {
+        selectTileAndFocus(result.id);
+        return;
+      }
+      const link = atlas?.links.find((candidate) => candidate.id === result.id);
+      if (link) {
+        expandAncestors(link.from);
+        expandAncestors(link.to);
+      }
+      setSelection({ kind: "link", id: result.id });
+    },
+    [atlas, expandAncestors, selectTileAndFocus]
+  );
+
+  const handlePaletteChange = useCallback(
+    (paletteId: ThemePaletteId) => {
+      setThemePaletteId(paletteId);
+      appendDebugEvent("settings.palette", "Theme palette changed", "info", { palette: paletteId });
+    },
+    [appendDebugEvent]
+  );
+
+  const handleOpenSettings = useCallback(() => {
+    setSettingsOpen(true);
+    appendDebugEvent("settings.open", "Settings opened");
+    loadHealth()
+      .then((health) => {
+        setBackendHealth(`${health.app}: ${health.status}`);
+        appendDebugEvent("api.health", "Backend health checked", "info", { status: health.status, app: health.app });
+      })
+      .catch((error) => {
+        setBackendHealth("unreachable");
+        appendDebugEvent("api.health", "Backend health check failed", "error", { error: error instanceof Error ? error.message : String(error) });
+      });
+  }, [appendDebugEvent]);
+
+  const handleExportDebugLog = useCallback(async () => {
+    try {
+      const backendEvents = await loadBackendDebugLog();
+      const events = [...debugEvents, ...backendEvents].sort((left, right) => left.timestamp.localeCompare(right.timestamp));
+      downloadDebugLog(events, {
+        app: "CTRoadmap",
+        active_view: activeView?.title ?? "None",
+        layout_template: layoutTemplate,
+        palette: themePaletteId,
+        backend_health: backendHealth,
+        frontend_events: debugEvents.length,
+        backend_events: backendEvents.length
+      });
+      appendDebugEvent("debug.export", "Debug log exported", "info", { frontend_events: debugEvents.length, backend_events: backendEvents.length });
+    } catch (error) {
+      appendDebugEvent("debug.export", "Debug log export failed", "error", { error: error instanceof Error ? error.message : String(error) });
+      window.alert(error instanceof Error ? error.message : "Debug log export failed");
+    }
+  }, [activeView, appendDebugEvent, backendHealth, debugEvents, layoutTemplate, themePaletteId]);
+
+  const handleClearDebugLog = useCallback(() => {
+    setDebugEvents([]);
+    void clearBackendDebugLog().catch((error) => {
+      appendDebugEvent("debug.clear", "Backend debug clear failed", "error", { error: error instanceof Error ? error.message : String(error) });
+    });
+  }, [appendDebugEvent]);
 
   const handleSave = useCallback(async () => {
     if (!atlas) return;
@@ -163,13 +445,75 @@ function AtlasEditor() {
       const saved = await saveAtlas(atlas);
       setAtlas(saved);
       setStatus("Atlas saved");
+      appendDebugEvent("atlas.save", "Atlas saved", "info", atlasSummary(saved));
     } catch (error) {
       console.error(error);
       setStatus("Save failed");
+      appendDebugEvent("atlas.save", "Atlas save failed", "error", { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsSaving(false);
     }
-  }, [atlas]);
+  }, [appendDebugEvent, atlas]);
+
+  const handleExport = useCallback(
+    async (format: ExportFormat) => {
+      if (!atlas) return;
+      setIsExporting(format);
+      setStatus(`Exporting ${format}...`);
+      try {
+        const saved = await saveAtlas(atlas);
+        setAtlas(saved);
+        const result = await generateExport(format);
+        setExportResults((current) => ({ ...current, [format]: result }));
+        downloadExport(format);
+        setStatus(`Exported ${result.filename}`);
+        appendDebugEvent("export.generate", "Export generated", "info", { format, filename: result.filename });
+      } catch (error) {
+        console.error(error);
+        setStatus(`Export ${format} failed`);
+        appendDebugEvent("export.generate", "Export failed", "error", { format, error: error instanceof Error ? error.message : String(error) });
+      } finally {
+        setIsExporting(null);
+      }
+    },
+    [appendDebugEvent, atlas]
+  );
+
+  const handleImportAtlas = useCallback(
+    async (file: File) => {
+      if (!window.confirm("Replace the current atlas with this JSON file?")) return;
+      setStatus("Importing atlas...");
+      try {
+        const imported = await importAtlasFile(file);
+        setAtlas(imported);
+        const nextView = imported.views.find((view) => view.id === "everything") ?? imported.views[0];
+        if (nextView) {
+          setActiveViewId(nextView.id);
+          setLayoutTemplate(nextView.layout_template);
+        }
+        setSelection(null);
+        setStatus("Atlas imported");
+        appendDebugEvent("atlas.import", "Atlas imported", "info", { filename: file.name, ...atlasSummary(imported) });
+      } catch (error) {
+        console.error(error);
+        setStatus("Import failed");
+        appendDebugEvent("atlas.import", "Atlas import failed", "error", { filename: file.name, error: error instanceof Error ? error.message : String(error) });
+        window.alert(error instanceof Error ? error.message : "Import failed");
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    },
+    [appendDebugEvent]
+  );
+
+  const handleDownloadAtlasJson = useCallback(() => {
+    if (!atlas) return;
+    downloadAtlasJson(atlas);
+    setStatus("atlas.json downloaded");
+    appendDebugEvent("atlas.download", "atlas.json downloaded", "info", atlasSummary(atlas));
+  }, [appendDebugEvent, atlas]);
 
   const handleCreateTile = useCallback(
     (type: TileType, position?: { x: number; y: number }, parentId?: string) => {
@@ -197,6 +541,8 @@ function AtlasEditor() {
             from: parentId,
             to: tileId,
             type: "contains",
+            from_port: "child",
+            to_port: "parent",
             label: "contains",
             notes: "",
             directional: true
@@ -209,8 +555,9 @@ function AtlasEditor() {
       }));
       setSelection({ kind: "tile", id: tileId });
       setStatus(parentId ? "Subtile created" : "Tile created");
+      appendDebugEvent(parentId ? "tile.create_subtile" : "tile.create", parentId ? "Subtile created" : "Tile created", "info", { type, parent: parentId ?? null });
     },
-    [atlas, updateAtlas]
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const getViewportCenterPosition = useCallback(() => {
@@ -240,7 +587,7 @@ function AtlasEditor() {
   }, []);
 
   const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
-    if (!event.dataTransfer.types.includes(TILE_DRAG_MIME)) return;
+    if (!Array.from(event.dataTransfer.types).includes(TILE_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   }, []);
@@ -273,14 +620,24 @@ function AtlasEditor() {
   const handleConnect = useCallback(
     (connection: Connection) => {
       if (!atlas || !connection.source || !connection.target) return;
-      const type = chooseLinkType("depends_on");
+      const sourceTile = atlas.tiles.find((tile) => tile.id === connection.source);
+      const targetTile = atlas.tiles.find((tile) => tile.id === connection.target);
+      const fromPort = asSourcePort(connection.sourceHandle);
+      const toPort = asTargetPort(connection.targetHandle);
+      const type = chooseLinkType(defaultLinkType(sourceTile, targetTile, fromPort, toPort));
       if (!type) return;
+      if (type === "contains" && (fromPort !== "child" || toPort !== "parent")) {
+        window.alert("Use the bottom parent/child handle path for contains relationships.");
+        return;
+      }
       const label = window.prompt("Relationship label", type.replace(/_/g, " ")) ?? type;
       const link: Link = {
         id: createId("link", `${connection.source}_${connection.target}_${type}`, atlas.links.map((candidate) => candidate.id)),
         from: connection.source,
         to: connection.target,
         type,
+        from_port: fromPort,
+        to_port: toPort,
         label,
         notes: "",
         directional: true
@@ -288,24 +645,61 @@ function AtlasEditor() {
       updateAtlas((current) => ({ ...current, links: [...current.links, link] }));
       setSelection({ kind: "link", id: link.id });
       setStatus("Relationship created");
+      appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort });
     },
-    [atlas, updateAtlas]
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      if (layoutTemplate !== "canvas_topology") return;
-      const positionChanges = changes.filter(isPositionNodeChange);
-      if (!positionChanges.length) return;
+      setFlowNodes((current) => applyNodeChanges(changes, current));
+    },
+    []
+  );
+
+  const handleNodeDragStart = useCallback(
+    (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
+      isNodeDragging.current = true;
+      appendDebugEvent("tile.drag_start", "Tile drag started", "info", getCanvasDebugContext({ tile_id: node.id, dragged_count: draggedNodes.length }));
+    },
+    [appendDebugEvent, getCanvasDebugContext]
+  );
+
+  const handleNodeDragStop = useCallback(
+    (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
+      isNodeDragging.current = false;
+      if (layoutTemplate !== "canvas_topology") {
+        setFlowNodes(derivedNodes);
+        return;
+      }
+      const positionsById = new Map(draggedNodes.map((draggedNode) => [draggedNode.id, draggedNode.position]));
       updateAtlas((current) => ({
         ...current,
         tiles: current.tiles.map((tile) => {
-          const change = positionChanges.find((candidate) => candidate.id === tile.id);
-          return change ? { ...tile, position: change.position } : tile;
+          const position = positionsById.get(tile.id);
+          return position ? { ...tile, position } : tile;
         })
       }));
+      appendDebugEvent(
+        "tile.drag_stop",
+        "Tile drag stopped",
+        "info",
+        getCanvasDebugContext({
+          tile_id: node.id,
+          dragged_count: draggedNodes.length,
+          position_x: Math.round(node.position.x),
+          position_y: Math.round(node.position.y)
+        })
+      );
     },
-    [layoutTemplate, updateAtlas]
+    [appendDebugEvent, derivedNodes, getCanvasDebugContext, layoutTemplate, updateAtlas]
+  );
+
+  const handleReactFlowError = useCallback(
+    (id: string, message: string) => {
+      appendDebugEvent("reactflow.error", "React Flow error", "error", getCanvasDebugContext({ error_id: id, error: message }));
+    },
+    [appendDebugEvent, getCanvasDebugContext]
   );
 
   const handleUpdateTile = useCallback(
@@ -323,6 +717,8 @@ function AtlasEditor() {
                 from: tile.parent,
                 to: tile.id,
                 type: "contains",
+                from_port: "child",
+                to_port: "parent",
                 label: "contains",
                 notes: "",
                 directional: true
@@ -337,8 +733,9 @@ function AtlasEditor() {
         };
       });
       setStatus("Tile updated");
+      appendDebugEvent("tile.update", "Tile updated", "info", { id: tile.id, type: tile.type });
     },
-    [updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleDeleteTile = useCallback(
@@ -351,8 +748,39 @@ function AtlasEditor() {
       }));
       setSelection(null);
       setStatus("Tile deleted");
+      appendDebugEvent("tile.delete", "Tile deleted", "warning", { id: tileId });
     },
-    [updateAtlas]
+    [appendDebugEvent, updateAtlas]
+  );
+
+  const handleDuplicateTile = useCallback(
+    (tileId: string) => {
+      if (!atlas) return;
+      const source = atlas.tiles.find((tile) => tile.id === tileId);
+      if (!source) return;
+      const title = `${source.title} Copy`;
+      const duplicateId = createId(source.type, title, atlas.tiles.map((tile) => tile.id));
+      const duplicate: Tile = {
+        ...source,
+        id: duplicateId,
+        title,
+        position: {
+          x: source.position.x + 36,
+          y: source.position.y + 36
+        },
+        fields: cloneFields(source.fields),
+        tags: [...(source.tags ?? [])],
+        notes: source.notes ?? ""
+      };
+      updateAtlas((current) => ({
+        ...current,
+        tiles: [...current.tiles, duplicate]
+      }));
+      setSelection({ kind: "tile", id: duplicateId });
+      setStatus("Tile duplicated");
+      appendDebugEvent("tile.duplicate", "Tile duplicated", "info", { source: tileId, duplicate: duplicateId, type: source.type });
+    },
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const handleUpdateLink = useCallback(
@@ -362,8 +790,9 @@ function AtlasEditor() {
         links: current.links.map((candidate) => (candidate.id === link.id ? link : candidate))
       }));
       setStatus("Relationship updated");
+      appendDebugEvent("link.update", "Relationship updated", "info", { id: link.id, type: link.type });
     },
-    [updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleDeleteLink = useCallback(
@@ -371,8 +800,9 @@ function AtlasEditor() {
       updateAtlas((current) => ({ ...current, links: current.links.filter((link) => link.id !== linkId) }));
       setSelection(null);
       setStatus("Relationship deleted");
+      appendDebugEvent("link.delete", "Relationship deleted", "warning", { id: linkId });
     },
-    [updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleSelectView = useCallback(
@@ -381,8 +811,9 @@ function AtlasEditor() {
       setLayoutTemplate(view.layout_template);
       setSelection(null);
       setStatus(`View: ${view.title}`);
+      appendDebugEvent("view.select", "View selected", "info", { id: view.id, title: view.title, layout_template: view.layout_template });
     },
-    []
+    [appendDebugEvent]
   );
 
   const handleTemplateChange = useCallback(
@@ -393,8 +824,96 @@ function AtlasEditor() {
         views: current.views.map((view) => (view.id === activeViewId ? { ...view, layout_template: nextTemplate } : view))
       }));
       setStatus(nextTemplate === "canvas_topology" ? "Canvas topology template" : "Layered hierarchy template");
+      appendDebugEvent("view.template", "Layout template changed", "info", { layout_template: nextTemplate });
     },
-    [activeViewId, updateAtlas]
+    [activeViewId, appendDebugEvent, updateAtlas]
+  );
+
+  const handleCreateView = useCallback(() => {
+    if (!atlas) return;
+    const title = window.prompt("View title");
+    if (!title) return;
+    const sourceView = activeView;
+    const view: View = {
+      id: createId("view", title, atlas.views.map((candidate) => candidate.id)),
+      title,
+      description: "",
+      visible_types: sourceView ? [...sourceView.visible_types] : [],
+      visible_links: sourceView ? [...sourceView.visible_links] : [],
+      camera: { x: 0, y: 0, zoom: 1 },
+      layout_template: sourceView?.layout_template ?? layoutTemplate
+    };
+    updateAtlas((current) => ({ ...current, views: [...current.views, view] }));
+    setActiveViewId(view.id);
+    setLayoutTemplate(view.layout_template);
+    setStatus(`Created view: ${view.title}`);
+    appendDebugEvent("view.create", "View created", "info", { id: view.id, title: view.title });
+  }, [activeView, appendDebugEvent, atlas, layoutTemplate, updateAtlas]);
+
+  const handleEditView = useCallback(() => {
+    if (!activeView) return;
+    const title = window.prompt("View title", activeView.title);
+    if (!title) return;
+    const description = window.prompt("View description", activeView.description) ?? activeView.description;
+    updateAtlas((current) => ({
+      ...current,
+      views: current.views.map((view) => (view.id === activeView.id ? { ...view, title, description } : view))
+    }));
+    setStatus(`Updated view: ${title}`);
+    appendDebugEvent("view.update", "View updated", "info", { id: activeView.id, title });
+  }, [activeView, appendDebugEvent, updateAtlas]);
+
+  const handleDeleteView = useCallback(() => {
+    if (!atlas || !activeView) return;
+    if (atlas.views.length <= 1) {
+      window.alert("At least one view is required.");
+      return;
+    }
+    if (!window.confirm(`Delete view "${activeView.title}"?`)) return;
+    const remainingViews = atlas.views.filter((view) => view.id !== activeView.id);
+    const nextView = remainingViews.find((view) => view.id === "everything") ?? remainingViews[0];
+    updateAtlas((current) => ({ ...current, views: current.views.filter((view) => view.id !== activeView.id) }));
+    setActiveViewId(nextView.id);
+    setLayoutTemplate(nextView.layout_template);
+    setSelection(null);
+    setStatus(`Deleted view: ${activeView.title}`);
+    appendDebugEvent("view.delete", "View deleted", "warning", { id: activeView.id, title: activeView.title });
+  }, [activeView, appendDebugEvent, atlas, updateAtlas]);
+
+  const handleToggleViewTileType = useCallback(
+    (type: TileType) => {
+      if (!activeView) return;
+      updateAtlas((current) => ({
+        ...current,
+        views: current.views.map((view) =>
+          view.id === activeView.id
+            ? {
+                ...view,
+                visible_types: toggleViewSelection(view.visible_types, TILE_TYPES, type)
+              }
+            : view
+        )
+      }));
+    },
+    [activeView, updateAtlas]
+  );
+
+  const handleToggleViewLinkType = useCallback(
+    (type: LinkType) => {
+      if (!activeView) return;
+      updateAtlas((current) => ({
+        ...current,
+        views: current.views.map((view) =>
+          view.id === activeView.id
+            ? {
+                ...view,
+                visible_links: toggleViewSelection(view.visible_links, LINK_TYPES, type)
+              }
+            : view
+        )
+      }));
+    },
+    [activeView, updateAtlas]
   );
 
   const handleLoadSeed = useCallback(() => {
@@ -405,11 +924,70 @@ function AtlasEditor() {
     setLayoutTemplate("canvas_topology");
     setSelection(null);
     setStatus("CTDC sample loaded. Save to persist it.");
-  }, []);
+    appendDebugEvent("seed.load", "CTDC sample loaded", "info", atlasSummary(seed));
+  }, [appendDebugEvent]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (isEditableTarget(event.target)) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        void handleSave();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
+        if (selection?.kind === "tile") {
+          event.preventDefault();
+          handleDuplicateTile(selection.id);
+        }
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        if (selection?.kind === "tile") {
+          event.preventDefault();
+          handleDeleteTile(selection.id);
+        } else if (selection?.kind === "link") {
+          event.preventDefault();
+          handleDeleteLink(selection.id);
+        }
+        return;
+      }
+      if (event.key === "/") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+      if (event.key === "Escape") {
+        setSelection(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleDeleteLink, handleDeleteTile, handleDuplicateTile, handleSave, selection]);
 
   const brokenLinkCount = atlas
     ? atlas.links.filter((link) => !atlas.tiles.some((tile) => tile.id === link.from) || !atlas.tiles.some((tile) => tile.id === link.to)).length
     : 0;
+  const warnings = useMemo(() => (atlas ? validateAtlasWarnings(atlas) : []), [atlas]);
+
+  useEffect(() => {
+    if (!atlas) return;
+    if (lastWarningCount.current === warnings.length) return;
+    lastWarningCount.current = warnings.length;
+    appendDebugEvent("validation.warnings", "Validation warning count changed", warnings.length ? "warning" : "info", { warnings: warnings.length });
+  }, [appendDebugEvent, atlas, warnings.length]);
+
+  useEffect(() => {
+    if (!atlas) return;
+    const previousCount = lastVisibleTileCount.current;
+    lastVisibleTileCount.current = visibleTiles.length;
+    if (previousCount !== null && previousCount > 0 && visibleTiles.length === 0) {
+      appendDebugEvent("canvas.visible_tiles_zero", "Visible tile count dropped to zero", "warning", {
+        ...getCanvasDebugContext(),
+        ...atlasSummary(atlas)
+      });
+    }
+  }, [appendDebugEvent, atlas, getCanvasDebugContext, visibleTiles.length]);
 
   if (!atlas) {
     return (
@@ -423,7 +1001,7 @@ function AtlasEditor() {
   const BrandIcon = BRAND_ICON;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-theme={themePaletteId}>
         <header className="topbar">
           <div className="brand">
             <div className="brand__mark">
@@ -437,23 +1015,53 @@ function AtlasEditor() {
           <button className="toolbar-button" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />} Save
           </button>
+          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()}>
+            <Upload size={18} /> Import JSON
+          </button>
+          <input
+            ref={fileInputRef}
+            className="hidden-input"
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              if (file) void handleImportAtlas(file);
+            }}
+          />
+          <button className="toolbar-button" onClick={handleDownloadAtlasJson}>
+            <Download size={18} /> atlas.json
+          </button>
           <button className="toolbar-button" onClick={handleLoadSeed}>
             <Upload size={18} /> Load Seed
           </button>
-          <button className="toolbar-button" disabled title="Phase 2">
-            <FileText size={18} /> Export Markdown
+          <button className="toolbar-button" onClick={() => void handleExport("markdown")} disabled={Boolean(isExporting)}>
+            {isExporting === "markdown" ? <Loader2 className="spin" size={18} /> : <FileText size={18} />} Export Markdown
           </button>
-          <button className="toolbar-button" disabled title="Phase 2">
-            <Download size={18} /> Export YAML
+          <button className="toolbar-button" onClick={() => void handleExport("yaml")} disabled={Boolean(isExporting)}>
+            {isExporting === "yaml" ? <Loader2 className="spin" size={18} /> : <Download size={18} />} Export YAML
           </button>
-          <button className="toolbar-button" disabled title="Phase 2">
-            <FileCode2 size={18} /> Export Mermaid
+          <button className="toolbar-button" onClick={() => void handleExport("mermaid")} disabled={Boolean(isExporting)}>
+            {isExporting === "mermaid" ? <Loader2 className="spin" size={18} /> : <FileCode2 size={18} />} Export Mermaid
           </button>
           <div className="search-box">
             <Search size={18} />
-            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
+            <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
+            {searchTerm ? (
+              <button
+                className="search-box__clear"
+                type="button"
+                aria-label="Clear search"
+                title="Clear search"
+                onClick={() => {
+                  setSearchTerm("");
+                  searchInputRef.current?.focus();
+                }}
+              >
+                <X size={15} />
+              </button>
+            ) : null}
           </div>
-          <button className="icon-button" disabled title="Settings planned">
+          <button className="icon-button" onClick={handleOpenSettings} title="Settings">
             <Settings size={19} />
           </button>
         </header>
@@ -469,7 +1077,7 @@ function AtlasEditor() {
                   <button
                     key={type}
                     className="palette-item"
-                    style={{ "--tile-accent": config.color } as CSSProperties}
+                    style={{ "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties}
                     draggable
                     onClick={() => handlePaletteClick(type)}
                     onDragStart={(event) => handlePaletteDragStart(event, type)}
@@ -483,6 +1091,29 @@ function AtlasEditor() {
               })}
             </div>
 
+            <div className="panel-title panel-title--spaced">Search Results</div>
+            <div className="search-results">
+              {searchTerm.trim() ? (
+                searchResults.length ? (
+                  searchResults.map((result) => (
+                    <button
+                      key={`${result.kind}-${result.id}`}
+                      className={selection?.kind === result.kind && selection.id === result.id ? "search-result search-result--active" : "search-result"}
+                      onClick={() => selectSearchResult(result)}
+                    >
+                      <span>{result.kind}</span>
+                      <strong>{result.title}</strong>
+                      <small>{result.detail}</small>
+                    </button>
+                  ))
+                ) : (
+                  <div className="warning-empty">No matches</div>
+                )
+              ) : (
+                <div className="warning-empty">Use search to find tiles and relationships</div>
+              )}
+            </div>
+
             <div className="panel-title panel-title--spaced">Views</div>
             <div className="view-list">
               {atlas.views.map((view) => (
@@ -491,6 +1122,17 @@ function AtlasEditor() {
                   {view.title}
                 </button>
               ))}
+            </div>
+            <div className="view-actions">
+              <button className="small-button" onClick={handleCreateView}>
+                <Plus size={15} /> New
+              </button>
+              <button className="small-button" onClick={handleEditView} disabled={!activeView}>
+                <Settings size={15} /> Edit
+              </button>
+              <button className="small-button small-button--danger" onClick={handleDeleteView} disabled={!activeView || atlas.views.length <= 1}>
+                <Trash2 size={15} /> Delete
+              </button>
             </div>
 
             <div className="panel-title panel-title--spaced">Template</div>
@@ -509,8 +1151,8 @@ function AtlasEditor() {
                 <label key={type} className="filter-check">
                   <input
                     type="checkbox"
-                    checked={!hiddenTypes.has(type)}
-                    onChange={() => setHiddenTypes((current) => toggleSet(current, type))}
+                    checked={!activeView?.visible_types.length || activeView.visible_types.includes(type)}
+                    onChange={() => handleToggleViewTileType(type)}
                   />
                   {TILE_TYPE_CONFIG[type].label}
                 </label>
@@ -523,12 +1165,33 @@ function AtlasEditor() {
                 <label key={type} className="filter-check">
                   <input
                     type="checkbox"
-                    checked={!hiddenLinks.has(type)}
-                    onChange={() => setHiddenLinks((current) => toggleSet(current, type))}
+                    checked={!activeView?.visible_links.length || activeView.visible_links.includes(type)}
+                    onChange={() => handleToggleViewLinkType(type)}
                   />
                   {type}
                 </label>
               ))}
+            </div>
+
+            <div className="panel-title panel-title--spaced">Warnings</div>
+            <div className="warning-list">
+              {warnings.length ? (
+                warnings.slice(0, 8).map((warning) => (
+                  <button
+                    key={warning.id}
+                    className={`warning-item warning-item--${warning.severity}`}
+                    onClick={() => {
+                      if (warning.targetKind === "tile" && warning.targetId) selectTileAndFocus(warning.targetId);
+                      if (warning.targetKind === "link" && warning.targetId) setSelection({ kind: "link", id: warning.targetId });
+                    }}
+                  >
+                    {warning.message}
+                  </button>
+                ))
+              ) : (
+                <div className="warning-empty">No validation warnings</div>
+              )}
+              {warnings.length > 8 ? <div className="warning-empty">+{warnings.length - 8} more warnings</div> : null}
             </div>
           </aside>
 
@@ -546,27 +1209,35 @@ function AtlasEditor() {
               ))}
             </div>
             <ReactFlow
-              nodes={nodes}
+              nodes={flowNodes}
               edges={edges}
               nodeTypes={nodeTypes}
               onNodesChange={handleNodesChange}
               onConnect={handleConnect}
-              onNodeClick={(_, node) => setSelection({ kind: "tile", id: node.id })}
+              onNodeDragStart={handleNodeDragStart}
+              onNodeDragStop={handleNodeDragStop}
+              onNodeClick={(_, node) => selectTileAndFocus(node.id)}
               onEdgeClick={(_, edge) => setSelection({ kind: "link", id: edge.id })}
+              onError={handleReactFlowError}
               onPaneClick={() => setSelection(null)}
               fitView
               minZoom={0.2}
               maxZoom={1.8}
             >
-              <Background color="#1f3a55" gap={20} size={1} />
-              <MiniMap pannable zoomable nodeColor={(node) => TILE_TYPE_CONFIG[(node.data.tile as Tile).type].color} />
+              <Background color="var(--canvas-grid-line)" gap={20} size={1} />
+              <MiniMap pannable zoomable nodeColor={(node) => getTileColor((node.data.tile as Tile).type, themePaletteId)} />
               <Controls />
             </ReactFlow>
             <div className="status-strip">
               <span>{status}</span>
               <span>{visibleTiles.length} tiles</span>
               <span>{visibleLinks.length} links</span>
+              {searchTerm.trim() ? <span>{searchResults.length} search results</span> : null}
               {brokenLinkCount > 0 ? <strong>{brokenLinkCount} broken links</strong> : <span>No broken links</span>}
+              {warnings.length > 0 ? <strong>{warnings.length} warnings</strong> : null}
+              {exportResults.markdown ? <span>Markdown ready</span> : null}
+              {exportResults.yaml ? <span>YAML ready</span> : null}
+              {exportResults.mermaid ? <span>Mermaid ready</span> : null}
             </div>
           </section>
 
@@ -575,11 +1246,26 @@ function AtlasEditor() {
             selection={selection}
             onUpdateTile={handleUpdateTile}
             onDeleteTile={handleDeleteTile}
+            onDuplicateTile={handleDuplicateTile}
             onAddSubtile={handleAddSubtile}
             onUpdateLink={handleUpdateLink}
             onDeleteLink={handleDeleteLink}
           />
         </main>
+        {settingsOpen ? (
+          <SettingsPanel
+            atlas={atlas}
+            activeView={activeView}
+            backendHealth={backendHealth}
+            debugEvents={debugEvents}
+            layoutTemplate={layoutTemplate}
+            paletteId={themePaletteId}
+            onClearDebugLog={handleClearDebugLog}
+            onClose={() => setSettingsOpen(false)}
+            onExportDebugLog={handleExportDebugLog}
+            onPaletteChange={handlePaletteChange}
+          />
+        ) : null}
       </div>
   );
 }
@@ -596,6 +1282,36 @@ function chooseLinkType(fallback: LinkType): LinkType | null {
   return LINK_TYPES.includes(value as LinkType) ? (value as LinkType) : fallback;
 }
 
+function defaultLinkType(
+  sourceTile: Tile | undefined,
+  targetTile: Tile | undefined,
+  fromPort: LinkSourcePort | null,
+  toPort: LinkTargetPort | null
+): LinkType {
+  if (fromPort === "child" && toPort === "parent") return "contains";
+  if (sourceTile?.type === "check" || targetTile?.type === "check") return "validates_with";
+  if (sourceTile?.type === "flow" && targetTile && ["check", "config", "secret_ref", "note"].includes(targetTile.type)) return "fails_if";
+  if (sourceTile?.type === "flow" || targetTile?.type === "flow") return "calls";
+  if (fromPort === "out" && toPort === "in") return "calls";
+  return "depends_on";
+}
+
+function resolveSourcePort(link: Link): LinkSourcePort {
+  return link.from_port ?? (link.type === "contains" ? "child" : "out");
+}
+
+function resolveTargetPort(link: Link): LinkTargetPort {
+  return link.to_port ?? (link.type === "contains" ? "parent" : "in");
+}
+
+function asSourcePort(value: string | null | undefined): LinkSourcePort {
+  return value === "child" ? "child" : "out";
+}
+
+function asTargetPort(value: string | null | undefined): LinkTargetPort {
+  return value === "parent" ? "parent" : "in";
+}
+
 function createId(prefix: string, label: string, existingIds: string[]): string {
   const base = `${prefix}_${label}`
     .toLowerCase()
@@ -609,16 +1325,6 @@ function createId(prefix: string, label: string, existingIds: string[]): string 
     index += 1;
   }
   return candidate;
-}
-
-function toggleSet<T>(current: Set<T>, value: T): Set<T> {
-  const next = new Set(current);
-  if (next.has(value)) {
-    next.delete(value);
-  } else {
-    next.add(value);
-  }
-  return next;
 }
 
 function computeLayeredPositions(tiles: Tile[]): Map<string, { x: number; y: number }> {
@@ -647,6 +1353,41 @@ function computeLayeredPositions(tiles: Tile[]): Map<string, { x: number; y: num
   });
 
   return positions;
+}
+
+function cloneFields(fields: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(fields)) as Record<string, unknown>;
+}
+
+function toggleViewSelection<T extends string>(current: T[], all: readonly T[], value: T): T[] {
+  const selected = new Set(current.length ? current : all);
+  if (selected.has(value)) {
+    selected.delete(value);
+  } else {
+    selected.add(value);
+  }
+  if (selected.size === 0) return current;
+  if (selected.size === all.length) return [];
+  return all.filter((item) => selected.has(item));
+}
+
+function readStoredStringArray(key: string): string[] {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable;
+}
+
+function errorToMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export default App;

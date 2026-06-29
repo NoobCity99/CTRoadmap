@@ -285,20 +285,20 @@ note
 
 ### Tile Type Meanings
 
-| Type | Purpose | Example |
-|---|---|---|
-| node | physical or logical machine | coffee1, table2, dispatch1 |
-| service | app, daemon, or system service | Docker, Samba, Ollama |
-| container | Docker container or compose service | Nextcloud AIO, MariaDB |
-| drive | physical or logical storage device | Boot NVMe, Backup SSD |
-| mount | filesystem mount path | /mnt/nextcloud-data |
-| script | custom executable logic | coffee1-sleep.sh |
-| config | important config file | sudoers rule, fstab entry |
-| secret_ref | reference to key/token only | SSH key reference |
-| flow | user-facing function or process | Wake coffee1 |
-| url | admin or service URL | Nextcloud login page |
-| check | validation/test command | ping coffee1 |
-| note | general documentation note | maintenance reminder |
+| Type       | Purpose                             | Example                    |
+| ---------- | ----------------------------------- | -------------------------- |
+| node       | physical or logical machine         | coffee1, table2, dispatch1 |
+| service    | app, daemon, or system service      | Docker, Samba, Ollama      |
+| container  | Docker container or compose service | Nextcloud AIO, MariaDB     |
+| drive      | physical or logical storage device  | Boot NVMe, Backup SSD      |
+| mount      | filesystem mount path               | /mnt/nextcloud-data        |
+| script     | custom executable logic             | coffee1-sleep.sh           |
+| config     | important config file               | sudoers rule, fstab entry  |
+| secret_ref | reference to key/token only         | SSH key reference          |
+| flow       | user-facing function or process     | Wake coffee1               |
+| url        | admin or service URL                | Nextcloud login page       |
+| check      | validation/test command             | ping coffee1               |
+| note       | general documentation note          | maintenance reminder       |
 
 Important: `secret_ref` must never store secret values. It may store paths, names, purpose, rotation notes, and permissions.
 
@@ -364,24 +364,24 @@ related_to
 
 ### Relationship Type Meanings
 
-| Type | Meaning |
-|---|---|
-| contains | parent object contains child object |
-| runs | node runs service |
-| hosts | node/service hosts another thing |
-| calls | one script/service calls another |
-| controls | one node/service controls another |
-| depends_on | general dependency |
-| uses_storage | service uses a drive or mount |
-| mounted_at | drive is mounted at a path |
-| backs_up_to | source backs up to target |
-| requires_key | action requires a key/token/credential reference |
-| requires_config | action requires a config file |
-| exposes_url | service exposes a web/admin URL |
-| validates_with | object can be checked by a validation tile |
-| fails_if | object/function fails if target condition is broken |
-| documents | note/doc tile documents target |
-| related_to | generic relationship fallback |
+| Type            | Meaning                                             |
+| --------------- | --------------------------------------------------- |
+| contains        | parent object contains child object                 |
+| runs            | node runs service                                   |
+| hosts           | node/service hosts another thing                    |
+| calls           | one script/service calls another                    |
+| controls        | one node/service controls another                   |
+| depends_on      | general dependency                                  |
+| uses_storage    | service uses a drive or mount                       |
+| mounted_at      | drive is mounted at a path                          |
+| backs_up_to     | source backs up to target                           |
+| requires_key    | action requires a key/token/credential reference    |
+| requires_config | action requires a config file                       |
+| exposes_url     | service exposes a web/admin URL                     |
+| validates_with  | object can be checked by a validation tile          |
+| fails_if        | object/function fails if target condition is broken |
+| documents       | note/doc tile documents target                      |
+| related_to      | generic relationship fallback                       |
 
 ---
 
@@ -1181,3 +1181,5 @@ simple exports
 ```
 
 Avoid drifting into monitoring, scanning, command execution, or user management until the atlas editor itself is solid.
+
+#NOTE: You are running in a WSL shell, so use the Linux Node/npm installed inside WSL, not Windows Node. First check `which node`, `node --version`, `which npm`, and `npm --version`. If unavailable, stop and tell me. Do not assume Windows Node is available inside WSL.

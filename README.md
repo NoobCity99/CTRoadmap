@@ -2,7 +2,7 @@
 
 CTRoadmap is a local-first infrastructure atlas for documenting nodes, services, storage, scripts, configs, URLs, checks, and operational relationships.
 
-The MVP is a GUI-first editor backed by `data/atlas.json`. It does not execute commands, SSH, Docker calls, or live checks.
+CTRoadmap is a GUI-first editor backed by `data/atlas.json`. It does not execute commands, SSH, Docker calls, or live checks.
 
 ## Run With Docker
 
@@ -59,16 +59,37 @@ npm run dev
 
 The Vite dev server proxies `/api` to `http://localhost:8088`.
 
-## MVP Features
+## Features
 
 - Create, edit, delete, drag, search, and filter typed tiles.
 - Create subtiles from the inspector; this creates a `contains` relationship.
 - Draw typed relationships between tiles in the canvas.
 - Edit relationship type, label, notes, endpoints, and directionality.
+- Duplicate tiles from the inspector or with `Ctrl/Cmd+D`.
+- Add ordered flow steps to `flow` tiles from the inspector.
+- Document non-executing checks with command and expected-result fields.
 - Save and reload the canonical atlas at `data/atlas.json`.
-- Switch between `canvas_topology` and `layered_hierarchy` templates.
+- Create, edit, delete, and switch saved views.
+- Switch between `canvas_topology` and `layered_hierarchy` templates per view.
+- Import a saved `atlas.json` after backend validation.
+- Download the current atlas JSON from the browser.
+- Export Markdown, YAML, and Mermaid files to `exports/`.
+- Download generated export files from the toolbar.
+- See warnings for broken links and missing required tile data.
+- See warnings for incomplete flows/checks.
 - Load optional CTDC sample data from the toolbar.
-- Export buttons are present but disabled until Phase 2.
+
+Flow steps and check tiles are documentation only. CTRoadmap does not run check commands.
+
+## Keyboard Shortcuts
+
+```text
+Ctrl/Cmd+S       Save
+Ctrl/Cmd+D       Duplicate selected tile
+Delete/Backspace Delete selected tile or relationship
+/                Focus search
+Escape           Clear selection
+```
 
 ## API
 
@@ -76,6 +97,12 @@ The Vite dev server proxies `/api` to `http://localhost:8088`.
 GET  /api/health
 GET  /api/atlas
 PUT  /api/atlas
+POST /api/export/markdown
+POST /api/export/yaml
+POST /api/export/mermaid
+GET  /api/export/markdown/download
+GET  /api/export/yaml/download
+GET  /api/export/mermaid/download
 ```
 
 ## Project Log

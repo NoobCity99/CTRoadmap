@@ -1,4 +1,5 @@
 # CTRoadmap
+![alt text](readmebanner.png)
 
 CTRoadmap is a local-first infrastructure atlas for documenting nodes, services, storage, scripts, configs, URLs, checks, and operational relationships.
 

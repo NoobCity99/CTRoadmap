@@ -1,4 +1,4 @@
-import type { AppVersion, Atlas, DebugEvent, ExportFormat, ExportResult, HealthResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
+import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
 
 export async function loadAtlas(): Promise<Atlas> {
   const response = await fetch("/api/atlas");
@@ -92,10 +92,23 @@ export function downloadExport(format: ExportFormat): void {
   window.location.href = `/api/export/${format}/download`;
 }
 
-export async function importAtlasFile(file: File): Promise<Atlas> {
+export async function readAtlasFile(file: File): Promise<Atlas> {
   const text = await file.text();
-  const parsed = JSON.parse(text) as Atlas;
-  return saveAtlas(parsed);
+  return JSON.parse(text) as Atlas;
+}
+
+export async function previewAtlasImport(atlas: Atlas): Promise<AtlasImportPreview> {
+  const response = await fetch("/api/atlas/preview", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(atlas)
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
 }
 
 export function downloadAtlasJson(atlas: Atlas): void {

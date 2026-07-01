@@ -2,15 +2,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 
+from .config import ATLAS_PATH, DATA_DIR, EXPORTS_DIR, ROOT_DIR
 from .models import Atlas, empty_atlas
-
-
-ROOT_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = ROOT_DIR / "data"
-EXPORTS_DIR = ROOT_DIR / "exports"
-ATLAS_PATH = DATA_DIR / "atlas.json"
 
 
 def ensure_directories() -> None:

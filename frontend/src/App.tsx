@@ -14,6 +14,8 @@ import {
   type NodeChange
 } from "@xyflow/react";
 import {
+  ChevronDown,
+  ChevronUp,
   Download,
   Eye,
   ExternalLink,
@@ -30,7 +32,7 @@ import {
   Upload,
   X
 } from "lucide-react";
-import { type CSSProperties, type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type DragEvent, type TouchEvent as ReactTouchEvent, type WheelEvent as ReactWheelEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector } from "./components/Inspector";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TileNode } from "./components/TileNode";
@@ -39,12 +41,13 @@ import {
   downloadAtlasJson,
   downloadExport,
   generateExport,
-  importAtlasFile,
   loadAppVersion,
   loadAtlas,
   loadBackendDebugLog,
   loadHealth,
   loadUpdateAdvisory,
+  previewAtlasImport,
+  readAtlasFile,
   saveAtlas,
   saveUpdateSettings
 } from "./lib/api";
@@ -81,6 +84,14 @@ const FIT_VIEW_OPTIONS: FitViewOptions = { padding: 0.28, duration: 450 };
 const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
 const UPDATE_NOTICE_SNOOZE_HOURS = 24;
 const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
+const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
+
+type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
+
+interface SidebarState {
+  collapsed: Record<SidebarSectionId, boolean>;
+  paletteIndex: number;
+}
 
 type SearchResult =
   | { kind: "tile"; id: string; title: string; detail: string }
@@ -100,6 +111,7 @@ function AtlasEditor() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isNodeDragging = useRef(false);
   const lastPaletteDragAt = useRef(0);
+  const collapsedPaletteTouchY = useRef<number | null>(null);
   const lastVisibleTileCount = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const lastWarningCount = useRef<number | null>(null);
@@ -115,6 +127,7 @@ function AtlasEditor() {
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [appMode, setAppMode] = useState<AppMode>("live");
+  const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [isSaving, setIsSaving] = useState(false);
@@ -175,6 +188,10 @@ function AtlasEditor() {
   }, [themePaletteId]);
 
   useEffect(() => {
+    storeSidebarState(sidebarState);
+  }, [sidebarState]);
+
+  useEffect(() => {
     loadAppVersion()
       .then((version) => {
         setAppVersion(version);
@@ -201,6 +218,15 @@ function AtlasEditor() {
     if (!atlas) return null;
     return atlas.views.find((view) => view.id === activeViewId) ?? atlas.views[0] ?? null;
   }, [atlas, activeViewId]);
+
+  const collapsedPaletteTypes = useMemo(() => {
+    const activeIndex = normalizePaletteIndex(sidebarState.paletteIndex);
+    return [
+      { slot: "previous", type: TILE_TYPES[normalizePaletteIndex(activeIndex - 1)], interactive: false },
+      { slot: "active", type: TILE_TYPES[activeIndex], interactive: true },
+      { slot: "next", type: TILE_TYPES[normalizePaletteIndex(activeIndex + 1)], interactive: false }
+    ] as const;
+  }, [sidebarState.paletteIndex]);
 
   const lifecycleCounts = useMemo(() => {
     const counts = {
@@ -414,6 +440,48 @@ function AtlasEditor() {
     [appendDebugEvent]
   );
 
+  const toggleSidebarSection = useCallback((section: SidebarSectionId) => {
+    setSidebarState((current) => ({
+      ...current,
+      collapsed: {
+        ...current.collapsed,
+        [section]: !current.collapsed[section]
+      }
+    }));
+  }, []);
+
+  const cycleCollapsedPalette = useCallback((delta: number) => {
+    setSidebarState((current) => ({
+      ...current,
+      paletteIndex: normalizePaletteIndex(current.paletteIndex + delta)
+    }));
+  }, []);
+
+  const handleCollapsedPaletteWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      cycleCollapsedPalette(event.deltaY >= 0 ? 1 : -1);
+    },
+    [cycleCollapsedPalette]
+  );
+
+  const handleCollapsedPaletteTouchStart = useCallback((event: ReactTouchEvent<HTMLDivElement>) => {
+    collapsedPaletteTouchY.current = event.touches[0]?.clientY ?? null;
+  }, []);
+
+  const handleCollapsedPaletteTouchEnd = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      const startY = collapsedPaletteTouchY.current;
+      collapsedPaletteTouchY.current = null;
+      const endY = event.changedTouches[0]?.clientY;
+      if (startY === null || endY === undefined) return;
+      const delta = startY - endY;
+      if (Math.abs(delta) < 18) return;
+      cycleCollapsedPalette(delta > 0 ? 1 : -1);
+    },
+    [cycleCollapsedPalette]
+  );
+
   const handleOpenSettings = useCallback(() => {
     setSettingsOpen(true);
     appendDebugEvent("settings.open", "Settings opened");
@@ -564,10 +632,30 @@ function AtlasEditor() {
 
   const handleImportAtlas = useCallback(
     async (file: File) => {
-      if (!window.confirm("Replace the current atlas with this JSON file?")) return;
-      setStatus("Importing atlas...");
+      setStatus("Validating import...");
       try {
-        const imported = await importAtlasFile(file);
+        const parsed = await readAtlasFile(file);
+        const preview = await previewAtlasImport(parsed);
+        if (!preview.valid) {
+          const details = preview.errors.length ? `\n\n${preview.errors.slice(0, 8).join("\n")}` : "";
+          setStatus("Import validation failed");
+          appendDebugEvent("atlas.import.preview", "Atlas import preview failed", "warning", { filename: file.name, errors: preview.errors.length });
+          window.alert(`This atlas file is not valid and was not imported.${details}`);
+          return;
+        }
+
+        const warningText = preview.warnings.length ? `\n\nWarnings:\n${preview.warnings.join("\n")}` : "";
+        const confirmed = window.confirm(
+          `Replace the current atlas with this validated JSON file?\n\nTiles: ${preview.tiles}\nRelationships: ${preview.links}\nViews: ${preview.views}${warningText}`
+        );
+        if (!confirmed) {
+          setStatus("Import canceled");
+          appendDebugEvent("atlas.import.cancel", "Atlas import canceled after preview", "info", { filename: file.name, ...preview });
+          return;
+        }
+
+        setStatus("Importing atlas...");
+        const imported = await saveAtlas(parsed);
         setAtlas(imported);
         const nextView = imported.views.find((view) => view.id === "everything") ?? imported.views[0];
         if (nextView) {
@@ -576,7 +664,7 @@ function AtlasEditor() {
         }
         setSelection(null);
         setStatus("Atlas imported");
-        appendDebugEvent("atlas.import", "Atlas imported", "info", { filename: file.name, ...atlasSummary(imported) });
+        appendDebugEvent("atlas.import", "Atlas imported", "info", { filename: file.name, ...atlasSummary(imported), warnings: preview.warnings.length });
       } catch (error) {
         console.error(error);
         setStatus("Import failed");
@@ -1330,28 +1418,74 @@ function AtlasEditor() {
 
         <main className="workspace">
           <aside className="sidebar">
-            <div className="panel-title">Tile Palette</div>
-            <div className="tile-palette">
-              {TILE_TYPES.map((type) => {
-                const config = TILE_TYPE_CONFIG[type];
-                const Icon = config.icon;
-                return (
-                  <button
-                    key={type}
-                    className="palette-item"
-                    style={{ "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties}
-                    draggable
-                    onClick={() => handlePaletteClick(type)}
-                    onDragStart={(event) => handlePaletteDragStart(event, type)}
-                    onDragEnd={handlePaletteDragEnd}
-                    title={`Click to create ${config.label}; drag onto the map to place it.`}
-                  >
-                    <Icon size={19} />
-                    {config.label}
+            <section className={sidebarState.collapsed.tilePalette ? "sidebar-section sidebar-section--collapsed" : "sidebar-section"}>
+              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.tilePalette} onClick={() => toggleSidebarSection("tilePalette")}>
+                <span className="panel-title">Tile Palette</span>
+                <ChevronDown className="sidebar-section__chevron" size={16} />
+              </button>
+              {sidebarState.collapsed.tilePalette ? (
+                <div
+                  className="tile-palette tile-palette--collapsed"
+                  onWheel={handleCollapsedPaletteWheel}
+                  onTouchStart={handleCollapsedPaletteTouchStart}
+                  onTouchEnd={handleCollapsedPaletteTouchEnd}
+                >
+                  <button className="palette-cycle-button" type="button" onClick={() => cycleCollapsedPalette(-1)} title="Previous tile type" aria-label="Previous tile type">
+                    <ChevronUp size={16} />
                   </button>
-                );
-              })}
-            </div>
+                  {collapsedPaletteTypes.map(({ slot, type, interactive }) => {
+                    const config = TILE_TYPE_CONFIG[type];
+                    const Icon = config.icon;
+                    const style = { "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties;
+                    return interactive ? (
+                      <button
+                        key={`${slot}-${type}`}
+                        className="palette-item palette-item--collapsed palette-item--active-slot"
+                        style={style}
+                        draggable
+                        onClick={() => handlePaletteClick(type)}
+                        onDragStart={(event) => handlePaletteDragStart(event, type)}
+                        onDragEnd={handlePaletteDragEnd}
+                        title={`Click to create ${config.label}; drag onto the map to place it.`}
+                      >
+                        <Icon size={19} />
+                        {config.label}
+                      </button>
+                    ) : (
+                      <div key={`${slot}-${type}`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
+                        <Icon size={19} />
+                        {config.label}
+                      </div>
+                    );
+                  })}
+                  <button className="palette-cycle-button" type="button" onClick={() => cycleCollapsedPalette(1)} title="Next tile type" aria-label="Next tile type">
+                    <ChevronDown size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="tile-palette">
+                  {TILE_TYPES.map((type) => {
+                    const config = TILE_TYPE_CONFIG[type];
+                    const Icon = config.icon;
+                    return (
+                      <button
+                        key={type}
+                        className="palette-item"
+                        style={{ "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties}
+                        draggable
+                        onClick={() => handlePaletteClick(type)}
+                        onDragStart={(event) => handlePaletteDragStart(event, type)}
+                        onDragEnd={handlePaletteDragEnd}
+                        title={`Click to create ${config.label}; drag onto the map to place it.`}
+                      >
+                        <Icon size={19} />
+                        {config.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
 
             <div className="panel-title panel-title--spaced">Search Results</div>
             <div className="search-results">
@@ -1376,26 +1510,35 @@ function AtlasEditor() {
               )}
             </div>
 
-            <div className="panel-title panel-title--spaced">Views</div>
-            <div className="view-list">
-              {atlas.views.map((view) => (
-                <button key={view.id} className={activeViewId === view.id ? "view-button view-button--active" : "view-button"} onClick={() => handleSelectView(view)}>
-                  <Eye size={16} />
-                  {view.title}
-                </button>
-              ))}
-            </div>
-            <div className="view-actions">
-              <button className="small-button" onClick={handleCreateView}>
-                <Plus size={15} /> New
+            <section className={sidebarState.collapsed.views ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
+              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.views} onClick={() => toggleSidebarSection("views")}>
+                <span className="panel-title">Views</span>
+                <ChevronDown className="sidebar-section__chevron" size={16} />
               </button>
-              <button className="small-button" onClick={handleEditView} disabled={!activeView}>
-                <Settings size={15} /> Edit
-              </button>
-              <button className="small-button small-button--danger" onClick={handleDeleteView} disabled={!activeView || atlas.views.length <= 1}>
-                <Trash2 size={15} /> Delete
-              </button>
-            </div>
+              {!sidebarState.collapsed.views ? (
+                <div className="sidebar-section__body">
+                  <div className="view-list">
+                    {atlas.views.map((view) => (
+                      <button key={view.id} className={activeViewId === view.id ? "view-button view-button--active" : "view-button"} onClick={() => handleSelectView(view)}>
+                        <Eye size={16} />
+                        {view.title}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="view-actions">
+                    <button className="small-button" onClick={handleCreateView}>
+                      <Plus size={15} /> New
+                    </button>
+                    <button className="small-button" onClick={handleEditView} disabled={!activeView}>
+                      <Settings size={15} /> Edit
+                    </button>
+                    <button className="small-button small-button--danger" onClick={handleDeleteView} disabled={!activeView || atlas.views.length <= 1}>
+                      <Trash2 size={15} /> Delete
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </section>
 
             <div className="panel-title panel-title--spaced">Template</div>
             <div className="segmented">
@@ -1407,33 +1550,47 @@ function AtlasEditor() {
               </button>
             </div>
 
-            <div className="panel-title panel-title--spaced">Filters</div>
-            <div className="filter-grid">
-              {TILE_TYPES.map((type) => (
-                <label key={type} className="filter-check">
-                  <input
-                    type="checkbox"
-                    checked={!activeView?.visible_types.length || activeView.visible_types.includes(type)}
-                    onChange={() => handleToggleViewTileType(type)}
-                  />
-                  {TILE_TYPE_CONFIG[type].label}
-                </label>
-              ))}
-            </div>
+            <section className={sidebarState.collapsed.filters ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
+              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.filters} onClick={() => toggleSidebarSection("filters")}>
+                <span className="panel-title">Filters</span>
+                <ChevronDown className="sidebar-section__chevron" size={16} />
+              </button>
+              {!sidebarState.collapsed.filters ? (
+                <div className="filter-grid">
+                  {TILE_TYPES.map((type) => (
+                    <label key={type} className="filter-check">
+                      <input
+                        type="checkbox"
+                        checked={!activeView?.visible_types.length || activeView.visible_types.includes(type)}
+                        onChange={() => handleToggleViewTileType(type)}
+                      />
+                      {TILE_TYPE_CONFIG[type].label}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </section>
 
-            <div className="panel-title panel-title--spaced">Relationships</div>
-            <div className="filter-grid filter-grid--links">
-              {LINK_TYPES.map((type) => (
-                <label key={type} className="filter-check">
-                  <input
-                    type="checkbox"
-                    checked={!activeView?.visible_links.length || activeView.visible_links.includes(type)}
-                    onChange={() => handleToggleViewLinkType(type)}
-                  />
-                  {type}
-                </label>
-              ))}
-            </div>
+            <section className={sidebarState.collapsed.relationships ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
+              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.relationships} onClick={() => toggleSidebarSection("relationships")}>
+                <span className="panel-title">Relationships</span>
+                <ChevronDown className="sidebar-section__chevron" size={16} />
+              </button>
+              {!sidebarState.collapsed.relationships ? (
+                <div className="filter-grid filter-grid--links">
+                  {LINK_TYPES.map((type) => (
+                    <label key={type} className="filter-check">
+                      <input
+                        type="checkbox"
+                        checked={!activeView?.visible_links.length || activeView.visible_links.includes(type)}
+                        onChange={() => handleToggleViewLinkType(type)}
+                      />
+                      {type}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </section>
 
             <div className="panel-title panel-title--spaced">Warnings</div>
             <div className="warning-list">
@@ -1552,6 +1709,50 @@ function chooseTileType(fallback: TileType): TileType | null {
   const value = window.prompt(`Tile type (${TILE_TYPES.join(", ")})`, fallback);
   if (!value) return null;
   return TILE_TYPES.includes(value as TileType) ? (value as TileType) : fallback;
+}
+
+function defaultSidebarState(): SidebarState {
+  return {
+    collapsed: {
+      tilePalette: false,
+      views: false,
+      filters: false,
+      relationships: false
+    },
+    paletteIndex: 0
+  };
+}
+
+function getStoredSidebarState(): SidebarState {
+  const fallback = defaultSidebarState();
+  try {
+    const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (!stored) return fallback;
+    const parsed = JSON.parse(stored) as Partial<SidebarState>;
+    return {
+      collapsed: {
+        ...fallback.collapsed,
+        ...(parsed.collapsed ?? {})
+      },
+      paletteIndex: normalizePaletteIndex(Number(parsed.paletteIndex ?? fallback.paletteIndex))
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function storeSidebarState(state: SidebarState): void {
+  try {
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Local UI state is optional; storage failures should not block atlas editing.
+  }
+}
+
+function normalizePaletteIndex(index: number): number {
+  const count = TILE_TYPES.length;
+  if (!Number.isFinite(index) || count === 0) return 0;
+  return ((Math.trunc(index) % count) + count) % count;
 }
 
 function chooseLinkType(fallback: LinkType): LinkType | null {

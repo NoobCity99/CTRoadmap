@@ -130,6 +130,15 @@ export interface ExportResult {
   generated_at: string;
 }
 
+export interface AtlasImportPreview {
+  valid: boolean;
+  tiles: number;
+  links: number;
+  views: number;
+  warnings: string[];
+  errors: string[];
+}
+
 export interface HealthResult {
   status: string;
   app: string;

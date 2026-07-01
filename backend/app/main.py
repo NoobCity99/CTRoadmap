@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic import ValidationError
 
+from .config import FRONTEND_DIST
 from .debug import clear_debug_events, get_debug_events, record_debug_event
 from .exports import EXPORT_FILES, EXPORT_MEDIA_TYPES, ExportFormat, export_path, write_export
 from .models import Atlas
-from .storage import ROOT_DIR, read_atlas, write_atlas
+from .storage import read_atlas, write_atlas
 from .update_advisory import AppVersion, UpdateAdvisory, UpdateSettings, UpdateState, get_app_version, get_update_advisory, update_settings
 
 
@@ -25,6 +26,15 @@ class ExportResult(BaseModel):
     filename: str
     download_url: str
     generated_at: str
+
+
+class AtlasImportPreview(BaseModel):
+    valid: bool
+    tiles: int = 0
+    links: int = 0
+    views: int = 0
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 app.add_middleware(
@@ -92,6 +102,33 @@ def put_atlas(atlas: Atlas) -> Atlas:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
+@app.post("/api/atlas/preview", response_model=AtlasImportPreview)
+def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
+    try:
+        atlas = Atlas.model_validate(payload)
+    except ValidationError as exc:
+        errors = [format_validation_error(error) for error in exc.errors()]
+        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {"errors": len(errors)})
+        return AtlasImportPreview(valid=False, errors=errors)
+    except ValueError as exc:
+        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {"error": str(exc)})
+        return AtlasImportPreview(valid=False, errors=[str(exc)])
+
+    warnings = atlas_preview_warnings(atlas)
+    record_debug_event(
+        "atlas.preview",
+        "Atlas import preview validated",
+        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views), "warnings": len(warnings)},
+    )
+    return AtlasImportPreview(
+        valid=True,
+        tiles=len(atlas.tiles),
+        links=len(atlas.links),
+        views=len(atlas.views),
+        warnings=warnings,
+    )
+
+
 @app.post("/api/export/{format_}", response_model=ExportResult)
 def generate_export(format_: ExportFormat) -> ExportResult:
     try:
@@ -139,8 +176,6 @@ def clear_debug_log() -> dict[str, str]:
     return {"status": "ok"}
 
 
-FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
-
 if FRONTEND_DIST.exists():
     assets_dir = FRONTEND_DIST / "assets"
     if assets_dir.exists():
@@ -152,3 +187,18 @@ if FRONTEND_DIST.exists():
         if full_path and requested.exists() and requested.is_file():
             return FileResponse(requested)
         return FileResponse(FRONTEND_DIST / "index.html")
+
+
+def atlas_preview_warnings(atlas: Atlas) -> list[str]:
+    warnings: list[str] = []
+    if not atlas.tiles:
+        warnings.append("The imported atlas has no tiles.")
+    if not atlas.views:
+        warnings.append("The imported atlas has no views; default views will be applied.")
+    return warnings
+
+
+def format_validation_error(error: dict[str, Any]) -> str:
+    location = ".".join(str(part) for part in error.get("loc", ()))
+    message = str(error.get("msg", "Invalid value"))
+    return f"{location}: {message}" if location else message

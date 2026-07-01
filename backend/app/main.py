@@ -14,6 +14,7 @@ from .debug import clear_debug_events, get_debug_events, record_debug_event
 from .exports import EXPORT_FILES, EXPORT_MEDIA_TYPES, ExportFormat, export_path, write_export
 from .models import Atlas
 from .storage import ROOT_DIR, read_atlas, write_atlas
+from .update_advisory import AppVersion, UpdateAdvisory, UpdateSettings, UpdateState, get_app_version, get_update_advisory, update_settings
 
 
 app = FastAPI(title="CTRoadmap", version="0.1.0")
@@ -39,6 +40,26 @@ app.add_middleware(
 def health() -> dict[str, str]:
     record_debug_event("health", "Health endpoint checked")
     return {"status": "ok", "app": "CTRoadmap"}
+
+
+@app.get("/api/app/version", response_model=AppVersion)
+def app_version() -> AppVersion:
+    record_debug_event("app.version", "App version checked")
+    return get_app_version()
+
+
+@app.get("/api/app/update", response_model=UpdateAdvisory)
+def app_update() -> UpdateAdvisory:
+    advisory = get_update_advisory()
+    record_debug_event("app.update", "Update advisory checked", context={"status": advisory.status, "latest_version": advisory.latest_version})
+    return advisory
+
+
+@app.put("/api/app/update/settings", response_model=UpdateState)
+def put_update_settings(settings: UpdateSettings) -> UpdateState:
+    state = update_settings(settings)
+    record_debug_event("app.update.settings", "Update advisory settings changed", context={"enabled": state.update_checks_enabled, "interval": state.check_interval_hours})
+    return state
 
 
 @app.get("/api/atlas", response_model=Atlas)

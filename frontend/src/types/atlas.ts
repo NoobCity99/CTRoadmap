@@ -38,6 +38,9 @@ export type LinkSourcePort = "out" | "child";
 export type LinkTargetPort = "in" | "parent";
 export type Lifecycle = "live" | "planned";
 export type AppMode = "live" | "planning";
+export type DeploymentType = "docker" | "linux_desktop" | "windows_desktop";
+export type ReleaseChannel = "beta" | "stable";
+export type UpdateStatus = "available" | "current" | "disabled" | "failed" | "unknown";
 
 export interface FlowStep {
   order: number;
@@ -130,6 +133,46 @@ export interface ExportResult {
 export interface HealthResult {
   status: string;
   app: string;
+}
+
+export interface AppVersion {
+  deployment_type: DeploymentType;
+  channel: ReleaseChannel;
+  current_version: string;
+  build_sha: string;
+  build_date: string;
+}
+
+export interface UpdateTarget {
+  update_command?: string | null;
+  release_notes_url?: string | null;
+  download_url?: string | null;
+  sha256?: string | null;
+  notes?: string;
+}
+
+export interface UpdateState {
+  last_checked_at: string | null;
+  last_result: UpdateStatus;
+  latest_seen_version: string | null;
+  target?: UpdateTarget | null;
+  last_error?: string | null;
+  update_checks_enabled: boolean;
+  check_interval_hours: number;
+}
+
+export interface UpdateAdvisory extends AppVersion {
+  status: UpdateStatus;
+  state: UpdateState;
+  latest_version: string | null;
+  manifest_url: string;
+  target?: UpdateTarget | null;
+  error?: string | null;
+}
+
+export interface UpdateSettings {
+  update_checks_enabled: boolean;
+  check_interval_hours: number;
 }
 
 export interface DebugEvent {

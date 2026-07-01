@@ -16,6 +16,7 @@ import {
 import {
   Download,
   Eye,
+  ExternalLink,
   FileCode2,
   FileText,
   GitBranch,
@@ -39,10 +40,13 @@ import {
   downloadExport,
   generateExport,
   importAtlasFile,
+  loadAppVersion,
   loadAtlas,
   loadBackendDebugLog,
   loadHealth,
-  saveAtlas
+  loadUpdateAdvisory,
+  saveAtlas,
+  saveUpdateSettings
 } from "./lib/api";
 import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
@@ -51,6 +55,7 @@ import { getLinkColor, getStoredThemePalette, getTileColor, storeThemePalette } 
 import { validateAtlasWarnings } from "./lib/validation";
 import type {
   Atlas,
+  AppVersion,
   DebugEvent,
   ExportFormat,
   ExportResult,
@@ -65,12 +70,17 @@ import type {
   ThemePaletteId,
   Tile,
   TileType,
+  UpdateAdvisory,
+  UpdateSettings,
   View
 } from "./types/atlas";
 
 const nodeTypes = { tileNode: TileNode };
 const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
 const FIT_VIEW_OPTIONS: FitViewOptions = { padding: 0.28, duration: 450 };
+const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
+const UPDATE_NOTICE_SNOOZE_HOURS = 24;
+const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 
 type SearchResult =
   | { kind: "tile"; id: string; title: string; detail: string }
@@ -97,6 +107,9 @@ function AtlasEditor() {
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
   const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
+  const [appVersion, setAppVersion] = useState<AppVersion | null>(null);
+  const [updateAdvisory, setUpdateAdvisory] = useState<UpdateAdvisory | null>(null);
+  const [updateNoticeRevision, setUpdateNoticeRevision] = useState(0);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,6 +173,29 @@ function AtlasEditor() {
   useEffect(() => {
     storeThemePalette(themePaletteId);
   }, [themePaletteId]);
+
+  useEffect(() => {
+    loadAppVersion()
+      .then((version) => {
+        setAppVersion(version);
+        appendDebugEvent("app.version", "App version loaded", "info", { version: version.current_version, channel: version.channel });
+      })
+      .catch((error) => {
+        appendDebugEvent("app.version", "App version load failed", "error", { error: error instanceof Error ? error.message : String(error) });
+      });
+
+    loadUpdateAdvisory()
+      .then((advisory) => {
+        setUpdateAdvisory(advisory);
+        appendDebugEvent("app.update", "Update advisory loaded", advisory.status === "failed" ? "warning" : "info", {
+          status: advisory.status,
+          latest_version: advisory.latest_version ?? null
+        });
+      })
+      .catch((error) => {
+        appendDebugEvent("app.update", "Update advisory load failed", "error", { error: error instanceof Error ? error.message : String(error) });
+      });
+  }, [appendDebugEvent]);
 
   const activeView = useMemo(() => {
     if (!atlas) return null;
@@ -418,6 +454,71 @@ function AtlasEditor() {
       appendDebugEvent("debug.clear", "Backend debug clear failed", "error", { error: error instanceof Error ? error.message : String(error) });
     });
   }, [appendDebugEvent]);
+
+  const handleUpdateSettings = useCallback(
+    async (settings: UpdateSettings) => {
+      if (!updateAdvisory) return;
+      try {
+        const state = await saveUpdateSettings(settings);
+        const nextAdvisory: UpdateAdvisory = {
+          ...updateAdvisory,
+          status: state.update_checks_enabled ? updateAdvisory.status : "disabled",
+          state
+        };
+        setUpdateAdvisory(nextAdvisory);
+        if (state.update_checks_enabled) {
+          loadUpdateAdvisory()
+            .then(setUpdateAdvisory)
+            .catch((error) => {
+              appendDebugEvent("app.update", "Update advisory refresh failed", "error", { error: error instanceof Error ? error.message : String(error) });
+            });
+        }
+        appendDebugEvent("app.update.settings", "Update advisory settings saved", "info", {
+          enabled: state.update_checks_enabled,
+          interval: state.check_interval_hours
+        });
+      } catch (error) {
+        appendDebugEvent("app.update.settings", "Update advisory settings failed", "error", { error: error instanceof Error ? error.message : String(error) });
+        window.alert(error instanceof Error ? error.message : "Unable to save update settings");
+      }
+    },
+    [appendDebugEvent, updateAdvisory]
+  );
+
+  const handleCopyUpdateCommand = useCallback(async () => {
+    const command = updateAdvisory?.target?.update_command || MANUAL_UPDATE_COMMAND;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(command);
+        setStatus("Update command copied");
+      } else {
+        window.prompt("Copy update command", command);
+        setStatus("Update command shown");
+      }
+      appendDebugEvent("app.update.copy_command", "Update command copied", "info", { deployment_type: updateAdvisory?.deployment_type ?? "docker" });
+    } catch (error) {
+      window.prompt("Copy update command", command);
+      appendDebugEvent("app.update.copy_command", "Clipboard copy failed; command shown", "warning", { error: error instanceof Error ? error.message : String(error) });
+    }
+  }, [appendDebugEvent, updateAdvisory]);
+
+  const handleViewReleaseNotes = useCallback(() => {
+    const url = updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url;
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+    appendDebugEvent("app.update.release_notes", "Release notes opened", "info", { url });
+  }, [appendDebugEvent, updateAdvisory]);
+
+  const handleRemindUpdateLater = useCallback(() => {
+    const key = updateNoticeKey(updateAdvisory);
+    window.localStorage.setItem(key, new Date().toISOString());
+    setUpdateNoticeRevision((revision) => revision + 1);
+    setStatus("Update reminder snoozed");
+    appendDebugEvent("app.update.remind_later", "Update advisory reminder snoozed", "info", {
+      status: updateAdvisory?.status ?? "unknown",
+      latest_version: updateAdvisory?.latest_version ?? null
+    });
+  }, [appendDebugEvent, updateAdvisory]);
 
   const handleSave = useCallback(async () => {
     if (!atlas) return;
@@ -1080,6 +1181,25 @@ function AtlasEditor() {
     ? atlas.links.filter((link) => !atlas.tiles.some((tile) => tile.id === link.from) || !atlas.tiles.some((tile) => tile.id === link.to)).length
     : 0;
   const warnings = useMemo(() => (atlas ? validateAtlasWarnings(atlas) : []), [atlas]);
+  const updateNotice = useMemo(() => {
+    if (!updateAdvisory) return null;
+    if (isUpdateNoticeSnoozed(updateAdvisory)) return null;
+    if (updateAdvisory.status === "available") {
+      return {
+        tone: "available",
+        title: `Update ${updateAdvisory.latest_version ?? ""} available`.trim(),
+        message: updateAdvisory.target?.notes || "A newer CTRoadmap build is available."
+      };
+    }
+    if (updateAdvisory.status === "disabled" || updateAdvisory.status === "failed") {
+      return {
+        tone: "manual",
+        title: "Manual update check",
+        message: "Beta Docker updates can be checked manually when advisory checks are unavailable."
+      };
+    }
+    return null;
+  }, [updateAdvisory, updateNoticeRevision]);
 
   useEffect(() => {
     if (!atlas) return;
@@ -1166,6 +1286,25 @@ function AtlasEditor() {
           >
             <Plus size={18} /> Planning Mode
           </button>
+          {updateNotice ? (
+            <div className={`update-advisory update-advisory--${updateNotice.tone}`}>
+              <div>
+                <strong>{updateNotice.title}</strong>
+                <span>{updateNotice.message}</span>
+              </div>
+              {updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url ? (
+                <button className="mini-icon-button" onClick={handleViewReleaseNotes} title="View release notes" aria-label="View release notes">
+                  <ExternalLink size={15} />
+                </button>
+              ) : null}
+              <button className="mini-icon-button" onClick={() => void handleCopyUpdateCommand()} title="Copy update command" aria-label="Copy update command">
+                <Download size={15} />
+              </button>
+              <button className="mini-icon-button" onClick={handleRemindUpdateLater} title="Remind me later" aria-label="Remind me later">
+                <X size={15} />
+              </button>
+            </div>
+          ) : null}
           <div className="search-box">
             <Search size={18} />
             <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
@@ -1390,14 +1529,19 @@ function AtlasEditor() {
           <SettingsPanel
             atlas={atlas}
             activeView={activeView}
+            appVersion={appVersion}
             backendHealth={backendHealth}
             debugEvents={debugEvents}
             layoutTemplate={layoutTemplate}
             paletteId={themePaletteId}
+            updateAdvisory={updateAdvisory}
             onClearDebugLog={handleClearDebugLog}
             onClose={() => setSettingsOpen(false)}
+            onCopyUpdateCommand={handleCopyUpdateCommand}
             onExportDebugLog={handleExportDebugLog}
             onPaletteChange={handlePaletteChange}
+            onUpdateSettings={handleUpdateSettings}
+            onViewReleaseNotes={handleViewReleaseNotes}
           />
         ) : null}
       </div>
@@ -1451,6 +1595,29 @@ function canConnectTiles(sourceTile: Tile, targetTile: Tile, mode: AppMode): boo
     return resolveLifecycle(sourceTile) === "planned" || resolveLifecycle(targetTile) === "planned";
   }
   return resolveLifecycle(sourceTile) === "live" && resolveLifecycle(targetTile) === "live";
+}
+
+function updateNoticeKey(advisory: UpdateAdvisory | null): string {
+  if (!advisory) return `${UPDATE_NOTICE_PREFIX}unknown`;
+  if (advisory.status === "available") {
+    return `${UPDATE_NOTICE_PREFIX}available:${advisory.latest_version ?? "unknown"}`;
+  }
+  return `${UPDATE_NOTICE_PREFIX}manual:${advisory.status}`;
+}
+
+function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
+  const key = updateNoticeKey(advisory);
+  const hiddenAt = window.localStorage.getItem(key);
+  if (!hiddenAt) return false;
+  const hiddenDate = new Date(hiddenAt);
+  if (Number.isNaN(hiddenDate.getTime())) {
+    window.localStorage.removeItem(key);
+    return false;
+  }
+  const expiresAt = hiddenDate.getTime() + UPDATE_NOTICE_SNOOZE_HOURS * 60 * 60 * 1000;
+  if (Date.now() < expiresAt) return true;
+  window.localStorage.removeItem(key);
+  return false;
 }
 
 function isEditableNodeChange(change: NodeChange, nodes: Node[], mode: AppMode): boolean {

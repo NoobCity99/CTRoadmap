@@ -38,12 +38,14 @@ This file tracks planning questions, product decisions, bugs, and bug fixes disc
 | 2026-06-29 | Live View remains editable for live objects. | Planning Mode edits only planned objects, while Live View can still maintain current live atlas data and promote planned work. |
 | 2026-06-28 | Beta users should install from a published Docker image instead of cloning the repo. | The first release target is a Docker-image-based install using `ghcr.io/noobcity99/ctroadmap:beta`. |
 | 2026-06-29 | Optional sample seed data should be stored as atlas JSON instead of hardcoded TypeScript. | Keeps the seed file aligned with exported atlas data and makes future seed replacement straightforward. |
+| 2026-07-01 | Update Advisory must remain informational only. | CTRoadmap can check a public version manifest and show update guidance, but it must not auto-update, run Docker commands, mount the Docker socket, or execute system-management actions. |
 
 ## Release Changes
 
 | Date/Time | Files Created/Changed | Summary | Assumptions | Validation Results |
 |---|---|---|---|---|
 | 2026-06-28 23:56 PDT | Created `CTRBETA_release-compose.yml`, `CTR_install.sh`, `CTR_uninstall.sh`; changed `README.md` and `PROJECT_LOG.md`. | Docker-image-based beta release bootstrap added. | Image will be published as `ghcr.io/noobcity99/ctroadmap:beta`; installer targets Linux with Docker Compose v2. | `bash -n CTR_install.sh` passed; `bash -n CTR_uninstall.sh` passed; `docker compose -f CTRBETA_release-compose.yml config` passed; `git diff --check` passed. |
+| 2026-07-01 | Created `backend/app/update_advisory.py` and `latest.json`; changed Dockerfile, backend API, frontend API/types/settings/UI, README, `.gitignore`, and project log. | Advisory-only update checks added with persisted `data/update_state.json` state and Settings/toolbar guidance. | Default deployment is Docker beta; default manifest is GitHub raw `main/latest.json`; users manually run the copied update command. | `python3 -m compileall backend` passed; `npm --prefix frontend run build` passed; `python3 -m json.tool latest.json` passed; targeted `git diff --check` passed for source changes. Repo-wide whitespace check still reports unrelated CRLF/trailing-whitespace issues in modified docs. |
 
 ## Bugs And Fixes
 

@@ -164,6 +164,50 @@ button:disabled {
   box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.16), 0 0 18px rgba(251, 191, 36, 0.12);
 }
 
+.update-advisory {
+  max-width: 370px;
+  min-height: 44px;
+  border: 1px solid rgba(91, 142, 196, 0.35);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 12px;
+  background: rgba(7, 15, 30, 0.95);
+}
+
+.update-advisory--available {
+  border-color: rgba(34, 197, 94, 0.48);
+  box-shadow: inset 0 0 18px rgba(34, 197, 94, 0.12);
+}
+
+.update-advisory--manual {
+  border-color: rgba(251, 191, 36, 0.42);
+}
+
+.update-advisory div {
+  min-width: 0;
+  flex: 1;
+}
+
+.update-advisory strong,
+.update-advisory span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-advisory strong {
+  color: #f8fafc;
+  font-size: 0.78rem;
+}
+
+.update-advisory span {
+  color: #91a4bf;
+  font-size: 0.72rem;
+}
+
 .icon-button {
   width: 42px;
   padding: 0;
@@ -968,6 +1012,10 @@ button:disabled {
   line-height: 1.45;
 }
 
+.settings-note--warning {
+  color: #fbbf24;
+}
+
 .settings-section {
   margin-top: 18px;
   border: 1px solid rgba(91, 142, 196, 0.22);
@@ -1049,6 +1097,33 @@ button:disabled {
   flex-wrap: wrap;
   gap: 9px;
   margin-bottom: 10px;
+}
+
+.settings-toggle,
+.settings-inline-field {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #dbeafe;
+  font-size: 0.86rem;
+  margin-top: 12px;
+}
+
+.settings-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--focus-accent);
+}
+
+.settings-inline-field input {
+  width: 88px;
+  height: 34px;
+  border: 1px solid rgba(91, 142, 196, 0.28);
+  border-radius: 8px;
+  color: #e5eefb;
+  background: rgba(6, 12, 24, 0.82);
+  padding: 0 9px;
 }
 
 .debug-list {

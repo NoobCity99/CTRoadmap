@@ -53,6 +53,12 @@ docker compose up -d
 docker compose pull && docker compose up -d
 ```
 
+Manual beta update:
+
+```bash
+cd ~/ctroadmap-beta && docker compose pull && docker compose up -d
+```
+
 Uninstall:
 
 ```bash
@@ -97,6 +103,9 @@ Backup data:
 ```bash
 cp data/atlas.json data/atlas.backup.json
 ```
+
+
+Update Advisory is informational only. CTRoadmap does not auto-update, run Docker commands, mount the Docker socket, or execute system-management actions.
 
 
 ## Features
@@ -149,6 +158,9 @@ Escape           Clear selection
 
 ```text
 GET  /api/health
+GET  /api/app/version
+GET  /api/app/update
+PUT  /api/app/update/settings
 GET  /api/atlas
 PUT  /api/atlas
 POST /api/export/markdown

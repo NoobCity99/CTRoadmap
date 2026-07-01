@@ -1,4 +1,4 @@
-import type { Atlas, DebugEvent, ExportFormat, ExportResult, HealthResult } from "../types/atlas";
+import type { AppVersion, Atlas, DebugEvent, ExportFormat, ExportResult, HealthResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
 
 export async function loadAtlas(): Promise<Atlas> {
   const response = await fetch("/api/atlas");
@@ -24,6 +24,36 @@ export async function saveAtlas(atlas: Atlas): Promise<Atlas> {
 
 export async function loadHealth(): Promise<HealthResult> {
   const response = await fetch("/api/health");
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function loadAppVersion(): Promise<AppVersion> {
+  const response = await fetch("/api/app/version");
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function loadUpdateAdvisory(): Promise<UpdateAdvisory> {
+  const response = await fetch("/api/app/update");
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function saveUpdateSettings(settings: UpdateSettings): Promise<UpdateState> {
+  const response = await fetch("/api/app/update/settings", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(settings)
+  });
   if (!response.ok) {
     throw new Error(await response.text());
   }

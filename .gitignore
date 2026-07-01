@@ -5,6 +5,7 @@ frontend/dist/
 .DS_Store
 *.pyc
 data/*.backup.json
+data/update_state.json
 exports/*
 !exports/.gitkeep
 ImportFeasability.md

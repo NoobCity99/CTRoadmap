@@ -1,5 +1,5 @@
 {
-  "latest_version": "0.1.2-beta",
+  "latest_version": "0.1.1-beta",
   "channel": "beta",
   "targets": {
     "docker": {

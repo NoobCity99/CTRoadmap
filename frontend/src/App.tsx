@@ -65,7 +65,15 @@ import {
 import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
 import { createSeedAtlas } from "./lib/seed";
-import { getLinkColor, getStoredThemePalette, getTileColor, storeThemePalette } from "./lib/theme";
+import {
+  getAssociatedCanvasBackground,
+  getLinkColor,
+  getStoredCanvasBackground,
+  getStoredThemePalette,
+  getTileColor,
+  storeCanvasBackground,
+  storeThemePalette
+} from "./lib/theme";
 import { validateAtlasWarnings } from "./lib/validation";
 import type {
   Atlas,
@@ -74,6 +82,7 @@ import type {
   ExportFormat,
   ExportResult,
   AppMode,
+  CanvasBackgroundId,
   LayoutTemplate,
   Lifecycle,
   Link,
@@ -169,6 +178,7 @@ function AtlasEditor() {
   const [stackContextMenu, setStackContextMenu] = useState<StackContextMenu | null>(null);
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
+  const [canvasBackgroundId, setCanvasBackgroundId] = useState<CanvasBackgroundId>(() => getStoredCanvasBackground());
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
   const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
@@ -225,6 +235,10 @@ function AtlasEditor() {
   useEffect(() => {
     storeThemePalette(themePaletteId);
   }, [themePaletteId]);
+
+  useEffect(() => {
+    storeCanvasBackground(canvasBackgroundId);
+  }, [canvasBackgroundId]);
 
   useEffect(() => {
     storeSidebarState(sidebarState);
@@ -383,6 +397,7 @@ function AtlasEditor() {
           tile,
           parentTitle,
           accentColor: getTileColor(tile.type, themePaletteId),
+          iconAccentColor: themePaletteId === "blueprint" ? getTileColor(tile.type, "cyber") : getTileColor(tile.type, themePaletteId),
           hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
           lifecycle,
           isMuted: !editable,
@@ -401,6 +416,7 @@ function AtlasEditor() {
     return visibleLinks.map((link) => {
       const lifecycle = resolveLifecycle(link);
       const editable = isLifecycleEditable(lifecycle, appMode);
+      const isBlueprint = themePaletteId === "blueprint";
       const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
       return {
         id: link.id,
@@ -417,12 +433,12 @@ function AtlasEditor() {
           opacity: editable ? 1 : 0.55
         },
         labelStyle: {
-          fill: editable ? "#f8fafc" : "#94a3b8",
+          fill: isBlueprint ? (editable ? "#06245a" : "rgba(6, 36, 90, 0.7)") : editable ? "#f8fafc" : "#94a3b8",
           fontSize: 12,
           fontWeight: 700
         },
         labelBgStyle: {
-          fill: "rgba(5, 10, 22, 0.88)",
+          fill: isBlueprint ? "rgba(238, 247, 255, 0.86)" : "rgba(5, 10, 22, 0.88)",
           fillOpacity: 0.9
         }
       };
@@ -486,7 +502,19 @@ function AtlasEditor() {
   const handlePaletteChange = useCallback(
     (paletteId: ThemePaletteId) => {
       setThemePaletteId(paletteId);
+      const associatedBackground = getAssociatedCanvasBackground(paletteId);
+      if (associatedBackground) {
+        setCanvasBackgroundId(associatedBackground);
+      }
       appendDebugEvent("settings.palette", "Theme palette changed", "info", { palette: paletteId });
+    },
+    [appendDebugEvent]
+  );
+
+  const handleCanvasBackgroundChange = useCallback(
+    (backgroundId: CanvasBackgroundId) => {
+      setCanvasBackgroundId(backgroundId);
+      appendDebugEvent("settings.canvas_background", "Canvas background changed", "info", { background: backgroundId });
     },
     [appendDebugEvent]
   );
@@ -1593,7 +1621,8 @@ function AtlasEditor() {
                   {collapsedPaletteTypes.map(({ slot, type, interactive }) => {
                     const config = TILE_TYPE_CONFIG[type];
                     const Icon = config.icon;
-                    const style = { "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties;
+                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(type, "cyber") : getTileColor(type, themePaletteId);
+                    const style = { "--tile-accent": paletteAccent } as CSSProperties;
                     return interactive ? (
                       <button
                         key={`${slot}-${type}`}
@@ -1624,11 +1653,12 @@ function AtlasEditor() {
                   {TILE_TYPES.map((type) => {
                     const config = TILE_TYPE_CONFIG[type];
                     const Icon = config.icon;
+                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(type, "cyber") : getTileColor(type, themePaletteId);
                     return (
                       <button
                         key={type}
                         className="palette-item"
-                        style={{ "--tile-accent": getTileColor(type, themePaletteId) } as CSSProperties}
+                        style={{ "--tile-accent": paletteAccent } as CSSProperties}
                         draggable
                         onClick={() => handlePaletteClick(type)}
                         onDragStart={(event) => handlePaletteDragStart(event, type)}
@@ -1774,6 +1804,7 @@ function AtlasEditor() {
           <section
             ref={canvasRef}
             className={`canvas-frame canvas-frame--${layoutTemplate}`}
+            data-background={canvasBackgroundId}
             onDragOver={handleCanvasDragOver}
             onDrop={handleCanvasDrop}
             onDoubleClick={handleCanvasDoubleClick}
@@ -1871,12 +1902,14 @@ function AtlasEditor() {
             backendHealth={backendHealth}
             debugEvents={debugEvents}
             layoutTemplate={layoutTemplate}
+            canvasBackgroundId={canvasBackgroundId}
             paletteId={themePaletteId}
             updateAdvisory={updateAdvisory}
             onClearDebugLog={handleClearDebugLog}
             onClose={() => setSettingsOpen(false)}
             onCopyUpdateCommand={handleCopyUpdateCommand}
             onExportDebugLog={handleExportDebugLog}
+            onCanvasBackgroundChange={handleCanvasBackgroundChange}
             onPaletteChange={handlePaletteChange}
             onUpdateSettings={handleUpdateSettings}
             onViewReleaseNotes={handleViewReleaseNotes}

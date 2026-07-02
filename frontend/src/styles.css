@@ -96,6 +96,26 @@ button:disabled {
   --focus-accent: #fb923c;
 }
 
+.app-shell[data-theme="blueprint"] {
+  --panel-bg: rgba(0, 34, 106, 0.78);
+  --panel-border: rgba(232, 247, 255, 0.32);
+  --button-bg: linear-gradient(180deg, rgba(235, 248, 255, 0.2), rgba(0, 47, 139, 0.62));
+  --button-border: rgba(235, 248, 255, 0.42);
+  --canvas-grid-line: rgba(255, 255, 255, 0.28);
+  --canvas-grid: rgba(255, 255, 255, 0.09);
+  --canvas-glow: rgba(255, 255, 255, 0.08);
+  --canvas-bg: #0041ba;
+  --focus-accent: #eaf6ff;
+}
+
+.app-shell[data-theme="blueprint"] .topbar,
+.app-shell[data-theme="blueprint"] .left-panel,
+.app-shell[data-theme="blueprint"] .inspector,
+.app-shell[data-theme="blueprint"] .settings-panel {
+  background: rgba(0, 30, 92, 0.84);
+  border-color: rgba(232, 247, 255, 0.28);
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -553,6 +573,9 @@ button:disabled {
 .canvas-frame {
   position: relative;
   min-width: 0;
+}
+
+.canvas-frame[data-background="grid"] {
   background:
     linear-gradient(var(--canvas-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
@@ -561,13 +584,114 @@ button:disabled {
   background-size: 20px 20px, 20px 20px, auto, auto;
 }
 
-.canvas-frame--layered_hierarchy {
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="grid"] {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 12%, transparent), transparent 40%),
     linear-gradient(var(--canvas-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
     var(--canvas-bg);
   background-size: auto, 24px 24px, 24px 24px, auto;
+}
+
+.canvas-frame[data-background="hex"] {
+  background:
+    radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
+    linear-gradient(30deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
+    linear-gradient(150deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
+    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 49%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 51%, transparent 52%),
+    var(--canvas-bg);
+  background-position: center, 0 0, 0 0, 0 0, center;
+  background-size: auto, 36px 62px, 36px 62px, 36px 62px, auto;
+}
+
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="hex"] {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 12%, transparent), transparent 40%),
+    radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
+    linear-gradient(30deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
+    linear-gradient(150deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
+    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 49%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 51%, transparent 52%),
+    var(--canvas-bg);
+  background-position: center, center, 0 0, 0 0, 0 0, center;
+  background-size: auto, auto, 42px 72px, 42px 72px, 42px 72px, auto;
+}
+
+.canvas-frame[data-background="circuit"] {
+  background-color: #050829;
+  background-image:
+    linear-gradient(0deg, #00000000 96%, #bebfc11f 100%),
+    linear-gradient(90deg, #00000000 96%, #bebfc11c 100%),
+    radial-gradient(75% 75% at 50% 50%, #000000 67%, #081420 100%),
+    radial-gradient(75% 75% at 50% 50%, #000000 0%, #050829 100%),
+    linear-gradient(132deg, #fdfdfd00 66%, #25e8e8 86%, #11d4d4 88%, #066e6e 89%, #05716a00 91%),
+    linear-gradient(132deg, #05716a00 9%, #066e6e 11%, #11d4d4 12%, #25e8e8 14%, #fdfdfd00 34%),
+    repeating-linear-gradient(0deg, #00000000 57%, #000000 59%, #073aff 60%, #073aff00 61%);
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  background-size:
+    50px 50px,
+    50px 50px,
+    220px 220px,
+    110px 110px,
+    110px 110px,
+    110px 110px,
+    110px 110px;
+}
+
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="circuit"] {
+  background-color: #050829;
+  background-image:
+    linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 10%, transparent), transparent 40%),
+    linear-gradient(0deg, #00000000 96%, #bebfc11f 100%),
+    linear-gradient(90deg, #00000000 96%, #bebfc11c 100%),
+    radial-gradient(75% 75% at 50% 50%, #000000 67%, #081420 100%),
+    radial-gradient(75% 75% at 50% 50%, #000000 0%, #050829 100%),
+    linear-gradient(132deg, #fdfdfd00 66%, #25e8e8 86%, #11d4d4 88%, #066e6e 89%, #05716a00 91%),
+    linear-gradient(132deg, #05716a00 9%, #066e6e 11%, #11d4d4 12%, #25e8e8 14%, #fdfdfd00 34%),
+    repeating-linear-gradient(0deg, #00000000 57%, #000000 59%, #073aff 60%, #073aff00 61%);
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  background-size:
+    auto,
+    50px 50px,
+    50px 50px,
+    220px 220px,
+    110px 110px,
+    110px 110px,
+    110px 110px,
+    110px 110px;
+}
+
+.canvas-frame[data-background="blueprint"] {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.09), rgba(0, 45, 145, 0.08) 46rem, rgba(0, 21, 82, 0.28) 86rem),
+    #0041ba;
+  background-size: 36px 36px, 36px 36px, auto, auto;
+}
+
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="blueprint"] {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 42%),
+    linear-gradient(rgba(255, 255, 255, 0.085) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.085) 1px, transparent 1px),
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), rgba(0, 45, 145, 0.08) 46rem, rgba(0, 21, 82, 0.28) 86rem),
+    #0041ba;
+  background-size: auto, 36px 36px, 36px 36px, auto, auto;
 }
 
 .view-tabs {
@@ -726,7 +850,7 @@ button:disabled {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--tile-accent);
+  color: var(--tile-icon-accent, var(--tile-accent));
   border: 1px solid color-mix(in srgb, var(--tile-accent) 62%, transparent);
   border-radius: 7px;
   background: rgba(2, 8, 18, 0.62);
@@ -943,6 +1067,119 @@ button:disabled {
   border-radius: 5px;
   padding: 3px 6px;
   font-size: 0.68rem;
+}
+
+.app-shell[data-theme="blueprint"] .tile-node {
+  border-color: rgba(255, 255, 255, 0.86);
+  color: #061d4d;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), transparent 58%),
+    rgba(238, 247, 255, 0.82);
+  box-shadow: 0 14px 26px rgba(0, 19, 72, 0.43), 0 0 24px color-mix(in srgb, var(--tile-accent) 34%, rgba(0, 24, 94, 0.6));
+}
+
+.app-shell[data-theme="blueprint"] .tile-node--parent {
+  outline-color: rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node--primary-node {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(0, 65, 186, 0.52),
+    0 16px 32px rgba(0, 19, 72, 0.55),
+    0 0 34px rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node--stacked {
+  box-shadow: 0 16px 32px rgba(0, 19, 72, 0.53), 0 0 26px rgba(255, 255, 255, 0.22);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node--stacked::before,
+.app-shell[data-theme="blueprint"] .tile-node--stacked::after {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(226, 241, 255, 0.72);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node--selected {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.88),
+    0 18px 34px rgba(0, 19, 72, 0.6),
+    0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__icon {
+  color: var(--tile-icon-accent, #073071);
+  border-color: color-mix(in srgb, var(--tile-icon-accent, #073071) 42%, rgba(0, 65, 186, 0.18));
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__title,
+.app-shell[data-theme="blueprint"] .tile-node__stack-meta strong,
+.app-shell[data-theme="blueprint"] .tile-node__field strong,
+.app-shell[data-theme="blueprint"] .tile-node__field-action {
+  color: #061d4d;
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__type,
+.app-shell[data-theme="blueprint"] .tile-node__parent,
+.app-shell[data-theme="blueprint"] .tile-node__field {
+  color: rgba(6, 29, 77, 0.72);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__parent,
+.app-shell[data-theme="blueprint"] .tile-node__stack-meta span {
+  color: #00358f;
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__lifecycle {
+  border-color: rgba(0, 65, 186, 0.24);
+  color: #06245a;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__lifecycle--planned {
+  border-color: rgba(137, 104, 0, 0.28);
+  color: #4f3b00;
+  background: rgba(255, 248, 214, 0.62);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__stack-meta {
+  border-color: rgba(0, 65, 186, 0.24);
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__stack-count {
+  border-color: rgba(0, 26, 91, 0.58);
+  color: #061d4d;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 20px rgba(0, 19, 72, 0.35);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__handle {
+  border-color: rgba(255, 255, 255, 0.88);
+  background: #00358f;
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__port-label {
+  color: #061d4d;
+  border-color: rgba(0, 65, 186, 0.28);
+  background: rgba(238, 247, 255, 0.9);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__field-action {
+  text-decoration-color: rgba(0, 65, 186, 0.42);
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__field-action:hover,
+.app-shell[data-theme="blueprint"] .tile-node__field-action:focus-visible {
+  color: #00184f;
+  text-decoration-color: #0041ba;
+}
+
+.app-shell[data-theme="blueprint"] .tile-node__tags span {
+  color: #061d4d;
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(0, 65, 186, 0.26);
 }
 
 .react-flow__attribution {
@@ -1422,7 +1659,8 @@ button:disabled {
 }
 
 .settings-toggle,
-.settings-inline-field {
+.settings-inline-field,
+.settings-select-field {
   min-height: 40px;
   display: flex;
   align-items: center;
@@ -1446,6 +1684,20 @@ button:disabled {
   color: #e5eefb;
   background: rgba(6, 12, 24, 0.82);
   padding: 0 9px;
+}
+
+.settings-select-field {
+  justify-content: space-between;
+}
+
+.settings-select-field select {
+  min-width: 180px;
+  height: 36px;
+  border: 1px solid rgba(91, 142, 196, 0.28);
+  border-radius: 8px;
+  color: #e5eefb;
+  background: rgba(6, 12, 24, 0.82);
+  padding: 0 10px;
 }
 
 .debug-list {

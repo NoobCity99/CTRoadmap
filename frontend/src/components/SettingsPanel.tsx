@@ -1,6 +1,6 @@
 import { Download, ExternalLink, ServerCog, Trash2, X } from "lucide-react";
-import { THEME_PALETTES, getThemePalette } from "../lib/theme";
-import type { AppVersion, Atlas, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
+import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
+import type { AppVersion, Atlas, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
 
 interface SettingsPanelProps {
   atlas: Atlas;
@@ -9,12 +9,14 @@ interface SettingsPanelProps {
   backendHealth: string;
   debugEvents: DebugEvent[];
   layoutTemplate: LayoutTemplate;
+  canvasBackgroundId: CanvasBackgroundId;
   paletteId: ThemePaletteId;
   updateAdvisory: UpdateAdvisory | null;
   onClearDebugLog: () => void;
   onClose: () => void;
   onCopyUpdateCommand: () => void | Promise<void>;
   onExportDebugLog: () => void;
+  onCanvasBackgroundChange: (backgroundId: CanvasBackgroundId) => void;
   onPaletteChange: (paletteId: ThemePaletteId) => void;
   onUpdateSettings: (settings: UpdateSettings) => void | Promise<void>;
   onViewReleaseNotes: () => void;
@@ -27,12 +29,14 @@ export function SettingsPanel({
   backendHealth,
   debugEvents,
   layoutTemplate,
+  canvasBackgroundId,
   paletteId,
   updateAdvisory,
   onClearDebugLog,
   onClose,
   onCopyUpdateCommand,
   onExportDebugLog,
+  onCanvasBackgroundChange,
   onPaletteChange,
   onUpdateSettings,
   onViewReleaseNotes
@@ -76,6 +80,21 @@ export function SettingsPanel({
             ))}
           </div>
           <div className="settings-note">Current palette: {activePalette.label}. Palette data is stored in this browser only.</div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section__title">Canvas Background</div>
+          <label className="settings-select-field">
+            <span>Background</span>
+            <select value={canvasBackgroundId} onChange={(event) => onCanvasBackgroundChange(event.currentTarget.value as CanvasBackgroundId)}>
+              {CANVAS_BACKGROUNDS.map((background) => (
+                <option key={background.id} value={background.id}>
+                  {background.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="settings-note">{CANVAS_BACKGROUNDS.find((background) => background.id === canvasBackgroundId)?.description}</div>
         </div>
 
         <div className="settings-section">

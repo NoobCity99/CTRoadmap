@@ -32,7 +32,8 @@ export type LinkType =
 
 export type LayoutTemplate = "canvas_topology" | "layered_hierarchy";
 export type ExportFormat = "markdown" | "yaml" | "mermaid";
-export type ThemePaletteId = "cyber" | "aurora" | "ember";
+export type ThemePaletteId = "cyber" | "aurora" | "ember" | "blueprint";
+export type CanvasBackgroundId = "grid" | "hex" | "circuit" | "blueprint";
 export type DebugSeverity = "info" | "warning" | "error";
 export type LinkSourcePort = "out" | "child";
 export type LinkTargetPort = "in" | "parent";

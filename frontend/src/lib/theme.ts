@@ -1,5 +1,5 @@
 import { LINK_COLOR, TILE_TYPE_CONFIG } from "./constants";
-import type { LinkType, ThemePaletteId, TileType } from "../types/atlas";
+import type { CanvasBackgroundId, LinkType, ThemePaletteId, TileType } from "../types/atlas";
 
 export interface ThemePalette {
   id: ThemePaletteId;
@@ -11,6 +11,36 @@ export interface ThemePalette {
 }
 
 const STORAGE_KEY = "ctroadmap.themePalette";
+const CANVAS_BACKGROUND_STORAGE_KEY = "ctroadmap.canvasBackground";
+
+export interface CanvasBackgroundOption {
+  id: CanvasBackgroundId;
+  label: string;
+  description: string;
+}
+
+export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
+  {
+    id: "grid",
+    label: "Grid",
+    description: "Current square grid with a soft center glow."
+  },
+  {
+    id: "hex",
+    label: "Hex",
+    description: "Subtle hex lattice for dense infrastructure maps."
+  },
+  {
+    id: "circuit",
+    label: "Circuit",
+    description: "High-contrast cyan circuitry with a compact technical grid."
+  },
+  {
+    id: "blueprint",
+    label: "Blueprint",
+    description: "Blue drafting surface with faint white construction lines."
+  }
+];
 
 export const THEME_PALETTES: ThemePalette[] = [
   {
@@ -76,6 +106,34 @@ export const THEME_PALETTES: ThemePalette[] = [
       validates_with: "#84cc16",
       fails_if: "#ef4444"
     }
+  },
+  {
+    id: "blueprint",
+    label: "Blueprint",
+    description: "High-tech blueprint drawing style with pale ink accents.",
+    swatches: ["#0041ba", "#eaf6ff", "#b9e6ff", "#d9f2ff"],
+    tileColors: {
+      node: "#f8fcff",
+      service: "#eef9ff",
+      container: "#e4f5ff",
+      drive: "#f6fbff",
+      mount: "#e8f8ff",
+      script: "#f5f1ff",
+      config: "#edf7ff",
+      secret_ref: "#fff3fb",
+      flow: "#fff9df",
+      url: "#e7fbff",
+      check: "#f4ffe8",
+      note: "#f8fbff"
+    },
+    linkColors: {
+      contains: "#f5fbff",
+      calls: "#eef8ff",
+      controls: "#fff9e6",
+      depends_on: "#f8fcff",
+      validates_with: "#f4ffe8",
+      fails_if: "#fff0f4"
+    }
   }
 ];
 
@@ -86,6 +144,19 @@ export function getStoredThemePalette(): ThemePaletteId {
 
 export function storeThemePalette(paletteId: ThemePaletteId): void {
   window.localStorage.setItem(STORAGE_KEY, paletteId);
+}
+
+export function getStoredCanvasBackground(): CanvasBackgroundId {
+  const stored = window.localStorage.getItem(CANVAS_BACKGROUND_STORAGE_KEY);
+  return CANVAS_BACKGROUNDS.some((background) => background.id === stored) ? (stored as CanvasBackgroundId) : "grid";
+}
+
+export function storeCanvasBackground(backgroundId: CanvasBackgroundId): void {
+  window.localStorage.setItem(CANVAS_BACKGROUND_STORAGE_KEY, backgroundId);
+}
+
+export function getAssociatedCanvasBackground(paletteId: ThemePaletteId): CanvasBackgroundId | null {
+  return paletteId === "blueprint" ? "blueprint" : null;
 }
 
 export function getThemePalette(paletteId: ThemePaletteId): ThemePalette {

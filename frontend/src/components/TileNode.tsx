@@ -8,6 +8,7 @@ import type { Tile, TileIconRef } from "../types/atlas";
 export interface TileNodeData extends Record<string, unknown> {
   accentColor?: string;
   hasChildren?: boolean;
+  iconAccentColor?: string;
   isMuted?: boolean;
   lifecycle?: "live" | "planned";
   stack?: {
@@ -22,7 +23,7 @@ export interface TileNodeData extends Record<string, unknown> {
 }
 
 export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, hasChildren, isMuted, lifecycle = "live", stack, tile, parentTitle } = data as TileNodeData;
+  const { accentColor, hasChildren, iconAccentColor, isMuted, lifecycle = "live", stack, tile, parentTitle } = data as TileNodeData;
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
@@ -61,7 +62,7 @@ export function TileNode({ data, selected }: NodeProps) {
       } ${
         stack ? "tile-node--stacked" : ""
       }`}
-      style={{ "--tile-accent": accentColor ?? config.color } as CSSProperties}
+      style={{ "--tile-accent": accentColor ?? config.color, "--tile-icon-accent": iconAccentColor ?? accentColor ?? config.color } as CSSProperties}
     >
       <Handle id="parent" type="target" position={Position.Top} className="tile-node__handle tile-node__handle--parent" />
       <Handle id="in" type="target" position={Position.Left} className="tile-node__handle tile-node__handle--in" />

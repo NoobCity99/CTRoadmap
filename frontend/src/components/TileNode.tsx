@@ -1,8 +1,9 @@
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
-import type { Tile } from "../types/atlas";
+import type { Tile, TileIconRef } from "../types/atlas";
 
 export interface TileNodeData extends Record<string, unknown> {
   accentColor?: string;
@@ -27,6 +28,27 @@ export function TileNode({ data, selected }: NodeProps) {
   const fieldEntries = getTileFieldPreviews(tile);
   const tags = tile.tags ?? [];
   const isPrimaryNode = tile.type === "node" && tile.fields?.primary_node === true;
+  const iconRef = getTileIconRef(tile);
+  const [iconFailed, setIconFailed] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
+
+  useEffect(() => {
+    setIconFailed(false);
+  }, [iconRef?.url]);
+
+  async function handleCopyPath(path: string) {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        window.prompt("Copy path", path);
+        return;
+      }
+      await navigator.clipboard.writeText(path);
+      setCopyNotice("Path Copied");
+      window.setTimeout(() => setCopyNotice(""), 3000);
+    } catch {
+      window.prompt("Copy path", path);
+    }
+  }
 
   return (
     <div
@@ -44,10 +66,15 @@ export function TileNode({ data, selected }: NodeProps) {
       <Handle id="parent" type="target" position={Position.Top} className="tile-node__handle tile-node__handle--parent" />
       <Handle id="in" type="target" position={Position.Left} className="tile-node__handle tile-node__handle--in" />
       <div className="tile-node__port-label tile-node__port-label--in">IN</div>
+      {copyNotice ? <div className="tile-node__copy-toast">{copyNotice}</div> : null}
       {stack ? <div className={stack.badgeShape === "hex" ? "tile-node__stack-count tile-node__stack-count--hex" : "tile-node__stack-count"}>{stack.count}</div> : null}
       <div className="tile-node__header">
         <div className="tile-node__icon">
-          <Icon size={20} strokeWidth={2.2} />
+          {iconRef && !iconFailed ? (
+            <img src={iconRef.url} alt="" onError={() => setIconFailed(true)} />
+          ) : (
+            <Icon size={20} strokeWidth={2.2} />
+          )}
         </div>
         <div className="tile-node__title-wrap">
           <div className="tile-node__title">{tile.title}</div>
@@ -67,7 +94,7 @@ export function TileNode({ data, selected }: NodeProps) {
           {fieldEntries.slice(0, 3).map(([key, value]) => (
             <div key={key} className="tile-node__field">
               <span>{key}</span>
-              <strong>{value}</strong>
+              <TileFieldValue fieldKey={key} value={value} onCopyPath={handleCopyPath} />
             </div>
           ))}
         </div>
@@ -97,6 +124,7 @@ function getTileFieldPreviews(tile: Tile): Array<[string, string]> {
 
 function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
   if (tile.type === "node" && key === "primary_node") return "";
+  if (key === "icon_ref") return "";
   if (value === "" || value === null || value === undefined) return "";
   if (tile.type === "flow" && key === "steps") {
     const stepCount = Array.isArray(value) ? value.length : 0;
@@ -108,4 +136,56 @@ function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
   }
   if (typeof value === "object") return "configured";
   return String(value);
+}
+
+function getTileIconRef(tile: Tile): TileIconRef | null {
+  const iconRef = tile.fields?.icon_ref;
+  if (!iconRef || typeof iconRef !== "object") return null;
+  const candidate = iconRef as Partial<TileIconRef>;
+  if (candidate.kind !== "uploaded" || typeof candidate.filename !== "string" || typeof candidate.url !== "string") return null;
+  return {
+    kind: "uploaded",
+    filename: candidate.filename,
+    url: candidate.url,
+    media_type: typeof candidate.media_type === "string" ? candidate.media_type : undefined
+  };
+}
+
+function TileFieldValue({ fieldKey, onCopyPath, value }: { fieldKey: string; onCopyPath: (path: string) => void; value: string }) {
+  const normalizedKey = fieldKey.toLowerCase();
+  if (normalizedKey === "url") {
+    return (
+      <a
+        className="tile-node__field-action nodrag nopan"
+        href={normalizeHref(value)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        {value}
+      </a>
+    );
+  }
+  if (normalizedKey === "path") {
+    return (
+      <button
+        className="tile-node__field-action tile-node__field-action--button nodrag nopan"
+        type="button"
+        title="click to copy"
+        onClick={(event) => {
+          event.stopPropagation();
+          void onCopyPath(value);
+        }}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        {value}
+      </button>
+    );
+  }
+  return <strong>{value}</strong>;
+}
+
+function normalizeHref(value: string): string {
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `http://${value}`;
 }

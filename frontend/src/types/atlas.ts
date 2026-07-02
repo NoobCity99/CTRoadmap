@@ -61,6 +61,13 @@ export interface CheckFields extends Record<string, unknown> {
   execution_enabled: false;
 }
 
+export interface TileIconRef {
+  kind: "uploaded";
+  filename: string;
+  url: string;
+  media_type?: string;
+}
+
 export interface Position {
   x: number;
   y: number;
@@ -149,6 +156,10 @@ export interface AtlasImportPreview {
   views: number;
   warnings: string[];
   errors: string[];
+}
+
+export interface IconUploadResult extends TileIconRef {
+  id: string;
 }
 
 export interface HealthResult {

@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-02T03:34:16.479830+00:00"
+    "updated_at": "2026-07-02T04:32:53.417567+00:00"
   },
   "tiles": [
     {
@@ -25,7 +25,8 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": ""
+        "purpose": "",
+        "primary_node": true
       },
       "notes": "",
       "tags": []
@@ -36,8 +37,8 @@
       "title": "/samba",
       "parent": null,
       "position": {
-        "x": 374.8951157957937,
-        "y": -171.93977712599155
+        "x": 380.5231655010474,
+        "y": -131.78288193174882
       },
       "size": {
         "width": 240.0,
@@ -71,7 +72,8 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": ""
+        "purpose": "",
+        "primary_node": true
       },
       "notes": "",
       "tags": []
@@ -140,7 +142,8 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": ""
+        "purpose": "",
+        "primary_node": true
       },
       "notes": "",
       "tags": []
@@ -200,7 +203,7 @@
       "parent": "mount_samba",
       "position": {
         "x": 382.5595967681993,
-        "y": 95.21280783321328
+        "y": 70.21280783321328
       },
       "size": {
         "width": 240.0,
@@ -312,7 +315,7 @@
       "title": "primary",
       "parent": "mount_samba",
       "position": {
-        "x": 396.5595967681993,
+        "x": 384.3908406487318,
         "y": 296.7128078332133
       },
       "size": {
@@ -335,8 +338,8 @@
       "title": "auto backup function",
       "parent": "mount_samba",
       "position": {
-        "x": 387.4021482493476,
-        "y": 469.5078645481967
+        "x": 382.4021482493476,
+        "y": 483.5078645481967
       },
       "size": {
         "width": 240.0,
@@ -773,20 +776,6 @@
     }
   ],
   "stacks": [
-    {
-      "id": "stack_mount_samba",
-      "stack_kind": "mount_children",
-      "parent_id": "mount_samba",
-      "tile_type": "mount",
-      "member_ids": [
-        "drive_back_ups",
-        "drive_primary",
-        "script_auto_backup_function"
-      ],
-      "representative_id": "mount_samba",
-      "name": "3 Mounted Items",
-      "name_is_custom": false
-    },
     {
       "id": "stack_node_server1_note",
       "stack_kind": "sibling_type",

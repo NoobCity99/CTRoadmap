@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from .config import ATLAS_PATH, DATA_DIR, EXPORTS_DIR, ROOT_DIR
+from .config import ATLAS_PATH, DATA_DIR, EXPORTS_DIR, ICONS_DIR, ROOT_DIR
 from .models import Atlas, empty_atlas
 
 
 def ensure_directories() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    ICONS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def read_atlas() -> Atlas:

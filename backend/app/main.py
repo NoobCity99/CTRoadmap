@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
-from fastapi import Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from pydantic import ValidationError
 
-from .config import FRONTEND_DIST
+from .config import FRONTEND_DIST, ICONS_DIR
 from .debug import clear_debug_events, get_debug_events, record_debug_event
 from .exports import EXPORT_FILES, EXPORT_MEDIA_TYPES, ExportFormat, export_path, write_export
 from .models import Atlas
@@ -19,6 +21,14 @@ from .update_advisory import AppVersion, UpdateAdvisory, UpdateSettings, UpdateS
 
 
 app = FastAPI(title="CTRoadmap", version="0.1.0")
+
+
+MAX_ICON_BYTES = 512 * 1024
+ICON_MEDIA_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+}
 
 
 class ExportResult(BaseModel):
@@ -35,6 +45,13 @@ class AtlasImportPreview(BaseModel):
     views: int = 0
     warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
+
+
+class IconUploadResult(BaseModel):
+    id: str
+    filename: str
+    url: str
+    media_type: str
 
 
 app.add_middleware(
@@ -129,6 +146,39 @@ def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
     )
 
 
+@app.post("/api/assets/icons", response_model=IconUploadResult)
+async def upload_icon(file: UploadFile = File(...)) -> IconUploadResult:
+    media_type = file.content_type or ""
+    extension = ICON_MEDIA_TYPES.get(media_type)
+    if not extension:
+        raise HTTPException(status_code=415, detail="Icon must be PNG, JPEG, or WebP")
+
+    content = await file.read(MAX_ICON_BYTES + 1)
+    if len(content) > MAX_ICON_BYTES:
+        raise HTTPException(status_code=413, detail="Icon must be 512 KB or smaller")
+    if not content:
+        raise HTTPException(status_code=400, detail="Icon file is empty")
+
+    ICONS_DIR.mkdir(parents=True, exist_ok=True)
+    icon_id = uuid4().hex
+    filename = f"{icon_id}{extension}"
+    path = ICONS_DIR / filename
+    path.write_bytes(content)
+    record_debug_event("assets.icon.upload", "Tile icon uploaded", context={"filename": filename, "media_type": media_type, "bytes": len(content)})
+    return IconUploadResult(id=icon_id, filename=filename, url=f"/api/assets/icons/{filename}", media_type=media_type)
+
+
+@app.get("/api/assets/icons/{filename}")
+def get_icon(filename: str) -> FileResponse:
+    if Path(filename).name != filename:
+        raise HTTPException(status_code=404, detail="Icon not found")
+    path = ICONS_DIR / filename
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail="Icon not found")
+    media_type = media_type_for_icon(path)
+    return FileResponse(path, media_type=media_type)
+
+
 @app.post("/api/export/{format_}", response_model=ExportResult)
 def generate_export(format_: ExportFormat) -> ExportResult:
     try:
@@ -202,3 +252,14 @@ def format_validation_error(error: dict[str, Any]) -> str:
     location = ".".join(str(part) for part in error.get("loc", ()))
     message = str(error.get("msg", "Invalid value"))
     return f"{location}: {message}" if location else message
+
+
+def media_type_for_icon(path: Path) -> str:
+    extension = path.suffix.lower()
+    if extension == ".png":
+        return "image/png"
+    if extension in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if extension == ".webp":
+        return "image/webp"
+    return "application/octet-stream"

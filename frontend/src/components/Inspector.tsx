@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
+import { uploadTileIcon } from "../lib/api";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileStack, TileType } from "../types/atlas";
+import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
@@ -96,11 +97,12 @@ export function Inspector({
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
     const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(
-      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node")
+      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node") && key !== "icon_ref"
     );
     const lifecycle = resolveLifecycle(selectedTile);
     const editable = isLifecycleEditable(lifecycle, mode);
     const primaryNode = selectedTile.type === "node" && selectedTile.fields?.primary_node === true;
+    const iconRef = getTileIconRef(selectedTile);
 
     return (
       <aside className="inspector">
@@ -121,6 +123,52 @@ export function Inspector({
           <ReadOnlyModeNotice lifecycle={lifecycle} mode={mode} kind="tile" onGoLive={lifecycle === "planned" && mode === "live" ? () => onPromoteTile(selectedTile.id) : undefined} />
         ) : null}
         <fieldset disabled={!editable} className="inspector__fieldset">
+        <div className="icon-editor">
+          <div className="field-editor__title">Icon</div>
+          <div className="icon-editor__preview" style={{ "--tile-accent": config.color } as CSSProperties}>
+            {iconRef ? <img src={iconRef.url} alt="" /> : <Icon size={24} strokeWidth={2.2} />}
+          </div>
+          <label className="ghost-button icon-editor__upload">
+            Upload Icon
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (!file) return;
+                void uploadTileIcon(file)
+                  .then((uploaded) =>
+                    onUpdateTile({
+                      ...selectedTile,
+                      fields: {
+                        ...selectedTile.fields,
+                        icon_ref: {
+                          kind: "uploaded",
+                          filename: uploaded.filename,
+                          url: uploaded.url,
+                          media_type: uploaded.media_type
+                        }
+                      }
+                    })
+                  )
+                  .catch((error) => window.alert(error instanceof Error ? error.message : "Icon upload failed"));
+              }}
+            />
+          </label>
+          {iconRef ? (
+            <button
+              className="ghost-button"
+              onClick={() => {
+                const fields = { ...selectedTile.fields };
+                delete fields.icon_ref;
+                onUpdateTile({ ...selectedTile, fields });
+              }}
+            >
+              Reset Icon
+            </button>
+          ) : null}
+        </div>
         <label>
           Type
           <select
@@ -520,6 +568,19 @@ function coerceFieldValue(original: unknown, next: string): unknown {
     return next === "true" || next === "1" || next.toLowerCase() === "yes";
   }
   return next;
+}
+
+function getTileIconRef(tile: Tile): TileIconRef | null {
+  const iconRef = tile.fields?.icon_ref;
+  if (!iconRef || typeof iconRef !== "object") return null;
+  const candidate = iconRef as Partial<TileIconRef>;
+  if (candidate.kind !== "uploaded" || typeof candidate.filename !== "string" || typeof candidate.url !== "string") return null;
+  return {
+    kind: "uploaded",
+    filename: candidate.filename,
+    url: candidate.url,
+    media_type: typeof candidate.media_type === "string" ? candidate.media_type : undefined
+  };
 }
 
 function defaultStackName(stack: TileStack): string {

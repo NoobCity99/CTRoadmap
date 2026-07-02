@@ -1,4 +1,4 @@
-import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
+import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult, IconUploadResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
 
 export async function loadAtlas(): Promise<Atlas> {
   const response = await fetch("/api/atlas");
@@ -104,6 +104,19 @@ export async function previewAtlasImport(atlas: Atlas): Promise<AtlasImportPrevi
       "Content-Type": "application/json"
     },
     body: JSON.stringify(atlas)
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function uploadTileIcon(file: File): Promise<IconUploadResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch("/api/assets/icons", {
+    method: "POST",
+    body: formData
   });
   if (!response.ok) {
     throw new Error(await response.text());

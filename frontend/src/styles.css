@@ -732,6 +732,12 @@ button:disabled {
   background: rgba(2, 8, 18, 0.62);
 }
 
+.tile-node__icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .tile-node__title-wrap {
   min-width: 0;
   flex: 1;
@@ -760,6 +766,10 @@ button:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tile-node--primary-node .tile-node__title {
+  font-size: 1.25rem;
 }
 
 .tile-node__type,
@@ -873,6 +883,49 @@ button:disabled {
   font-weight: 650;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-node__field-action {
+  min-width: 0;
+  border: 0;
+  color: #dbeafe;
+  background: transparent;
+  font-weight: 650;
+  overflow: hidden;
+  text-align: right;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--tile-accent) 44%, transparent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-node__field-action:hover,
+.tile-node__field-action:focus-visible {
+  color: #f8fafc;
+  text-decoration-color: var(--tile-accent);
+}
+
+.tile-node__field-action--button {
+  cursor: copy;
+  padding: 0;
+}
+
+.tile-node__copy-toast {
+  position: absolute;
+  z-index: 4;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-radius: 999px;
+  color: #dcfce7;
+  background: rgba(6, 45, 25, 0.92);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.22);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 850;
+  pointer-events: none;
   white-space: nowrap;
 }
 
@@ -994,6 +1047,43 @@ button:disabled {
 
 .inspector__readonly span {
   color: #cbd5e1;
+}
+
+.icon-editor {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0 4px;
+}
+
+.icon-editor .field-editor__title {
+  grid-column: 1 / -1;
+}
+
+.icon-editor__preview {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--tile-accent, #38a3ff) 45%, transparent);
+  border-radius: 8px;
+  color: var(--tile-accent, #38a3ff);
+  background: rgba(7, 15, 30, 0.9);
+}
+
+.icon-editor__preview img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.inspector .icon-editor__upload {
+  margin: 0;
+}
+
+.icon-editor__upload input {
+  display: none;
 }
 
 .stack-inspector {

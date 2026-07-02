@@ -9,16 +9,24 @@ export interface TileNodeData extends Record<string, unknown> {
   hasChildren?: boolean;
   isMuted?: boolean;
   lifecycle?: "live" | "planned";
+  stack?: {
+    badgeShape?: "circle" | "hex";
+    count: number;
+    kind?: "sibling_type" | "mount_children";
+    name: string;
+    subtitle: string;
+  };
   tile: Tile;
   parentTitle?: string;
 }
 
 export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, hasChildren, isMuted, lifecycle = "live", tile, parentTitle } = data as TileNodeData;
+  const { accentColor, hasChildren, isMuted, lifecycle = "live", stack, tile, parentTitle } = data as TileNodeData;
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
   const tags = tile.tags ?? [];
+  const isPrimaryNode = tile.type === "node" && tile.fields?.primary_node === true;
 
   return (
     <div
@@ -26,12 +34,17 @@ export function TileNode({ data, selected }: NodeProps) {
         isMuted ? "tile-node--muted" : ""
       } ${
         selected ? "tile-node--selected" : ""
+      } ${
+        isPrimaryNode ? "tile-node--primary-node" : ""
+      } ${
+        stack ? "tile-node--stacked" : ""
       }`}
       style={{ "--tile-accent": accentColor ?? config.color } as CSSProperties}
     >
       <Handle id="parent" type="target" position={Position.Top} className="tile-node__handle tile-node__handle--parent" />
       <Handle id="in" type="target" position={Position.Left} className="tile-node__handle tile-node__handle--in" />
       <div className="tile-node__port-label tile-node__port-label--in">IN</div>
+      {stack ? <div className={stack.badgeShape === "hex" ? "tile-node__stack-count tile-node__stack-count--hex" : "tile-node__stack-count"}>{stack.count}</div> : null}
       <div className="tile-node__header">
         <div className="tile-node__icon">
           <Icon size={20} strokeWidth={2.2} />
@@ -42,6 +55,12 @@ export function TileNode({ data, selected }: NodeProps) {
         </div>
         <div className={lifecycle === "planned" ? "tile-node__lifecycle tile-node__lifecycle--planned" : "tile-node__lifecycle"}>{lifecycle}</div>
       </div>
+      {stack ? (
+        <div className="tile-node__stack-meta">
+          <strong>{stack.name}</strong>
+          <span>{stack.subtitle}</span>
+        </div>
+      ) : null}
       {parentTitle ? <div className="tile-node__parent">inside {parentTitle}</div> : null}
       {fieldEntries.length > 0 ? (
         <div className="tile-node__fields">
@@ -77,6 +96,7 @@ function getTileFieldPreviews(tile: Tile): Array<[string, string]> {
 }
 
 function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
+  if (tile.type === "node" && key === "primary_node") return "";
   if (value === "" || value === null || value === undefined) return "";
   if (tile.type === "flow" && key === "steps") {
     const stepCount = Array.isArray(value) ? value.length : 0;

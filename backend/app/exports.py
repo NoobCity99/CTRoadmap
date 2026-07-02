@@ -69,6 +69,7 @@ def render_markdown(atlas: Atlas) -> str:
         f"- Tiles: {len(atlas.tiles)}",
         f"- Relationships: {len(atlas.links)}",
         f"- Views: {len(atlas.views)}",
+        f"- Stacks: {len(atlas.stacks)}",
         "",
     ]
 
@@ -131,6 +132,28 @@ def render_markdown(atlas: Atlas) -> str:
         )
         if view.description:
             lines.extend([view.description, ""])
+
+    if atlas.stacks:
+        lines.extend(["## Visual Stacks", ""])
+        for stack in atlas.stacks:
+            parent = tile_by_id.get(stack.parent_id)
+            representative = tile_by_id.get(stack.representative_id)
+            members = [tile_by_id.get(member_id) for member_id in stack.member_ids]
+            member_titles = [member.title for member in members if member]
+            stack_type = "Mixed mounted items" if stack.stack_kind == "mount_children" else f"`{stack.tile_type}`"
+            lines.extend(
+                [
+                    f"### {stack.name}",
+                    "",
+                    f"- ID: `{stack.id}`",
+                    f"- Kind: `{stack.stack_kind}`",
+                    f"- Parent: {parent.title if parent else stack.parent_id}",
+                    f"- Tile Type: {stack_type}",
+                    f"- Representative: {representative.title if representative else stack.representative_id}",
+                    f"- Members: {', '.join(member_titles) if member_titles else 'None'}",
+                    "",
+                ]
+            )
 
     return "\n".join(lines).rstrip() + "\n"
 

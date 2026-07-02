@@ -85,7 +85,7 @@ export const LINK_COLOR: Record<LinkType, string> = {
 };
 
 export const DEFAULT_FIELDS: Record<TileType, Record<string, unknown>> = {
-  node: { role: "", hostname: "", ip: "", os: "", purpose: "" },
+  node: { role: "", hostname: "", ip: "", os: "", purpose: "", primary_node: false },
   service: { role: "", status: "", port: "", purpose: "" },
   container: { image: "", compose_service: "", port: "", purpose: "" },
   drive: { capacity: "", filesystem: "", device: "", purpose: "" },

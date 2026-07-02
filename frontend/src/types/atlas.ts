@@ -97,6 +97,17 @@ export interface Link {
   directional?: boolean;
 }
 
+export interface TileStack {
+  id: string;
+  stack_kind?: "sibling_type" | "mount_children";
+  parent_id: string;
+  tile_type: TileType;
+  member_ids: string[];
+  representative_id: string;
+  name: string;
+  name_is_custom?: boolean;
+}
+
 export interface View {
   id: string;
   title: string;
@@ -121,6 +132,7 @@ export interface Atlas {
   tiles: Tile[];
   links: Link[];
   views: View[];
+  stacks?: TileStack[];
 }
 
 export interface ExportResult {
@@ -205,4 +217,5 @@ export interface AtlasWarning {
 export type Selection =
   | { kind: "tile"; id: string }
   | { kind: "link"; id: string }
+  | { kind: "stack"; id: string }
   | null;

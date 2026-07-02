@@ -32,7 +32,18 @@ import {
   Upload,
   X
 } from "lucide-react";
-import { type CSSProperties, type DragEvent, type TouchEvent as ReactTouchEvent, type WheelEvent as ReactWheelEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type DragEvent,
+  type MouseEvent as ReactMouseEvent,
+  type TouchEvent as ReactTouchEvent,
+  type WheelEvent as ReactWheelEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { Inspector } from "./components/Inspector";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TileNode } from "./components/TileNode";
@@ -72,6 +83,7 @@ import type {
   Selection,
   ThemePaletteId,
   Tile,
+  TileStack,
   TileType,
   UpdateAdvisory,
   UpdateSettings,
@@ -96,6 +108,32 @@ interface SidebarState {
 type SearchResult =
   | { kind: "tile"; id: string; title: string; detail: string }
   | { kind: "link"; id: string; title: string; detail: string };
+
+interface StackContextMenu {
+  x: number;
+  y: number;
+  tileId: string;
+  stackId?: string;
+  canStack: boolean;
+  canStackMountChildren: boolean;
+  tileType: TileType;
+}
+
+interface StackRenderInfo {
+  id: string;
+  kind: "sibling_type" | "mount_children";
+  badgeShape: "circle" | "hex";
+  count: number;
+  name: string;
+  subtitle: string;
+}
+
+interface StackState {
+  stacks: TileStack[];
+  hiddenMemberIds: Set<string>;
+  memberToRepresentative: Map<string, string>;
+  stackByRepresentative: Map<string, StackRenderInfo>;
+}
 
 function App() {
   return (
@@ -128,6 +166,7 @@ function AtlasEditor() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [appMode, setAppMode] = useState<AppMode>("live");
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
+  const [stackContextMenu, setStackContextMenu] = useState<StackContextMenu | null>(null);
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [isSaving, setIsSaving] = useState(false);
@@ -259,6 +298,8 @@ function AtlasEditor() {
     return grouped;
   }, [atlas]);
 
+  const stackState = useMemo(() => (atlas ? buildStackState(atlas) : emptyStackState()), [atlas]);
+
   const searchResults = useMemo<SearchResult[]>(() => {
     if (!atlas) return [];
     const query = searchTerm.trim().toLowerCase();
@@ -301,9 +342,9 @@ function AtlasEditor() {
       const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
       const searchable = `${tile.title} ${tile.type} ${resolveLifecycle(tile)} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
       const allowedBySearch = !query || searchable.includes(query);
-      return allowedByView && allowedBySearch;
+      return allowedByView && allowedBySearch && !stackState.hiddenMemberIds.has(tile.id);
     });
-  }, [activeView, atlas, searchTerm]);
+  }, [activeView, atlas, searchTerm, stackState.hiddenMemberIds]);
 
   const visibleTileIds = useMemo(() => new Set(visibleTiles.map((tile) => tile.id)), [visibleTiles]);
 
@@ -312,10 +353,16 @@ function AtlasEditor() {
     return atlas.links.filter((link) => {
       const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
       const searchable = `${link.type} ${resolveLifecycle(link)} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
-      const allowedBySearch = !searchTerm.trim() || searchable.includes(searchTerm.trim().toLowerCase()) || visibleTileIds.has(link.from) || visibleTileIds.has(link.to);
-      return allowedByView && allowedBySearch && visibleTileIds.has(link.from) && visibleTileIds.has(link.to);
+      const renderedSource = stackState.memberToRepresentative.get(link.from) ?? link.from;
+      const renderedTarget = stackState.memberToRepresentative.get(link.to) ?? link.to;
+      const allowedBySearch =
+        !searchTerm.trim() ||
+        searchable.includes(searchTerm.trim().toLowerCase()) ||
+        visibleTileIds.has(renderedSource) ||
+        visibleTileIds.has(renderedTarget);
+      return allowedByView && allowedBySearch && renderedSource !== renderedTarget && visibleTileIds.has(renderedSource) && visibleTileIds.has(renderedTarget);
     });
-  }, [activeView, atlas, searchTerm, visibleTileIds]);
+  }, [activeView, atlas, searchTerm, stackState.memberToRepresentative, visibleTileIds]);
 
   const derivedNodes: Node[] = useMemo(() => {
     if (!atlas) return [];
@@ -326,22 +373,24 @@ function AtlasEditor() {
       const position = layoutPositions.get(tile.id) ?? tile.position;
       const lifecycle = resolveLifecycle(tile);
       const editable = isLifecycleEditable(lifecycle, appMode);
+      const stack = stackState.stackByRepresentative.get(tile.id);
       return {
         id: tile.id,
         type: "tileNode",
         position,
-        draggable: isInteractive && editable && layoutTemplate === "canvas_topology",
+        draggable: isInteractive && editable && !stack && layoutTemplate === "canvas_topology",
         data: {
           tile,
           parentTitle,
           accentColor: getTileColor(tile.type, themePaletteId),
           hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
           lifecycle,
-          isMuted: !editable
+          isMuted: !editable,
+          stack
         }
       };
     });
-  }, [appMode, atlas, childrenByParent, isInteractive, layoutTemplate, themePaletteId, visibleTiles]);
+  }, [appMode, atlas, childrenByParent, isInteractive, layoutTemplate, stackState.stackByRepresentative, themePaletteId, visibleTiles]);
 
   useEffect(() => {
     if (isNodeDragging.current) return;
@@ -355,8 +404,8 @@ function AtlasEditor() {
       const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
       return {
         id: link.id,
-        source: link.from,
-        target: link.to,
+        source: stackState.memberToRepresentative.get(link.from) ?? link.from,
+        target: stackState.memberToRepresentative.get(link.to) ?? link.to,
         sourceHandle: resolveSourcePort(link),
         targetHandle: resolveTargetPort(link),
         label,
@@ -378,10 +427,10 @@ function AtlasEditor() {
         }
       };
     });
-  }, [appMode, themePaletteId, visibleLinks]);
+  }, [appMode, stackState.memberToRepresentative, themePaletteId, visibleLinks]);
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
-    setAtlas((current) => (current ? updater(current) : current));
+    setAtlas((current) => (current ? sanitizeAtlasStacks(updater(withAtlasStacks(current))) : current));
   }, []);
 
   const getCanvasDebugContext = useCallback(
@@ -409,16 +458,18 @@ function AtlasEditor() {
   const selectTileAndFocus = useCallback(
     (tileId: string) => {
       if (!atlas) return;
-      const tile = atlas.tiles.find((candidate) => candidate.id === tileId);
+      const renderedTileId = stackState.memberToRepresentative.get(tileId) ?? tileId;
+      const stack = stackState.stackByRepresentative.get(renderedTileId);
+      const tile = atlas.tiles.find((candidate) => candidate.id === renderedTileId);
       if (!tile) return;
-      const renderedNode = flowNodes.find((node) => node.id === tileId);
+      const renderedNode = flowNodes.find((node) => node.id === renderedTileId);
       const position = renderedNode?.position ?? tile.position;
       const width = renderedNode?.width ?? tile.size?.width ?? 248;
       const height = renderedNode?.height ?? tile.size?.height ?? 128;
-      setSelection({ kind: "tile", id: tileId });
+      setSelection(stack ? { kind: "stack", id: stack.id } : { kind: "tile", id: renderedTileId });
       setCenter(position.x + width / 2, position.y + height / 2, { zoom: 1, duration: 500 });
     },
-    [atlas, flowNodes, setCenter]
+    [atlas, flowNodes, setCenter, stackState.memberToRepresentative, stackState.stackByRepresentative]
   );
 
   const selectSearchResult = useCallback(
@@ -937,6 +988,27 @@ function AtlasEditor() {
     [appendDebugEvent, getCanvasDebugContext]
   );
 
+  const handleNodeContextMenu = useCallback(
+    (event: ReactMouseEvent, node: Node) => {
+      if (!atlas) return;
+      event.preventDefault();
+      const tile = atlas.tiles.find((candidate) => candidate.id === node.id);
+      if (!tile) return;
+      const stack = stackState.stackByRepresentative.get(tile.id);
+      setSelection(stack ? { kind: "stack", id: stack.id } : { kind: "tile", id: tile.id });
+      setStackContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        tileId: tile.id,
+        stackId: stack?.id,
+        canStack: canStackSiblingTiles(tile, atlas.tiles),
+        canStackMountChildren: canStackMountChildren(tile, atlas.tiles),
+        tileType: tile.type
+      });
+    },
+    [atlas, stackState.stackByRepresentative]
+  );
+
   const handleUpdateTile = useCallback(
     (tile: Tile) => {
       if (!isLifecycleEditable(resolveLifecycle(tile), appMode)) {
@@ -1062,6 +1134,91 @@ function AtlasEditor() {
       appendDebugEvent("link.delete", "Relationship deleted", "warning", { id: linkId });
     },
     [appendDebugEvent, appMode, atlas, updateAtlas]
+  );
+
+  const handleStackSiblings = useCallback(
+    (tileId: string) => {
+      if (!atlas) return;
+      const source = atlas.tiles.find((tile) => tile.id === tileId);
+      if (!source?.parent) return;
+      const members = atlas.tiles.filter((tile) => tile.parent === source.parent && tile.type === source.type);
+      if (members.length < 2) return;
+      const parent = atlas.tiles.find((tile) => tile.id === source.parent);
+      const representative = parent ? closestTileToParent(members, parent) : source;
+      const stack: TileStack = {
+        id: createId("stack", `${source.parent}_${source.type}`, (atlas.stacks ?? []).map((candidate) => candidate.id)),
+        parent_id: source.parent,
+        tile_type: source.type,
+        member_ids: members.map((member) => member.id),
+        representative_id: representative.id,
+        name: defaultStackName(members.length, source.type),
+        name_is_custom: false
+      };
+      updateAtlas((current) => {
+        const existing = (current.stacks ?? []).filter((candidate) => !(candidate.parent_id === stack.parent_id && candidate.tile_type === stack.tile_type));
+        return { ...current, stacks: [...existing, stack] };
+      });
+      setSelection({ kind: "stack", id: stack.id });
+      setStatus(`Stacked ${members.length} ${TILE_TYPE_CONFIG[source.type].label} tiles`);
+      setStackContextMenu(null);
+      appendDebugEvent("stack.create", "Sibling tiles stacked", "info", { stack_id: stack.id, parent_id: stack.parent_id, tile_type: stack.tile_type, members: stack.member_ids.length });
+    },
+    [appendDebugEvent, atlas, updateAtlas]
+  );
+
+  const handleStackMountChildren = useCallback(
+    (mountTileId: string) => {
+      if (!atlas) return;
+      const mountTile = atlas.tiles.find((tile) => tile.id === mountTileId);
+      if (!mountTile || mountTile.type !== "mount") return;
+      const members = atlas.tiles.filter((tile) => tile.parent === mountTile.id);
+      if (members.length < 2) return;
+      const stack: TileStack = {
+        id: createId("stack_mount", mountTile.title, (atlas.stacks ?? []).map((candidate) => candidate.id)),
+        stack_kind: "mount_children",
+        parent_id: mountTile.id,
+        tile_type: "mount",
+        member_ids: members.map((member) => member.id),
+        representative_id: mountTile.id,
+        name: defaultMountStackName(members.length),
+        name_is_custom: false
+      };
+      updateAtlas((current) => {
+        const existing = (current.stacks ?? []).filter((candidate) => !(candidate.stack_kind === "mount_children" && candidate.parent_id === mountTile.id));
+        return { ...current, stacks: [...existing, stack] };
+      });
+      setSelection({ kind: "stack", id: stack.id });
+      setStatus(`Stacked ${members.length} mounted items`);
+      setStackContextMenu(null);
+      appendDebugEvent("stack.mount_children.create", "Mounted child tiles stacked", "info", { stack_id: stack.id, mount_id: mountTile.id, members: stack.member_ids.length });
+    },
+    [appendDebugEvent, atlas, updateAtlas]
+  );
+
+  const handleUpdateStack = useCallback(
+    (stack: TileStack) => {
+      updateAtlas((current) => ({
+        ...current,
+        stacks: (current.stacks ?? []).map((candidate) => (candidate.id === stack.id ? stack : candidate))
+      }));
+      setStatus("Stack updated");
+      appendDebugEvent("stack.update", "Stack updated", "info", { stack_id: stack.id });
+    },
+    [appendDebugEvent, updateAtlas]
+  );
+
+  const handleUnstack = useCallback(
+    (stackId: string) => {
+      updateAtlas((current) => ({
+        ...current,
+        stacks: (current.stacks ?? []).filter((stack) => stack.id !== stackId)
+      }));
+      setSelection(null);
+      setStackContextMenu(null);
+      setStatus("Stack removed");
+      appendDebugEvent("stack.delete", "Stack removed", "info", { stack_id: stackId });
+    },
+    [appendDebugEvent, updateAtlas]
   );
 
   const handlePromoteTile = useCallback(
@@ -1637,9 +1794,13 @@ function AtlasEditor() {
               onNodeDragStart={handleNodeDragStart}
               onNodeDragStop={handleNodeDragStop}
               onNodeClick={(_, node) => selectTileAndFocus(node.id)}
+              onNodeContextMenu={handleNodeContextMenu}
               onEdgeClick={(_, edge) => setSelection({ kind: "link", id: edge.id })}
               onError={handleReactFlowError}
-              onPaneClick={() => setSelection(null)}
+              onPaneClick={() => {
+                setSelection(null);
+                setStackContextMenu(null);
+              }}
               nodesDraggable={isInteractive && layoutTemplate === "canvas_topology"}
               nodesConnectable={isInteractive}
               elementsSelectable
@@ -1666,6 +1827,24 @@ function AtlasEditor() {
               {exportResults.yaml ? <span>YAML ready</span> : null}
               {exportResults.mermaid ? <span>Mermaid ready</span> : null}
             </div>
+            {stackContextMenu ? (
+              <div className="canvas-context-menu" style={{ left: stackContextMenu.x, top: stackContextMenu.y }}>
+                {stackContextMenu.canStack ? (
+                  <button onClick={() => handleStackSiblings(stackContextMenu.tileId)}>Stack sibling {TILE_TYPE_CONFIG[stackContextMenu.tileType].label} tiles</button>
+                ) : null}
+                {stackContextMenu.canStackMountChildren ? <button onClick={() => handleStackMountChildren(stackContextMenu.tileId)}>Stack mounted items</button> : null}
+                {stackContextMenu.stackId ? (
+                  <button
+                    onClick={() => {
+                      if (stackContextMenu.stackId) handleUnstack(stackContextMenu.stackId);
+                    }}
+                  >
+                    Unstack
+                  </button>
+                ) : null}
+                {!stackContextMenu.canStack && !stackContextMenu.canStackMountChildren && !stackContextMenu.stackId ? <span>No stack actions</span> : null}
+              </div>
+            ) : null}
           </section>
 
           <Inspector
@@ -1673,6 +1852,8 @@ function AtlasEditor() {
             mode={appMode}
             selection={selection}
             onUpdateTile={handleUpdateTile}
+            onUpdateStack={handleUpdateStack}
+            onUnstack={handleUnstack}
             onDeleteTile={handleDeleteTile}
             onDuplicateTile={handleDuplicateTile}
             onAddSubtile={handleAddSubtile}
@@ -1711,13 +1892,145 @@ function chooseTileType(fallback: TileType): TileType | null {
   return TILE_TYPES.includes(value as TileType) ? (value as TileType) : fallback;
 }
 
+function emptyStackState(): StackState {
+  return {
+    stacks: [],
+    hiddenMemberIds: new Set(),
+    memberToRepresentative: new Map(),
+    stackByRepresentative: new Map()
+  };
+}
+
+function buildStackState(atlas: Atlas): StackState {
+  const stacks = sanitizeStacks(atlas);
+  const hiddenMemberIds = new Set<string>();
+  const memberToRepresentative = new Map<string, string>();
+  const stackByRepresentative = new Map<string, StackRenderInfo>();
+
+  for (const stack of stacks) {
+    const stackKind = stack.stack_kind ?? "sibling_type";
+    for (const memberId of stack.member_ids) {
+      memberToRepresentative.set(memberId, stack.representative_id);
+      if (stackKind === "mount_children" || memberId !== stack.representative_id) hiddenMemberIds.add(memberId);
+    }
+    stackByRepresentative.set(stack.representative_id, {
+      id: stack.id,
+      kind: stackKind,
+      badgeShape: stackKind === "mount_children" ? "hex" : "circle",
+      count: stack.member_ids.length,
+      name: stack.name,
+      subtitle: stackKind === "mount_children" ? `${stack.member_ids.length} Mounted Items` : `${stack.member_ids.length} ${TILE_TYPE_CONFIG[stack.tile_type].label} tiles`
+    });
+  }
+
+  return { stacks, hiddenMemberIds, memberToRepresentative, stackByRepresentative };
+}
+
+function withAtlasStacks(atlas: Atlas): Atlas {
+  return { ...atlas, stacks: atlas.stacks ?? [] };
+}
+
+function sanitizeAtlasStacks(atlas: Atlas): Atlas {
+  return { ...atlas, stacks: sanitizeStacks(atlas) };
+}
+
+function sanitizeStacks(atlas: Atlas): TileStack[] {
+  const tileById = new Map(atlas.tiles.map((tile) => [tile.id, tile]));
+  const usedIds = new Set<string>();
+  const sanitized: TileStack[] = [];
+
+  for (const stack of atlas.stacks ?? []) {
+    const stackKind = stack.stack_kind ?? "sibling_type";
+    const parent = tileById.get(stack.parent_id);
+    if (!parent) continue;
+    if (stackKind === "mount_children") {
+      if (parent.type !== "mount" || stack.representative_id !== parent.id) continue;
+      const memberIds = stack.member_ids.filter((memberId, index, allIds) => {
+        const member = tileById.get(memberId);
+        return Boolean(member && member.parent === parent.id && allIds.indexOf(memberId) === index);
+      });
+      if (memberIds.length < 2) continue;
+      const id = uniqueId(stack.id, usedIds);
+      usedIds.add(id);
+      sanitized.push({
+        ...stack,
+        id,
+        stack_kind: "mount_children",
+        tile_type: "mount",
+        member_ids: memberIds,
+        representative_id: parent.id,
+        name: stack.name_is_custom ? stack.name : defaultMountStackName(memberIds.length),
+        name_is_custom: Boolean(stack.name_is_custom)
+      });
+      continue;
+    }
+    const memberIds = stack.member_ids.filter((memberId, index, allIds) => {
+      const member = tileById.get(memberId);
+      return Boolean(member && member.parent === stack.parent_id && member.type === stack.tile_type && allIds.indexOf(memberId) === index);
+    });
+    if (memberIds.length < 2) continue;
+    const members = memberIds.map((memberId) => tileById.get(memberId)).filter((tile): tile is Tile => Boolean(tile));
+    const representative = memberIds.includes(stack.representative_id) ? tileById.get(stack.representative_id) : closestTileToParent(members, parent);
+    if (!representative) continue;
+    const id = uniqueId(stack.id, usedIds);
+    usedIds.add(id);
+    sanitized.push({
+      ...stack,
+      id,
+      stack_kind: "sibling_type",
+      member_ids: memberIds,
+      representative_id: representative.id,
+      name: stack.name_is_custom ? stack.name : defaultStackName(memberIds.length, stack.tile_type),
+      name_is_custom: Boolean(stack.name_is_custom)
+    });
+  }
+
+  return sanitized;
+}
+
+function canStackSiblingTiles(tile: Tile, tiles: Tile[]): boolean {
+  if (!tile.parent) return false;
+  return tiles.filter((candidate) => candidate.parent === tile.parent && candidate.type === tile.type).length >= 2;
+}
+
+function canStackMountChildren(tile: Tile, tiles: Tile[]): boolean {
+  return tile.type === "mount" && tiles.filter((candidate) => candidate.parent === tile.id).length >= 2;
+}
+
+function closestTileToParent(members: Tile[], parent: Tile): Tile {
+  return members.reduce((closest, member) => (distanceSquared(member.position, parent.position) < distanceSquared(closest.position, parent.position) ? member : closest), members[0]);
+}
+
+function distanceSquared(left: { x: number; y: number }, right: { x: number; y: number }): number {
+  return (left.x - right.x) ** 2 + (left.y - right.y) ** 2;
+}
+
+function defaultStackName(count: number, tileType: TileType): string {
+  const label = TILE_TYPE_CONFIG[tileType].label;
+  return `${count} ${label}${label.endsWith("s") ? "" : "s"}`;
+}
+
+function defaultMountStackName(count: number): string {
+  return `${count} Mounted Items`;
+}
+
+function uniqueId(baseId: string, usedIds: Set<string>): string {
+  let candidate = baseId;
+  let index = 2;
+  while (usedIds.has(candidate)) {
+    candidate = `${baseId}_${index}`;
+    index += 1;
+  }
+  return candidate;
+}
+
 function defaultSidebarState(): SidebarState {
   return {
     collapsed: {
-      tilePalette: false,
-      views: false,
-      filters: false,
-      relationships: false
+      tilePalette: true,
+      views: true,
+      filters: true,
+      relationships: true
     },
     paletteIndex: 0
   };

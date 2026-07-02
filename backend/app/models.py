@@ -43,6 +43,7 @@ LayoutTemplate = Literal["canvas_topology", "layered_hierarchy"]
 LinkSourcePort = Literal["out", "child"]
 LinkTargetPort = Literal["in", "parent"]
 Lifecycle = Literal["live", "planned"]
+StackKind = Literal["sibling_type", "mount_children"]
 
 
 class Position(BaseModel):
@@ -103,6 +104,19 @@ class Link(BaseModel):
     directional: bool = True
 
 
+class Stack(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    stack_kind: StackKind = "sibling_type"
+    parent_id: str = Field(min_length=1)
+    tile_type: TileType
+    member_ids: list[str] = Field(default_factory=list)
+    representative_id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    name_is_custom: bool = False
+
+
 class ViewCamera(BaseModel):
     x: float = 0
     y: float = 0
@@ -129,6 +143,7 @@ class Atlas(BaseModel):
     tiles: list[Tile] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
     views: list[View] = Field(default_factory=list)
+    stacks: list[Stack] = Field(default_factory=list)
 
     @field_validator("tiles")
     @classmethod
@@ -149,6 +164,7 @@ class Atlas(BaseModel):
     @model_validator(mode="after")
     def validate_references(self) -> "Atlas":
         tile_ids = {tile.id for tile in self.tiles}
+        tile_by_id = {tile.id: tile for tile in self.tiles}
         parent_by_id = {tile.id: tile.parent for tile in self.tiles}
         for tile in self.tiles:
             if tile.parent and tile.parent not in tile_ids:
@@ -168,9 +184,94 @@ class Atlas(BaseModel):
         for tile in self.tiles:
             if tile.type == "flow":
                 validate_flow_steps_references(tile.fields.get("steps", []), tile.id, tile_ids)
+        self.stacks = normalize_stacks(self.stacks, tile_by_id)
         if not self.views:
             self.views = default_views()
         return self
+
+
+def normalize_stacks(stacks: list[Stack], tile_by_id: dict[str, Tile]) -> list[Stack]:
+    normalized: list[Stack] = []
+    used_ids: set[str] = set()
+    for stack in stacks:
+        parent = tile_by_id.get(stack.parent_id)
+        if not parent:
+            continue
+        if stack.stack_kind == "mount_children":
+            if parent.type != "mount" or stack.representative_id != stack.parent_id:
+                continue
+            member_ids = []
+            seen_members = set()
+            for member_id in stack.member_ids:
+                member = tile_by_id.get(member_id)
+                if not member or member.parent != stack.parent_id or member_id in seen_members:
+                    continue
+                member_ids.append(member_id)
+                seen_members.add(member_id)
+            if len(member_ids) < 2:
+                continue
+            stack_id = unique_stack_id(stack.id, used_ids)
+            used_ids.add(stack_id)
+            default_name = default_mount_stack_name(len(member_ids))
+            normalized.append(
+                Stack(
+                    id=stack_id,
+                    stack_kind=stack.stack_kind,
+                    parent_id=stack.parent_id,
+                    tile_type="mount",
+                    member_ids=member_ids,
+                    representative_id=stack.parent_id,
+                    name=stack.name if stack.name_is_custom else default_name,
+                    name_is_custom=stack.name_is_custom,
+                )
+            )
+            continue
+        member_ids: list[str] = []
+        seen_members: set[str] = set()
+        for member_id in stack.member_ids:
+            member = tile_by_id.get(member_id)
+            if not member or member.parent != stack.parent_id or member.type != stack.tile_type or member_id in seen_members:
+                continue
+            member_ids.append(member_id)
+            seen_members.add(member_id)
+        if len(member_ids) < 2:
+            continue
+        representative_id = stack.representative_id if stack.representative_id in seen_members else member_ids[0]
+        stack_id = unique_stack_id(stack.id, used_ids)
+        used_ids.add(stack_id)
+        default_name = default_stack_name(len(member_ids), stack.tile_type)
+        normalized.append(
+            Stack(
+                id=stack_id,
+                stack_kind=stack.stack_kind,
+                parent_id=stack.parent_id,
+                tile_type=stack.tile_type,
+                member_ids=member_ids,
+                representative_id=representative_id,
+                name=stack.name if stack.name_is_custom else default_name,
+                name_is_custom=stack.name_is_custom,
+            )
+        )
+    return normalized
+
+
+def unique_stack_id(stack_id: str, used_ids: set[str]) -> str:
+    candidate = stack_id
+    index = 2
+    while candidate in used_ids:
+        candidate = f"{stack_id}_{index}"
+        index += 1
+    return candidate
+
+
+def default_stack_name(count: int, tile_type: str) -> str:
+    label = tile_type.replace("_", " ").title()
+    suffix = "" if label.endswith("s") else "s"
+    return f"{count} {label}{suffix}"
+
+
+def default_mount_stack_name(count: int) -> str:
+    return f"{count} Mounted Items"
 
 
 SENSITIVE_FIELD_NAMES = {

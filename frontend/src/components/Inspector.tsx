@@ -1,13 +1,15 @@
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileType } from "../types/atlas";
+import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileStack, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
   mode: AppMode;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
+  onUpdateStack: (stack: TileStack) => void;
+  onUnstack: (stackId: string) => void;
   onDeleteTile: (tileId: string) => void;
   onDuplicateTile: (tileId: string) => void;
   onAddSubtile: (parentId: string) => void;
@@ -22,6 +24,8 @@ export function Inspector({
   mode,
   selection,
   onUpdateTile,
+  onUpdateStack,
+  onUnstack,
   onDeleteTile,
   onDuplicateTile,
   onAddSubtile,
@@ -32,15 +36,71 @@ export function Inspector({
 }: InspectorProps) {
   const selectedTile = selection?.kind === "tile" ? atlas.tiles.find((tile) => tile.id === selection.id) : null;
   const selectedLink = selection?.kind === "link" ? atlas.links.find((link) => link.id === selection.id) : null;
+  const selectedStack = selection?.kind === "stack" ? atlas.stacks?.find((stack) => stack.id === selection.id) : null;
+
+  if (selectedStack) {
+    const parent = atlas.tiles.find((tile) => tile.id === selectedStack.parent_id);
+    const members = selectedStack.member_ids.map((memberId) => atlas.tiles.find((tile) => tile.id === memberId)).filter((tile): tile is Tile => Boolean(tile));
+    const config = TILE_TYPE_CONFIG[selectedStack.tile_type];
+    const Icon = config.icon;
+    const isMountStack = selectedStack.stack_kind === "mount_children";
+
+    return (
+      <aside className="inspector">
+        <div className="panel-title">Stack Inspector</div>
+        <div className="inspector__hero" style={{ "--tile-accent": config.color } as CSSProperties}>
+          <Icon size={28} />
+          <div>
+            <input
+              className="title-input"
+              value={selectedStack.name}
+              onChange={(event) => onUpdateStack({ ...selectedStack, name: event.target.value || defaultStackName(selectedStack), name_is_custom: true })}
+            />
+            <span>
+              {isMountStack ? `${members.length} Mounted Items` : `${members.length} ${config.label} tiles`}
+            </span>
+          </div>
+        </div>
+        <div className="stack-inspector">
+          <div>
+            <span>{isMountStack ? "Mount" : "Parent"}</span>
+            <strong>{parent?.title ?? selectedStack.parent_id}</strong>
+          </div>
+          <div>
+            <span>Tile Type</span>
+            <strong>{isMountStack ? "Mixed mounted items" : config.label}</strong>
+          </div>
+          <div>
+            <span>Count</span>
+            <strong>{members.length}</strong>
+          </div>
+          <div>
+            <span>Members</span>
+            <ul>
+              {members.map((member) => (
+                <li key={member.id}>{member.title}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <button className="ghost-button" onClick={() => onUnstack(selectedStack.id)}>
+          Unstack
+        </button>
+      </aside>
+    );
+  }
 
   if (selectedTile) {
     const config = TILE_TYPE_CONFIG[selectedTile.type];
     const Icon = config.icon;
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
-    const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(([key]) => !(selectedTile.type === "flow" && key === "steps"));
+    const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(
+      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node")
+    );
     const lifecycle = resolveLifecycle(selectedTile);
     const editable = isLifecycleEditable(lifecycle, mode);
+    const primaryNode = selectedTile.type === "node" && selectedTile.fields?.primary_node === true;
 
     return (
       <aside className="inspector">
@@ -90,6 +150,21 @@ export function Inspector({
               ))}
           </select>
         </label>
+        {selectedTile.type === "node" ? (
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={primaryNode}
+              onChange={(event) =>
+                onUpdateTile({
+                  ...selectedTile,
+                  fields: { ...selectedTile.fields, primary_node: event.target.checked }
+                })
+              }
+            />
+            Primary Node
+          </label>
+        ) : null}
         <label>
           Tags
           <input
@@ -445,6 +520,12 @@ function coerceFieldValue(original: unknown, next: string): unknown {
     return next === "true" || next === "1" || next.toLowerCase() === "yes";
   }
   return next;
+}
+
+function defaultStackName(stack: TileStack): string {
+  if (stack.stack_kind === "mount_children") return `${stack.member_ids.length} Mounted Items`;
+  const label = TILE_TYPE_CONFIG[stack.tile_type].label;
+  return `${stack.member_ids.length} ${label}${label.endsWith("s") ? "" : "s"}`;
 }
 
 function getDescendantIds(tiles: Tile[], tileId: string): Set<string> {

@@ -106,8 +106,10 @@ const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
 const UPDATE_NOTICE_SNOOZE_HOURS = 24;
 const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
+const AUTOSAVE_DEBOUNCE_MS = 1000;
 
 type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
+type SaveReason = "autosave" | "manual" | "export";
 
 interface SidebarState {
   collapsed: Record<SidebarSectionId, boolean>;
@@ -162,6 +164,15 @@ function AtlasEditor() {
   const lastVisibleTileCount = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const lastWarningCount = useRef<number | null>(null);
+  const latestAtlasRef = useRef<Atlas | null>(null);
+  const autosaveTimerRef = useRef<number | null>(null);
+  const dirtyVersionRef = useRef(0);
+  const savedVersionRef = useRef(0);
+  const inFlightSaveVersionRef = useRef<number | null>(null);
+  const isSavingRef = useRef(false);
+  const queuedSaveRef = useRef(false);
+  const currentSavePromiseRef = useRef<Promise<Atlas | null> | null>(null);
+  const saveCurrentAtlasRef = useRef<(reason: SaveReason) => Promise<Atlas | null>>(() => Promise.resolve(null));
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
@@ -173,6 +184,7 @@ function AtlasEditor() {
   const [selection, setSelection] = useState<Selection>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [appMode, setAppMode] = useState<AppMode>("live");
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
   const [stackContextMenu, setStackContextMenu] = useState<StackContextMenu | null>(null);
@@ -180,6 +192,9 @@ function AtlasEditor() {
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [canvasBackgroundId, setCanvasBackgroundId] = useState<CanvasBackgroundId>(() => getStoredCanvasBackground());
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [lastSaveError, setLastSaveError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
   const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
@@ -188,6 +203,132 @@ function AtlasEditor() {
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
     setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
   }, []);
+
+  const clearAutosaveTimer = useCallback(() => {
+    if (autosaveTimerRef.current !== null) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+  }, []);
+
+  const saveCurrentAtlas = useCallback(
+    async (reason: SaveReason = "autosave"): Promise<Atlas | null> => {
+      const snapshot = latestAtlasRef.current;
+      if (!snapshot) return null;
+      if (reason === "autosave" && dirtyVersionRef.current <= savedVersionRef.current) return snapshot;
+
+      clearAutosaveTimer();
+
+      if (isSavingRef.current) {
+        queuedSaveRef.current = true;
+        if (reason === "manual" || reason === "export") {
+          await currentSavePromiseRef.current;
+          return saveCurrentAtlasRef.current(reason);
+        }
+        return null;
+      }
+
+      const saveVersion = dirtyVersionRef.current;
+      isSavingRef.current = true;
+      inFlightSaveVersionRef.current = saveVersion;
+      setIsSaving(true);
+      setLastSaveError(null);
+
+      const savePromise = (async () => {
+        let succeeded = false;
+        try {
+          const saved = await saveAtlas(snapshot);
+          succeeded = true;
+          const savedAt = new Date();
+          const hasNewerLocalChanges = dirtyVersionRef.current !== saveVersion;
+
+          if (!hasNewerLocalChanges) {
+            latestAtlasRef.current = saved;
+            savedVersionRef.current = saveVersion;
+            setAtlas(saved);
+            setIsDirty(false);
+            setLastSavedAt(savedAt);
+          } else {
+            queuedSaveRef.current = true;
+          }
+
+          const action = reason === "autosave" ? "atlas.autosave" : reason === "export" ? "atlas.export_presave" : "atlas.save";
+          const message = reason === "autosave" ? "Atlas autosaved" : reason === "export" ? "Atlas saved before export" : "Atlas saved";
+          appendDebugEvent(action, message, "info", atlasSummary(saved));
+          if (reason === "manual" && !hasNewerLocalChanges) setStatus("Atlas saved");
+          return saved;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(error);
+          queuedSaveRef.current = false;
+          clearAutosaveTimer();
+          setIsDirty(true);
+          setLastSaveError(message);
+          if (reason === "manual") setStatus("Save failed");
+          appendDebugEvent(reason === "autosave" ? "atlas.autosave" : "atlas.save", "Atlas save failed", "error", { reason, error: message });
+          return null;
+        } finally {
+          isSavingRef.current = false;
+          inFlightSaveVersionRef.current = null;
+          currentSavePromiseRef.current = null;
+          setIsSaving(false);
+
+          if (succeeded && (queuedSaveRef.current || dirtyVersionRef.current > savedVersionRef.current)) {
+            queuedSaveRef.current = false;
+            void saveCurrentAtlasRef.current("autosave");
+          }
+        }
+      })();
+
+      currentSavePromiseRef.current = savePromise;
+      return savePromise;
+    },
+    [appendDebugEvent, clearAutosaveTimer]
+  );
+
+  useEffect(() => {
+    saveCurrentAtlasRef.current = saveCurrentAtlas;
+  }, [saveCurrentAtlas]);
+
+  const scheduleAutosave = useCallback(() => {
+    clearAutosaveTimer();
+    autosaveTimerRef.current = window.setTimeout(() => {
+      autosaveTimerRef.current = null;
+      void saveCurrentAtlasRef.current("autosave");
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }, [clearAutosaveTimer]);
+
+  const commitDirtyAtlas = useCallback(
+    (nextAtlas: Atlas) => {
+      latestAtlasRef.current = nextAtlas;
+      dirtyVersionRef.current += 1;
+      setAtlas(nextAtlas);
+      setIsDirty(true);
+      setLastSaveError(null);
+      if (isSavingRef.current) queuedSaveRef.current = true;
+      scheduleAutosave();
+    },
+    [scheduleAutosave]
+  );
+
+  const setCleanAtlas = useCallback(
+    (nextAtlas: Atlas, savedAt: Date | null = null) => {
+      clearAutosaveTimer();
+      latestAtlasRef.current = nextAtlas;
+      dirtyVersionRef.current += 1;
+      savedVersionRef.current = dirtyVersionRef.current;
+      queuedSaveRef.current = false;
+      setAtlas(nextAtlas);
+      setIsDirty(false);
+      setLastSaveError(null);
+      setLastSavedAt(savedAt);
+    },
+    [clearAutosaveTimer]
+  );
+
+  useEffect(() => {
+    return () => clearAutosaveTimer();
+  }, [clearAutosaveTimer]);
 
   useEffect(() => {
     function handleWindowError(event: ErrorEvent) {
@@ -216,7 +357,7 @@ function AtlasEditor() {
   useEffect(() => {
     loadAtlas()
       .then((nextAtlas) => {
-        setAtlas(nextAtlas);
+        setCleanAtlas(nextAtlas);
         const defaultView = nextAtlas.views.find((view) => view.id === "everything") ?? nextAtlas.views[0];
         if (defaultView) {
           setActiveViewId(defaultView.id);
@@ -230,7 +371,7 @@ function AtlasEditor() {
         setStatus("Unable to load atlas");
         appendDebugEvent("atlas.load", "Atlas load failed", "error", { error: error instanceof Error ? error.message : String(error) });
       });
-  }, [appendDebugEvent]);
+  }, [appendDebugEvent, setCleanAtlas]);
 
   useEffect(() => {
     storeThemePalette(themePaletteId);
@@ -446,8 +587,10 @@ function AtlasEditor() {
   }, [appMode, stackState.memberToRepresentative, themePaletteId, visibleLinks]);
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
-    setAtlas((current) => (current ? sanitizeAtlasStacks(updater(withAtlasStacks(current))) : current));
-  }, []);
+    const current = latestAtlasRef.current;
+    if (!current) return;
+    commitDirtyAtlas(sanitizeAtlasStacks(updater(withAtlasStacks(current))));
+  }, [commitDirtyAtlas]);
 
   const getCanvasDebugContext = useCallback(
     (extra: Record<string, unknown> = {}) => ({
@@ -668,31 +811,23 @@ function AtlasEditor() {
   }, [appendDebugEvent, updateAdvisory]);
 
   const handleSave = useCallback(async () => {
-    if (!atlas) return;
-    setIsSaving(true);
+    if (!latestAtlasRef.current) return;
     setStatus("Saving atlas...");
-    try {
-      const saved = await saveAtlas(atlas);
-      setAtlas(saved);
-      setStatus("Atlas saved");
-      appendDebugEvent("atlas.save", "Atlas saved", "info", atlasSummary(saved));
-    } catch (error) {
-      console.error(error);
-      setStatus("Save failed");
-      appendDebugEvent("atlas.save", "Atlas save failed", "error", { error: error instanceof Error ? error.message : String(error) });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [appendDebugEvent, atlas]);
+    await saveCurrentAtlas("manual");
+  }, [saveCurrentAtlas]);
 
   const handleExport = useCallback(
     async (format: ExportFormat) => {
-      if (!atlas) return;
+      if (!latestAtlasRef.current) return;
       setIsExporting(format);
-      setStatus(`Exporting ${format}...`);
+      setStatus(`Saving atlas before ${format} export...`);
       try {
-        const saved = await saveAtlas(atlas);
-        setAtlas(saved);
+        let saved = await saveCurrentAtlas("export");
+        while (saved && (isSavingRef.current || dirtyVersionRef.current > savedVersionRef.current)) {
+          saved = await saveCurrentAtlas("export");
+        }
+        if (!saved) throw new Error("Unable to save atlas before export.");
+        setStatus(`Exporting ${format}...`);
         const result = await generateExport(format);
         setExportResults((current) => ({ ...current, [format]: result }));
         downloadExport(format);
@@ -706,7 +841,15 @@ function AtlasEditor() {
         setIsExporting(null);
       }
     },
-    [appendDebugEvent, atlas]
+    [appendDebugEvent, saveCurrentAtlas]
+  );
+
+  const handleToolbarExport = useCallback(
+    async (format: ExportFormat) => {
+      setExportMenuOpen(false);
+      await handleExport(format);
+    },
+    [handleExport]
   );
 
   const handleImportAtlas = useCallback(
@@ -734,8 +877,13 @@ function AtlasEditor() {
         }
 
         setStatus("Importing atlas...");
+        clearAutosaveTimer();
+        queuedSaveRef.current = false;
+        while (currentSavePromiseRef.current) {
+          await currentSavePromiseRef.current;
+        }
         const imported = await saveAtlas(parsed);
-        setAtlas(imported);
+        setCleanAtlas(imported, new Date());
         const nextView = imported.views.find((view) => view.id === "everything") ?? imported.views[0];
         if (nextView) {
           setActiveViewId(nextView.id);
@@ -755,7 +903,7 @@ function AtlasEditor() {
         }
       }
     },
-    [appendDebugEvent]
+    [appendDebugEvent, clearAutosaveTimer, setCleanAtlas]
   );
 
   const handleDownloadAtlasJson = useCallback(() => {
@@ -1404,13 +1552,13 @@ function AtlasEditor() {
   const handleLoadSeed = useCallback(() => {
     if (!window.confirm("Replace the current unsaved atlas with optional CTDC sample data?")) return;
     const seed = createSeedAtlas();
-    setAtlas(seed);
+    commitDirtyAtlas(seed);
     setActiveViewId("everything");
     setLayoutTemplate("canvas_topology");
     setSelection(null);
-    setStatus("CTDC sample loaded. Save to persist it.");
+    setStatus("CTDC sample loaded");
     appendDebugEvent("seed.load", "CTDC sample loaded", "info", atlasSummary(seed));
-  }, [appendDebugEvent]);
+  }, [appendDebugEvent, commitDirtyAtlas]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -1443,6 +1591,7 @@ function AtlasEditor() {
         return;
       }
       if (event.key === "Escape") {
+        setExportMenuOpen(false);
         setSelection(null);
       }
     }
@@ -1493,6 +1642,16 @@ function AtlasEditor() {
     }
   }, [appendDebugEvent, atlas, getCanvasDebugContext, visibleTiles.length]);
 
+  const saveStatusText = useMemo(() => {
+    if (lastSaveError) return "Save failed";
+    if (isSaving) return "Autosaving...";
+    if (isDirty) return "Unsaved changes";
+    if (lastSavedAt) return `Saved at ${formatSaveTime(lastSavedAt)}`;
+    return "Saved";
+  }, [isDirty, isSaving, lastSaveError, lastSavedAt]);
+
+  const saveStatusClass = lastSaveError ? "save-status save-status--error" : isDirty ? "save-status save-status--dirty" : "save-status";
+
   if (!atlas) {
     return (
       <div className="boot-screen">
@@ -1507,98 +1666,123 @@ function AtlasEditor() {
   return (
     <div className="app-shell" data-theme={themePaletteId}>
         <header className="topbar">
-          <div className="brand">
-            <div className="brand__mark">
-              <BrandIcon size={28} />
+          <div className="topbar__main">
+            <div className="brand">
+              <div className="brand__mark">
+                <BrandIcon size={28} />
+              </div>
+              <div>
+                <strong>CTRoadmap</strong>
+                <span>Local Infrastructure Atlas</span>
+              </div>
             </div>
-            <div>
-              <strong>CTRoadmap</strong>
-              <span>Local Infrastructure Atlas</span>
+            <div className="topbar__actions">
+              <button className="toolbar-button toolbar-button--icon-only" onClick={handleSave} disabled={isSaving} title="Save" aria-label="Save">
+                {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+              </button>
+              <span className={saveStatusClass}>{saveStatusText}</span>
+              <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import atlas.json">
+                <Upload size={18} /> Import atlas.json
+              </button>
+              <input
+                ref={fileInputRef}
+                className="hidden-input"
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  if (file) void handleImportAtlas(file);
+                }}
+              />
+              <button className="toolbar-button" onClick={handleDownloadAtlasJson} title="Download your Atlas">
+                <Download size={18} /> Download your Atlas
+              </button>
+              <button className="toolbar-button" onClick={handleLoadSeed} title="Load Demo">
+                <Upload size={18} /> Load Demo
+              </button>
+              <div className="toolbar-menu">
+                <button
+                  className="toolbar-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={exportMenuOpen}
+                  onClick={() => setExportMenuOpen((open) => !open)}
+                  disabled={Boolean(isExporting)}
+                  title="3rd Party Export"
+                >
+                  {isExporting ? <Loader2 className="spin" size={18} /> : <Download size={18} />} 3rd Party Export
+                </button>
+                {exportMenuOpen ? (
+                  <div className="toolbar-popover" role="menu" aria-label="3rd Party Export">
+                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("markdown")}>
+                      <FileText size={16} /> Markdown
+                    </button>
+                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("yaml")}>
+                      <Download size={16} /> YAML
+                    </button>
+                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("mermaid")}>
+                      <FileCode2 size={16} /> Mermaid
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+              <button
+                className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}
+                onClick={() => {
+                  const nextMode: AppMode = appMode === "planning" ? "live" : "planning";
+                  setAppMode(nextMode);
+                  setSelection(null);
+                  setStatus(nextMode === "planning" ? "Planning Mode" : "Live View");
+                  appendDebugEvent("planning.mode", nextMode === "planning" ? "Planning Mode enabled" : "Live View enabled", "info", { mode: nextMode });
+                }}
+                title="Planning Mode"
+              >
+                <Plus size={18} /> Planning Mode
+              </button>
+              {updateNotice ? (
+                <div className={`update-advisory update-advisory--${updateNotice.tone}`}>
+                  <div>
+                    <strong>{updateNotice.title}</strong>
+                    <span>{updateNotice.message}</span>
+                  </div>
+                  {updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url ? (
+                    <button className="mini-icon-button" onClick={handleViewReleaseNotes} title="View release notes" aria-label="View release notes">
+                      <ExternalLink size={15} />
+                    </button>
+                  ) : null}
+                  <button className="mini-icon-button" onClick={() => void handleCopyUpdateCommand()} title="Copy update command" aria-label="Copy update command">
+                    <Download size={15} />
+                  </button>
+                  <button className="mini-icon-button" onClick={handleRemindUpdateLater} title="Remind me later" aria-label="Remind me later">
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
-          <button className="toolbar-button" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />} Save
-          </button>
-          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={18} /> Import JSON
-          </button>
-          <input
-            ref={fileInputRef}
-            className="hidden-input"
-            type="file"
-            accept="application/json,.json"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              if (file) void handleImportAtlas(file);
-            }}
-          />
-          <button className="toolbar-button" onClick={handleDownloadAtlasJson}>
-            <Download size={18} /> atlas.json
-          </button>
-          <button className="toolbar-button" onClick={handleLoadSeed}>
-            <Upload size={18} /> Load Seed
-          </button>
-          <button className="toolbar-button" onClick={() => void handleExport("markdown")} disabled={Boolean(isExporting)}>
-            {isExporting === "markdown" ? <Loader2 className="spin" size={18} /> : <FileText size={18} />} Export Markdown
-          </button>
-          <button className="toolbar-button" onClick={() => void handleExport("yaml")} disabled={Boolean(isExporting)}>
-            {isExporting === "yaml" ? <Loader2 className="spin" size={18} /> : <Download size={18} />} Export YAML
-          </button>
-          <button className="toolbar-button" onClick={() => void handleExport("mermaid")} disabled={Boolean(isExporting)}>
-            {isExporting === "mermaid" ? <Loader2 className="spin" size={18} /> : <FileCode2 size={18} />} Export Mermaid
-          </button>
-          <button
-            className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}
-            onClick={() => {
-              const nextMode: AppMode = appMode === "planning" ? "live" : "planning";
-              setAppMode(nextMode);
-              setSelection(null);
-              setStatus(nextMode === "planning" ? "Planning Mode" : "Live View");
-              appendDebugEvent("planning.mode", nextMode === "planning" ? "Planning Mode enabled" : "Live View enabled", "info", { mode: nextMode });
-            }}
-          >
-            <Plus size={18} /> Planning Mode
-          </button>
-          {updateNotice ? (
-            <div className={`update-advisory update-advisory--${updateNotice.tone}`}>
-              <div>
-                <strong>{updateNotice.title}</strong>
-                <span>{updateNotice.message}</span>
-              </div>
-              {updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url ? (
-                <button className="mini-icon-button" onClick={handleViewReleaseNotes} title="View release notes" aria-label="View release notes">
-                  <ExternalLink size={15} />
+          <div className="topbar__right">
+            <div className="search-box">
+              <Search size={18} />
+              <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
+              {searchTerm ? (
+                <button
+                  className="search-box__clear"
+                  type="button"
+                  aria-label="Clear search"
+                  title="Clear search"
+                  onClick={() => {
+                    setSearchTerm("");
+                    searchInputRef.current?.focus();
+                  }}
+                >
+                  <X size={15} />
                 </button>
               ) : null}
-              <button className="mini-icon-button" onClick={() => void handleCopyUpdateCommand()} title="Copy update command" aria-label="Copy update command">
-                <Download size={15} />
-              </button>
-              <button className="mini-icon-button" onClick={handleRemindUpdateLater} title="Remind me later" aria-label="Remind me later">
-                <X size={15} />
-              </button>
             </div>
-          ) : null}
-          <div className="search-box">
-            <Search size={18} />
-            <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
-            {searchTerm ? (
-              <button
-                className="search-box__clear"
-                type="button"
-                aria-label="Clear search"
-                title="Clear search"
-                onClick={() => {
-                  setSearchTerm("");
-                  searchInputRef.current?.focus();
-                }}
-              >
-                <X size={15} />
-              </button>
-            ) : null}
+            <button className="icon-button" onClick={handleOpenSettings} title="Settings">
+              <Settings size={19} />
+            </button>
           </div>
-          <button className="icon-button" onClick={handleOpenSettings} title="Settings">
-            <Settings size={19} />
-          </button>
         </header>
 
         <main className="workspace">
@@ -2248,6 +2432,10 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 function errorToMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function formatSaveTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default App;

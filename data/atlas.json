@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-02T04:32:53.417567+00:00"
+    "updated_at": "2026-07-02T20:30:42.252543+00:00"
   },
   "tiles": [
     {
@@ -25,8 +25,7 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": "",
-        "primary_node": true
+        "purpose": ""
       },
       "notes": "",
       "tags": []
@@ -37,8 +36,8 @@
       "title": "/samba",
       "parent": null,
       "position": {
-        "x": 380.5231655010474,
-        "y": -131.78288193174882
+        "x": 374.8951157957937,
+        "y": -171.93977712599155
       },
       "size": {
         "width": 240.0,
@@ -56,11 +55,11 @@
     {
       "id": "node_micro_server",
       "type": "node",
-      "title": "micro server",
+      "title": "mini server",
       "parent": null,
       "position": {
-        "x": -263.21351765281594,
-        "y": -429.58857689950713
+        "x": -473.3072788572912,
+        "y": -423.0231468618673
       },
       "size": {
         "width": 240.0,
@@ -72,8 +71,7 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": "",
-        "primary_node": true
+        "purpose": ""
       },
       "notes": "",
       "tags": []
@@ -84,7 +82,7 @@
       "title": "WAKE/SLEEP",
       "parent": null,
       "position": {
-        "x": -693.3255841588325,
+        "x": -687.9072400778009,
         "y": 188.42137017125603
       },
       "size": {
@@ -129,8 +127,8 @@
       "title": "server 2",
       "parent": null,
       "position": {
-        "x": -762.0398475134772,
-        "y": -430.2820628022017
+        "x": -867.0867281157148,
+        "y": -619.0381763843475
       },
       "size": {
         "width": 240.0,
@@ -142,8 +140,7 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": "",
-        "primary_node": true
+        "purpose": ""
       },
       "notes": "",
       "tags": []
@@ -178,8 +175,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 8.354574926149496,
-        "y": 63.00876026846203
+        "x": 201.3545749261495,
+        "y": 237.00876026846203
       },
       "size": {
         "width": 240.0,
@@ -200,10 +197,10 @@
       "id": "drive_back_ups",
       "type": "drive",
       "title": "back ups",
-      "parent": "mount_samba",
+      "parent": null,
       "position": {
-        "x": 382.5595967681993,
-        "y": 70.21280783321328
+        "x": 375.55959676819924,
+        "y": 20.21280783321329
       },
       "size": {
         "width": 240.0,
@@ -310,58 +307,13 @@
       "tags": []
     },
     {
-      "id": "drive_primary",
-      "type": "drive",
-      "title": "primary",
-      "parent": "mount_samba",
-      "position": {
-        "x": 384.3908406487318,
-        "y": 296.7128078332133
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "live",
-      "fields": {
-        "capacity": "",
-        "filesystem": "",
-        "device": "",
-        "purpose": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "script_auto_backup_function",
-      "type": "script",
-      "title": "auto backup function",
-      "parent": "mount_samba",
-      "position": {
-        "x": 382.4021482493476,
-        "y": 483.5078645481967
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "live",
-      "fields": {
-        "path": "",
-        "language": "",
-        "purpose": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "drive_redundant",
-      "type": "drive",
-      "title": "redundant",
+      "id": "url_vlan",
+      "type": "url",
+      "title": "VLAN",
       "parent": null,
       "position": {
-        "x": 1000.4179074689024,
-        "y": 193.40956858649838
+        "x": -263.2135176528159,
+        "y": -666.0885768995072
       },
       "size": {
         "width": 240.0,
@@ -369,50 +321,9 @@
       },
       "lifecycle": "live",
       "fields": {
-        "capacity": "",
-        "filesystem": "",
-        "device": "",
+        "url": "666.6.6.666",
+        "protocol": "",
         "purpose": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "note_note",
-      "type": "note",
-      "title": "note",
-      "parent": "node_server1",
-      "position": {
-        "x": 874.082348289711,
-        "y": -445.3087450883194
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "live",
-      "fields": {
-        "text": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "note_notes",
-      "type": "note",
-      "title": "notes",
-      "parent": "node_server1",
-      "position": {
-        "x": 921.5189282661489,
-        "y": -644.278844433934
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "live",
-      "fields": {
-        "text": ""
       },
       "notes": "",
       "tags": []
@@ -504,6 +415,18 @@
       "directional": true
     },
     {
+      "id": "link_mount_samba_drive_back_ups_contains",
+      "from": "mount_samba",
+      "to": "drive_back_ups",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
       "id": "link_secret_ref_ssh_key_secret_ref_ssh_key_micro_validates_with",
       "from": "secret_ref_ssh_key",
       "to": "secret_ref_ssh_key_micro",
@@ -564,74 +487,38 @@
       "directional": true
     },
     {
-      "id": "link_contains_mount_samba_drive_back_ups",
-      "from": "mount_samba",
-      "to": "drive_back_ups",
-      "type": "mounted_at",
+      "id": "link_url_vlan_node_micro_server_calls",
+      "from": "url_vlan",
+      "to": "node_micro_server",
+      "type": "calls",
       "from_port": "child",
       "to_port": "parent",
       "lifecycle": "live",
-      "label": "contains",
+      "label": ".",
       "notes": "",
       "directional": true
     },
     {
-      "id": "link_contains_mount_samba_drive_primary",
-      "from": "mount_samba",
-      "to": "drive_primary",
-      "type": "mounted_at",
+      "id": "link_url_vlan_node_server_2_calls",
+      "from": "url_vlan",
+      "to": "node_server_2",
+      "type": "calls",
       "from_port": "child",
       "to_port": "parent",
       "lifecycle": "live",
-      "label": "contains",
+      "label": ",",
       "notes": "",
       "directional": true
     },
     {
-      "id": "link_contains_mount_samba_script_auto_backup_function",
-      "from": "mount_samba",
-      "to": "script_auto_backup_function",
-      "type": "contains",
+      "id": "link_url_vlan_node_server1_calls",
+      "from": "url_vlan",
+      "to": "node_server1",
+      "type": "calls",
       "from_port": "child",
       "to_port": "parent",
       "lifecycle": "live",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_script_auto_backup_function_drive_redundant_uses_storage",
-      "from": "script_auto_backup_function",
-      "to": "drive_redundant",
-      "type": "uses_storage",
-      "from_port": "out",
-      "to_port": "in",
-      "lifecycle": "live",
-      "label": "sends to",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_contains_node_server1_note_notes",
-      "from": "node_server1",
-      "to": "note_notes",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_contains_node_server1_note_note",
-      "from": "node_server1",
-      "to": "note_note",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
+      "label": ",",
       "notes": "",
       "directional": true
     }
@@ -775,19 +662,5 @@
       "layout_template": "canvas_topology"
     }
   ],
-  "stacks": [
-    {
-      "id": "stack_node_server1_note",
-      "stack_kind": "sibling_type",
-      "parent_id": "node_server1",
-      "tile_type": "note",
-      "member_ids": [
-        "note_note",
-        "note_notes"
-      ],
-      "representative_id": "note_note",
-      "name": "2 Notes",
-      "name_is_custom": false
-    }
-  ]
+  "stacks": []
 }

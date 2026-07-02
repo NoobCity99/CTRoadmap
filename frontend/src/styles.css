@@ -117,7 +117,10 @@ button:disabled {
 }
 
 .topbar {
-  display: flex;
+  position: relative;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 14px 18px;
@@ -126,11 +129,34 @@ button:disabled {
   backdrop-filter: blur(18px);
 }
 
+.topbar__main,
+.topbar__actions,
+.topbar__right {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.topbar__main {
+  gap: 12px;
+}
+
+.topbar__actions {
+  flex: 1;
+  gap: 8px;
+  overflow: visible;
+}
+
+.topbar__right {
+  flex-shrink: 0;
+  gap: 10px;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 234px;
+  flex: 0 0 234px;
 }
 
 .brand__mark {
@@ -157,6 +183,25 @@ button:disabled {
   font-size: 0.86rem;
 }
 
+.save-status {
+  flex: 0 0 auto;
+  max-width: 108px;
+  color: #9fb5d1;
+  font-size: 0.78rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-status--dirty {
+  color: #facc15;
+}
+
+.save-status--error {
+  color: #ffb4b4;
+}
+
 .toolbar-button,
 .icon-button,
 .ghost-button,
@@ -174,6 +219,65 @@ button:disabled {
   padding: 0 14px;
 }
 
+.toolbar-button {
+  min-width: 0;
+  max-width: 170px;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-button--icon-only {
+  flex: 0 0 42px;
+  width: 42px;
+  padding: 0;
+}
+
+.toolbar-menu {
+  position: relative;
+  min-width: 0;
+  flex: 0 1 auto;
+  z-index: 40;
+}
+
+.toolbar-menu > .toolbar-button {
+  width: 100%;
+}
+
+.toolbar-popover {
+  position: absolute;
+  z-index: 120;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(91, 142, 196, 0.34);
+  border-radius: 8px;
+  background: rgba(3, 9, 20, 0.98);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+  padding: 6px;
+}
+
+.toolbar-popover button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #dbeafe;
+  background: transparent;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.toolbar-popover button:hover,
+.toolbar-popover button:focus-visible {
+  background: rgba(56, 163, 255, 0.14);
+}
+
 .toolbar-button--planning {
   border-color: rgba(251, 191, 36, 0.46);
   color: #fde68a;
@@ -185,7 +289,9 @@ button:disabled {
 }
 
 .update-advisory {
-  max-width: 370px;
+  min-width: 150px;
+  max-width: 260px;
+  flex: 1 1 190px;
   min-height: 44px;
   border: 1px solid rgba(91, 142, 196, 0.35);
   border-radius: 8px;
@@ -238,9 +344,10 @@ button:disabled {
 }
 
 .search-box {
-  margin-left: auto;
+  width: clamp(190px, 22vw, 320px);
+  margin-left: 0;
   height: 44px;
-  min-width: 250px;
+  min-width: 190px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -593,27 +700,42 @@ button:disabled {
   background-size: auto, 24px 24px, 24px 24px, auto;
 }
 
+.app-shell[data-theme="blueprint"] .canvas-frame[data-background="grid"],
+.app-shell[data-theme="blueprint"] .canvas-frame[data-background="hex"] {
+  --canvas-bg: #050b15;
+  --canvas-glow: rgba(14, 165, 233, 0.12);
+  --canvas-grid: rgba(80, 180, 255, 0.035);
+  --canvas-grid-line: #1f3a55;
+  --focus-accent: #38a3ff;
+}
+
 .canvas-frame[data-background="hex"] {
   background:
     radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
-    linear-gradient(30deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
-    linear-gradient(150deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
-    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 49%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 51%, transparent 52%),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
     var(--canvas-bg);
-  background-position: center, 0 0, 0 0, 0 0, center;
-  background-size: auto, 36px 62px, 36px 62px, 36px 62px, auto;
+  background-position: center, 0 0, 10px 17px, 0 0, 10px 17px, 10px 0, 0 17px, center;
+  background-size: auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
 }
 
 .canvas-frame.canvas-frame--layered_hierarchy[data-background="hex"] {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 12%, transparent), transparent 40%),
     radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
-    linear-gradient(30deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
-    linear-gradient(150deg, transparent 24%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 25%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 26%, transparent 27%, transparent 74%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 75%, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 76%, transparent 77%),
-    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 49%, color-mix(in srgb, var(--canvas-grid) 72%, transparent) 51%, transparent 52%),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
     var(--canvas-bg);
-  background-position: center, center, 0 0, 0 0, 0 0, center;
-  background-size: auto, auto, 42px 72px, 42px 72px, 42px 72px, auto;
+  background-position: center, center, 0 0, 10px 17px, 0 0, 10px 17px, 10px 0, 0 17px, center;
+  background-size: auto, auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
 }
 
 .canvas-frame[data-background="circuit"] {
@@ -692,6 +814,29 @@ button:disabled {
     radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), rgba(0, 45, 145, 0.08) 46rem, rgba(0, 21, 82, 0.28) 86rem),
     #0041ba;
   background-size: auto, 36px 36px, 36px 36px, auto, auto;
+}
+
+.canvas-frame[data-background="pcb_board"] {
+  background:
+    radial-gradient(circle, rgba(246, 203, 95, 0.44) 0 1.4px, transparent 1.6px),
+    linear-gradient(rgba(246, 203, 95, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 203, 95, 0.18) 1px, transparent 1px),
+    radial-gradient(circle at 50% 42%, rgba(255, 232, 153, 0.09), transparent 42rem),
+    #046307;
+  background-position: 0 0, 0 0, 0 0, center, center;
+  background-size: 24px 24px, 32px 32px, 32px 32px, auto, auto;
+}
+
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="pcb_board"] {
+  background:
+    linear-gradient(90deg, rgba(246, 203, 95, 0.08), transparent 42%),
+    radial-gradient(circle, rgba(246, 203, 95, 0.44) 0 1.4px, transparent 1.6px),
+    linear-gradient(rgba(246, 203, 95, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 203, 95, 0.18) 1px, transparent 1px),
+    radial-gradient(circle at 50% 42%, rgba(255, 232, 153, 0.09), transparent 42rem),
+    #046307;
+  background-position: center, 0 0, 0 0, 0 0, center, center;
+  background-size: auto, 24px 24px, 32px 32px, 32px 32px, auto, auto;
 }
 
 .view-tabs {
@@ -1751,8 +1896,33 @@ button:disabled {
     grid-template-columns: 216px minmax(0, 1fr) 286px;
   }
 
+  .brand {
+    flex-basis: 188px;
+  }
+
+  .brand span {
+    display: none;
+  }
+
+  .topbar__actions {
+    gap: 6px;
+  }
+
+  .save-status {
+    max-width: 92px;
+  }
+
+  .toolbar-button {
+    max-width: 132px;
+    padding-inline: 10px;
+  }
+
   .toolbar-button:disabled {
     display: none;
+  }
+
+  .topbar .toolbar-button:disabled {
+    display: inline-flex;
   }
 }
 
@@ -1764,12 +1934,23 @@ button:disabled {
   }
 
   .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar__main,
+  .topbar__actions,
+  .topbar__right {
     flex-wrap: wrap;
+  }
+
+  .topbar__right {
+    width: 100%;
   }
 
   .search-box {
     order: 10;
     width: 100%;
+    max-width: none;
   }
 
   .workspace {

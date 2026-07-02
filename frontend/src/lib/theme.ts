@@ -39,6 +39,11 @@ export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
     id: "blueprint",
     label: "Blueprint",
     description: "Blue drafting surface with faint white construction lines."
+  },
+  {
+    id: "pcb_board",
+    label: "PCB Board",
+    description: "Green circuit-board canvas with gold grid and solder pads."
   }
 ];
 

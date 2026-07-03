@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-03T02:08:19.162023+00:00"
+    "updated_at": "2026-07-03T02:46:33.856791+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "server1",
       "parent": null,
       "position": {
-        "x": 59.10427313312141,
-        "y": -550.4303038602537
+        "x": 45.10427313312141,
+        "y": -559.4303038602537
       },
       "size": {
         "width": 240.0,
@@ -73,7 +73,7 @@
         "ip": "",
         "os": "",
         "purpose": "",
-        "primary_node": true
+        "primary_node": false
       },
       "notes": "",
       "tags": []
@@ -383,8 +383,8 @@
       "title": "note",
       "parent": "node_server1",
       "position": {
-        "x": 874.082348289711,
-        "y": -445.3087450883194
+        "x": 512.4069209858372,
+        "y": -484.7212349144177
       },
       "size": {
         "width": 240.0,
@@ -392,7 +392,13 @@
       },
       "lifecycle": "live",
       "fields": {
-        "text": ""
+        "text": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "a2471c5361fd4eb289bb28bed8391411.jpg",
+          "url": "/api/assets/icons/a2471c5361fd4eb289bb28bed8391411.jpg",
+          "media_type": "image/jpeg"
+        }
       },
       "notes": "",
       "tags": []
@@ -634,14 +640,14 @@
       "directional": true
     },
     {
-      "id": "link_contains_node_server1_note_note",
+      "id": "link_node_server1_note_note_depends_on",
       "from": "node_server1",
       "to": "note_note",
-      "type": "contains",
+      "type": "depends_on",
       "from_port": "child",
-      "to_port": "parent",
+      "to_port": "in",
       "lifecycle": "live",
-      "label": "contains",
+      "label": ".",
       "notes": "",
       "directional": true
     }
@@ -787,19 +793,6 @@
   ],
   "stacks": [
     {
-      "id": "stack_node_server1_note",
-      "stack_kind": "sibling_type",
-      "parent_id": "node_server1",
-      "tile_type": "note",
-      "member_ids": [
-        "note_note",
-        "note_notes"
-      ],
-      "representative_id": "note_note",
-      "name": "2 Notes",
-      "name_is_custom": false
-    },
-    {
       "id": "stack_mount_samba",
       "stack_kind": "mount_children",
       "parent_id": "mount_samba",
@@ -811,6 +804,19 @@
       ],
       "representative_id": "mount_samba",
       "name": "3 Mounted Items",
+      "name_is_custom": false
+    },
+    {
+      "id": "stack_node_server1_note",
+      "stack_kind": "sibling_type",
+      "parent_id": "node_server1",
+      "tile_type": "note",
+      "member_ids": [
+        "note_note",
+        "note_notes"
+      ],
+      "representative_id": "note_note",
+      "name": "2 Notes",
       "name_is_custom": false
     }
   ]

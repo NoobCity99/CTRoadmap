@@ -853,12 +853,27 @@ button:disabled {
   backdrop-filter: blur(12px);
 }
 
+.view-tabs--collapsed {
+  gap: 0;
+  padding: 5px;
+}
+
 .view-tabs button {
+  min-width: 0;
+  min-height: 34px;
   border: 0;
   color: #9fb5d1;
   background: transparent;
   border-radius: 6px;
   padding: 8px 14px;
+}
+
+.view-tabs .view-tabs__toggle {
+  width: 34px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  color: #dbeafe;
 }
 
 .view-tabs .active {

@@ -165,6 +165,7 @@ function AtlasEditor() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const lastWarningCount = useRef<number | null>(null);
   const latestAtlasRef = useRef<Atlas | null>(null);
+  const exportMenuRef = useRef<HTMLDivElement | null>(null);
   const autosaveTimerRef = useRef<number | null>(null);
   const dirtyVersionRef = useRef(0);
   const savedVersionRef = useRef(0);
@@ -185,6 +186,7 @@ function AtlasEditor() {
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [viewBarOpen, setViewBarOpen] = useState(true);
   const [appMode, setAppMode] = useState<AppMode>("live");
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
   const [stackContextMenu, setStackContextMenu] = useState<StackContextMenu | null>(null);
@@ -717,6 +719,15 @@ function AtlasEditor() {
         appendDebugEvent("api.health", "Backend health check failed", "error", { error: error instanceof Error ? error.message : String(error) });
       });
   }, [appendDebugEvent]);
+
+  const handleToggleSettings = useCallback(() => {
+    if (settingsOpen) {
+      setSettingsOpen(false);
+      appendDebugEvent("settings.close", "Settings closed");
+      return;
+    }
+    handleOpenSettings();
+  }, [appendDebugEvent, handleOpenSettings, settingsOpen]);
 
   const handleExportDebugLog = useCallback(async () => {
     try {
@@ -1550,7 +1561,7 @@ function AtlasEditor() {
   );
 
   const handleLoadSeed = useCallback(() => {
-    if (!window.confirm("Replace the current unsaved atlas with optional CTDC sample data?")) return;
+    if (!window.confirm("This will overwrite your current ALTAS, Download your current ATLAS .json file first so you can revert to it later if you don't want to lose it.")) return;
     const seed = createSeedAtlas();
     commitDirtyAtlas(seed);
     setActiveViewId("everything");
@@ -1559,6 +1570,16 @@ function AtlasEditor() {
     setStatus("CTDC sample loaded");
     appendDebugEvent("seed.load", "CTDC sample loaded", "info", atlasSummary(seed));
   }, [appendDebugEvent, commitDirtyAtlas]);
+
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof globalThis.Node && exportMenuRef.current?.contains(event.target)) return;
+      setExportMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [exportMenuOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -1700,7 +1721,7 @@ function AtlasEditor() {
               <button className="toolbar-button" onClick={handleLoadSeed} title="Load Demo">
                 <Upload size={18} /> Load Demo
               </button>
-              <div className="toolbar-menu">
+              <div className="toolbar-menu" ref={exportMenuRef}>
                 <button
                   className="toolbar-button"
                   type="button"
@@ -1779,7 +1800,7 @@ function AtlasEditor() {
                 </button>
               ) : null}
             </div>
-            <button className="icon-button" onClick={handleOpenSettings} title="Settings">
+            <button className="icon-button" onClick={handleToggleSettings} title={settingsOpen ? "Close settings" : "Settings"} aria-label={settingsOpen ? "Close settings" : "Settings"} aria-expanded={settingsOpen}>
               <Settings size={19} />
             </button>
           </div>
@@ -1993,12 +2014,24 @@ function AtlasEditor() {
             onDrop={handleCanvasDrop}
             onDoubleClick={handleCanvasDoubleClick}
           >
-            <div className="view-tabs">
-              {atlas.views.map((view) => (
-                <button key={view.id} className={activeViewId === view.id ? "active" : ""} onClick={() => handleSelectView(view)}>
-                  {view.title}
-                </button>
-              ))}
+            <div className={viewBarOpen ? "view-tabs" : "view-tabs view-tabs--collapsed"}>
+              <button
+                className="view-tabs__toggle"
+                type="button"
+                onClick={() => setViewBarOpen((open) => !open)}
+                title={viewBarOpen ? "Hide views" : "Show views"}
+                aria-label={viewBarOpen ? "Hide views" : "Show views"}
+                aria-expanded={viewBarOpen}
+              >
+                <Eye size={16} />
+              </button>
+              {viewBarOpen
+                ? atlas.views.map((view) => (
+                    <button key={view.id} className={activeViewId === view.id ? "active" : ""} onClick={() => handleSelectView(view)}>
+                      {view.title}
+                    </button>
+                  ))
+                : null}
             </div>
             <ReactFlow
               nodes={flowNodes}

@@ -81,7 +81,7 @@ export function TileNode({ data, selected }: NodeProps) {
           <div className="tile-node__title">{tile.title}</div>
           <div className="tile-node__type">{config.label}</div>
         </div>
-        <div className={lifecycle === "planned" ? "tile-node__lifecycle tile-node__lifecycle--planned" : "tile-node__lifecycle"}>{lifecycle}</div>
+        {lifecycle === "planned" ? <div className="tile-node__lifecycle tile-node__lifecycle--planned">planned</div> : null}
       </div>
       {stack ? (
         <div className="tile-node__stack-meta">

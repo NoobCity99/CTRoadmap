@@ -14,6 +14,7 @@ import {
   type NodeChange
 } from "@xyflow/react";
 import {
+  CircuitBoard,
   ChevronDown,
   ChevronUp,
   Download,
@@ -44,6 +45,7 @@ import {
   useRef,
   useState
 } from "react";
+import { FamilyNode } from "./components/FamilyNode";
 import { Inspector } from "./components/Inspector";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TileNode } from "./components/TileNode";
@@ -79,6 +81,7 @@ import type {
   Atlas,
   AppVersion,
   DebugEvent,
+  Family,
   ExportFormat,
   ExportResult,
   AppMode,
@@ -99,8 +102,10 @@ import type {
   View
 } from "./types/atlas";
 
-const nodeTypes = { tileNode: TileNode };
+const nodeTypes = { tileNode: TileNode, familyNode: FamilyNode };
 const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
+const FAMILY_DRAG_MIME = "application/ctroadmap-family";
+const FAMILY_PALETTE_COLOR = "#38a3ff";
 const FIT_VIEW_OPTIONS: FitViewOptions = { padding: 0.28, duration: 450 };
 const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
 const UPDATE_NOTICE_SNOOZE_HOURS = 24;
@@ -110,6 +115,9 @@ const AUTOSAVE_DEBOUNCE_MS = 1000;
 
 type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
 type SaveReason = "autosave" | "manual" | "export";
+type PaletteEntry = { kind: "tile"; type: TileType } | { kind: "family" };
+
+const PALETTE_ENTRIES: PaletteEntry[] = [...TILE_TYPES.map((type) => ({ kind: "tile" as const, type })), { kind: "family" }];
 
 interface SidebarState {
   collapsed: Record<SidebarSectionId, boolean>;
@@ -155,7 +163,7 @@ function App() {
 }
 
 function AtlasEditor() {
-  const { fitView, screenToFlowPosition, setCenter } = useReactFlow();
+  const { fitView, fitBounds, screenToFlowPosition, setCenter } = useReactFlow();
   const canvasRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isNodeDragging = useRef(false);
@@ -415,12 +423,12 @@ function AtlasEditor() {
     return atlas.views.find((view) => view.id === activeViewId) ?? atlas.views[0] ?? null;
   }, [atlas, activeViewId]);
 
-  const collapsedPaletteTypes = useMemo(() => {
+  const collapsedPaletteEntries = useMemo(() => {
     const activeIndex = normalizePaletteIndex(sidebarState.paletteIndex);
     return [
-      { slot: "previous", type: TILE_TYPES[normalizePaletteIndex(activeIndex - 1)], interactive: false },
-      { slot: "active", type: TILE_TYPES[activeIndex], interactive: true },
-      { slot: "next", type: TILE_TYPES[normalizePaletteIndex(activeIndex + 1)], interactive: false }
+      { slot: "previous", entry: PALETTE_ENTRIES[normalizePaletteIndex(activeIndex - 1)], interactive: false },
+      { slot: "active", entry: PALETTE_ENTRIES[activeIndex], interactive: true },
+      { slot: "next", entry: PALETTE_ENTRIES[normalizePaletteIndex(activeIndex + 1)], interactive: false }
     ] as const;
   }, [sidebarState.paletteIndex]);
 
@@ -456,6 +464,47 @@ function AtlasEditor() {
   }, [atlas]);
 
   const stackState = useMemo(() => (atlas ? buildStackState(atlas) : emptyStackState()), [atlas]);
+
+  const handleFocusFamily = useCallback(
+    (family: Family) => {
+      setSelection({ kind: "family", id: family.id });
+      fitBounds(
+        {
+          x: family.position.x,
+          y: family.position.y,
+          width: family.size.width,
+          height: family.size.height
+        },
+        { padding: 0.2, duration: 450 }
+      );
+      setStatus(`Family: ${family.title}`);
+      appendDebugEvent("family.focus", "Family focused", "info", { family_id: family.id });
+    },
+    [appendDebugEvent, fitBounds]
+  );
+
+  const handleResizeFamily = useCallback(
+    (familyId: string, size: { width: number; height: number }) => {
+      const current = latestAtlasRef.current;
+      if (!current) return;
+      commitDirtyAtlas({
+        ...current,
+        families: (current.families ?? []).map((family) =>
+          family.id === familyId
+            ? {
+                ...family,
+                size: {
+                  width: Math.max(240, size.width),
+                  height: Math.max(160, size.height)
+                }
+              }
+            : family
+        )
+      });
+      appendDebugEvent("family.resize", "Family resized", "info", { family_id: familyId, width: size.width, height: size.height });
+    },
+    [appendDebugEvent, commitDirtyAtlas]
+  );
 
   const searchResults = useMemo<SearchResult[]>(() => {
     if (!atlas) return [];
@@ -524,8 +573,35 @@ function AtlasEditor() {
   const derivedNodes: Node[] = useMemo(() => {
     if (!atlas) return [];
     const layoutPositions = layoutTemplate === "layered_hierarchy" ? computeLayeredPositions(visibleTiles) : new Map<string, { x: number; y: number }>();
+    const familyNodes: Node[] =
+      layoutTemplate === "canvas_topology"
+        ? [...(atlas.families ?? [])]
+            .sort((left, right) => left.order - right.order)
+            .map((family) => ({
+              id: familyNodeId(family.id),
+              type: "familyNode",
+              className: "family-flow-node",
+              position: family.position,
+              draggable: isInteractive,
+              dragHandle: ".family-node__header",
+              connectable: false,
+              selectable: true,
+              selected: selection?.kind === "family" && selection.id === family.id,
+              zIndex: family.order,
+              style: {
+                width: family.size.width,
+                height: family.size.height
+              },
+              data: {
+                family,
+                memberCount: family.member_tile_ids.filter((memberId) => atlas.tiles.some((tile) => tile.id === memberId)).length,
+                onResizeFamily: handleResizeFamily,
+                onFocusFamily: handleFocusFamily
+              }
+            }))
+        : [];
 
-    return visibleTiles.map((tile) => {
+    const tileNodes = visibleTiles.map((tile) => {
       const parentTitle = tile.parent ? atlas.tiles.find((candidate) => candidate.id === tile.parent)?.title : undefined;
       const position = layoutPositions.get(tile.id) ?? tile.position;
       const lifecycle = resolveLifecycle(tile);
@@ -548,7 +624,8 @@ function AtlasEditor() {
         }
       };
     });
-  }, [appMode, atlas, childrenByParent, isInteractive, layoutTemplate, stackState.stackByRepresentative, themePaletteId, visibleTiles]);
+    return [...familyNodes, ...tileNodes];
+  }, [appMode, atlas, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, layoutTemplate, selection, stackState.stackByRepresentative, themePaletteId, visibleTiles]);
 
   useEffect(() => {
     if (isNodeDragging.current) return;
@@ -591,7 +668,7 @@ function AtlasEditor() {
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
     const current = latestAtlasRef.current;
     if (!current) return;
-    commitDirtyAtlas(sanitizeAtlasStacks(updater(withAtlasStacks(current))));
+    commitDirtyAtlas(sanitizeAtlas(updater(withAtlasDefaults(current))));
   }, [commitDirtyAtlas]);
 
   const getCanvasDebugContext = useCallback(
@@ -879,7 +956,7 @@ function AtlasEditor() {
 
         const warningText = preview.warnings.length ? `\n\nWarnings:\n${preview.warnings.join("\n")}` : "";
         const confirmed = window.confirm(
-          `Replace the current atlas with this validated JSON file?\n\nTiles: ${preview.tiles}\nRelationships: ${preview.links}\nViews: ${preview.views}${warningText}`
+          `Replace the current atlas with this validated JSON file?\n\nTiles: ${preview.tiles}\nRelationships: ${preview.links}\nViews: ${preview.views}\nFamilies: ${preview.families}${warningText}`
         );
         if (!confirmed) {
           setStatus("Import canceled");
@@ -980,6 +1057,43 @@ function AtlasEditor() {
     });
   }, [screenToFlowPosition]);
 
+  const handleCreateFamily = useCallback((positionOverride?: { x: number; y: number }) => {
+    if (!atlas) return;
+    if (layoutTemplate !== "canvas_topology") {
+      setStatus("Families are available in Canvas template");
+      return;
+    }
+    const title = window.prompt("Family title", "New Family");
+    if (!title) return;
+    const position = positionOverride ?? getViewportCenterPosition() ?? { x: 160 + (atlas.families ?? []).length * 28, y: 140 + (atlas.families ?? []).length * 28 };
+    const family: Family = {
+      id: createId("family", title, (atlas.families ?? []).map((candidate) => candidate.id)),
+      title,
+      description: "",
+      member_tile_ids: [],
+      position: {
+        x: Math.round(position.x - 180),
+        y: Math.round(position.y - 120)
+      },
+      size: { width: 360, height: 240 },
+      order: ((atlas.families ?? []).reduce((maxOrder, candidate) => Math.max(maxOrder, candidate.order), -1) ?? -1) + 1,
+      color: "#38a3ff",
+      tag: ""
+    };
+    updateAtlas((current) => ({
+      ...current,
+      families: [...(current.families ?? []), family]
+    }));
+    setSelection({ kind: "family", id: family.id });
+    setStatus("Family created");
+    appendDebugEvent("family.create", "Family created", "info", { family_id: family.id });
+  }, [appendDebugEvent, atlas, getViewportCenterPosition, layoutTemplate, updateAtlas]);
+
+  const handleFamilyPaletteClick = useCallback(() => {
+    if (Date.now() - lastPaletteDragAt.current < 250) return;
+    handleCreateFamily();
+  }, [handleCreateFamily]);
+
   const handlePaletteClick = useCallback(
     (type: TileType) => {
       if (Date.now() - lastPaletteDragAt.current < 250) return;
@@ -997,19 +1111,50 @@ function AtlasEditor() {
     event.dataTransfer.effectAllowed = "copy";
   }, [isInteractive]);
 
+  const handleFamilyPaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>) => {
+    if (!isInteractive || layoutTemplate !== "canvas_topology") {
+      event.preventDefault();
+      if (layoutTemplate !== "canvas_topology") setStatus("Families are available in Canvas template");
+      return;
+    }
+    event.dataTransfer.setData(FAMILY_DRAG_MIME, "family");
+    event.dataTransfer.effectAllowed = "copy";
+  }, [isInteractive, layoutTemplate]);
+
   const handlePaletteDragEnd = useCallback(() => {
     lastPaletteDragAt.current = Date.now();
   }, []);
 
   const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
     if (!isInteractive) return;
-    if (!Array.from(event.dataTransfer.types).includes(TILE_DRAG_MIME)) return;
+    const dragTypes = Array.from(event.dataTransfer.types);
+    if (!dragTypes.includes(TILE_DRAG_MIME) && !dragTypes.includes(FAMILY_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   }, [isInteractive]);
 
   const handleCanvasDrop = useCallback(
     (event: DragEvent<HTMLElement>) => {
+      const dragTypes = Array.from(event.dataTransfer.types);
+      if (dragTypes.includes(FAMILY_DRAG_MIME)) {
+        event.preventDefault();
+        if (!isInteractive) {
+          setStatus("Interactivity locked");
+          appendDebugEvent("canvas.locked_drop", "Family drop blocked while interactivity is locked", "warning", getCanvasDebugContext({ type: "family" }));
+          return;
+        }
+        if (layoutTemplate !== "canvas_topology") {
+          setStatus("Families are available in Canvas template");
+          return;
+        }
+        handleCreateFamily(
+          screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY
+          })
+        );
+        return;
+      }
       const type = event.dataTransfer.getData(TILE_DRAG_MIME) as TileType;
       if (!TILE_TYPES.includes(type)) return;
       event.preventDefault();
@@ -1026,7 +1171,7 @@ function AtlasEditor() {
         })
       );
     },
-    [appendDebugEvent, getCanvasDebugContext, handleCreateTile, isInteractive, screenToFlowPosition]
+    [appendDebugEvent, getCanvasDebugContext, handleCreateFamily, handleCreateTile, isInteractive, layoutTemplate, screenToFlowPosition]
   );
 
   const handleAddSubtile = useCallback(
@@ -1094,9 +1239,9 @@ function AtlasEditor() {
   const handleNodeDragStart = useCallback(
     (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
       if (!isInteractive) return;
-      if (!draggedNodes.some((draggedNode) => isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))) return;
+      if (!draggedNodes.some((draggedNode) => draggedNode.type === "familyNode" || isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))) return;
       isNodeDragging.current = true;
-      appendDebugEvent("tile.drag_start", "Tile drag started", "info", getCanvasDebugContext({ tile_id: node.id, dragged_count: draggedNodes.length }));
+      appendDebugEvent("canvas.node_drag_start", "Canvas node drag started", "info", getCanvasDebugContext({ node_id: node.id, node_type: node.type, dragged_count: draggedNodes.length }));
     },
     [appendDebugEvent, appMode, getCanvasDebugContext, isInteractive]
   );
@@ -1113,28 +1258,39 @@ function AtlasEditor() {
         setFlowNodes(derivedNodes);
         return;
       }
-      const positionsById = new Map(
+      const tilePositionsById = new Map(
         draggedNodes
-          .filter((draggedNode) => isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))
+          .filter((draggedNode) => draggedNode.type !== "familyNode" && isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))
           .map((draggedNode) => [draggedNode.id, draggedNode.position])
       );
-      if (!positionsById.size) {
+      const familyPositionsById = new Map(
+        draggedNodes
+          .filter((draggedNode) => draggedNode.type === "familyNode")
+          .map((draggedNode) => [(draggedNode.data?.family as Family | undefined)?.id, draggedNode.position])
+          .filter((entry): entry is [string, { x: number; y: number }] => Boolean(entry[0]))
+      );
+      if (!tilePositionsById.size && !familyPositionsById.size) {
         setFlowNodes(derivedNodes);
         return;
       }
       updateAtlas((current) => ({
         ...current,
         tiles: current.tiles.map((tile) => {
-          const position = positionsById.get(tile.id);
+          const position = tilePositionsById.get(tile.id);
           return position ? { ...tile, position } : tile;
+        }),
+        families: (current.families ?? []).map((family) => {
+          const position = familyPositionsById.get(family.id);
+          return position ? { ...family, position } : family;
         })
       }));
       appendDebugEvent(
-        "tile.drag_stop",
-        "Tile drag stopped",
+        "canvas.node_drag_stop",
+        "Canvas node drag stopped",
         "info",
         getCanvasDebugContext({
-          tile_id: node.id,
+          node_id: node.id,
+          node_type: node.type,
           dragged_count: draggedNodes.length,
           position_x: Math.round(node.position.x),
           position_y: Math.round(node.position.y)
@@ -1237,6 +1393,51 @@ function AtlasEditor() {
     [appendDebugEvent, appMode, updateAtlas]
   );
 
+  const handleUpdateFamily = useCallback(
+    (family: Family) => {
+      updateAtlas((current) => ({
+        ...current,
+        families: (current.families ?? []).map((candidate) => (candidate.id === family.id ? family : candidate))
+      }));
+      setStatus("Family updated");
+      appendDebugEvent("family.update", "Family updated", "info", { family_id: family.id });
+    },
+    [appendDebugEvent, updateAtlas]
+  );
+
+  const handleDeleteFamily = useCallback(
+    (familyId: string) => {
+      if (!window.confirm("Delete this Family? Member tiles will not be deleted.")) return;
+      updateAtlas((current) => ({
+        ...current,
+        families: (current.families ?? []).filter((family) => family.id !== familyId)
+      }));
+      setSelection(null);
+      setStatus("Family deleted");
+      appendDebugEvent("family.delete", "Family deleted", "warning", { family_id: familyId });
+    },
+    [appendDebugEvent, updateAtlas]
+  );
+
+  const handleToggleTileFamily = useCallback(
+    (tileId: string, familyId: string, included: boolean) => {
+      updateAtlas((current) => ({
+        ...current,
+        families: (current.families ?? []).map((family) => {
+          if (family.id !== familyId) return family;
+          const currentMembers = family.member_tile_ids.filter((memberId, index, allIds) => allIds.indexOf(memberId) === index);
+          const memberSet = new Set(currentMembers);
+          if (included) memberSet.add(tileId);
+          else memberSet.delete(tileId);
+          return { ...family, member_tile_ids: Array.from(memberSet) };
+        })
+      }));
+      setStatus(included ? "Tile added to Family" : "Tile removed from Family");
+      appendDebugEvent("family.membership", included ? "Tile added to Family" : "Tile removed from Family", "info", { family_id: familyId, tile_id: tileId });
+    },
+    [appendDebugEvent, updateAtlas]
+  );
+
   const handleDeleteTile = useCallback(
     (tileId: string) => {
       const tile = atlas?.tiles.find((candidate) => candidate.id === tileId);
@@ -1248,7 +1449,11 @@ function AtlasEditor() {
       updateAtlas((current) => ({
         ...current,
         tiles: current.tiles.filter((tile) => tile.id !== tileId).map((tile) => (tile.parent === tileId ? { ...tile, parent: null } : tile)),
-        links: current.links.filter((link) => link.from !== tileId && link.to !== tileId)
+        links: current.links.filter((link) => link.from !== tileId && link.to !== tileId),
+        families: (current.families ?? []).map((family) => ({
+          ...family,
+          member_tile_ids: family.member_tile_ids.filter((memberId) => memberId !== tileId)
+        }))
       }));
       setSelection(null);
       setStatus("Tile deleted");
@@ -1823,19 +2028,42 @@ function AtlasEditor() {
                   <button className="palette-cycle-button" type="button" onClick={() => cycleCollapsedPalette(-1)} title="Previous tile type" aria-label="Previous tile type">
                     <ChevronUp size={16} />
                   </button>
-                  {collapsedPaletteTypes.map(({ slot, type, interactive }) => {
-                    const config = TILE_TYPE_CONFIG[type];
+                  {collapsedPaletteEntries.map(({ slot, entry, interactive }) => {
+                    if (entry.kind === "family") {
+                      const style = { "--tile-accent": FAMILY_PALETTE_COLOR } as CSSProperties;
+                      return interactive ? (
+                        <button
+                          key={`${slot}-family`}
+                          className="palette-item palette-item--collapsed palette-item--active-slot"
+                          style={style}
+                          draggable
+                          onClick={handleFamilyPaletteClick}
+                          onDragStart={handleFamilyPaletteDragStart}
+                          onDragEnd={handlePaletteDragEnd}
+                          title="Click to create Family; drag onto the map to place it."
+                        >
+                          <CircuitBoard size={19} />
+                          Family
+                        </button>
+                      ) : (
+                        <div key={`${slot}-family`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
+                          <CircuitBoard size={19} />
+                          Family
+                        </div>
+                      );
+                    }
+                    const config = TILE_TYPE_CONFIG[entry.type];
                     const Icon = config.icon;
-                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(type, "cyber") : getTileColor(type, themePaletteId);
+                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(entry.type, "cyber") : getTileColor(entry.type, themePaletteId);
                     const style = { "--tile-accent": paletteAccent } as CSSProperties;
                     return interactive ? (
                       <button
-                        key={`${slot}-${type}`}
+                        key={`${slot}-${entry.type}`}
                         className="palette-item palette-item--collapsed palette-item--active-slot"
                         style={style}
                         draggable
-                        onClick={() => handlePaletteClick(type)}
-                        onDragStart={(event) => handlePaletteDragStart(event, type)}
+                        onClick={() => handlePaletteClick(entry.type)}
+                        onDragStart={(event) => handlePaletteDragStart(event, entry.type)}
                         onDragEnd={handlePaletteDragEnd}
                         title={`Click to create ${config.label}; drag onto the map to place it.`}
                       >
@@ -1843,7 +2071,7 @@ function AtlasEditor() {
                         {config.label}
                       </button>
                     ) : (
-                      <div key={`${slot}-${type}`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
+                      <div key={`${slot}-${entry.type}`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
                         <Icon size={19} />
                         {config.label}
                       </div>
@@ -1855,18 +2083,35 @@ function AtlasEditor() {
                 </div>
               ) : (
                 <div className="tile-palette">
-                  {TILE_TYPES.map((type) => {
-                    const config = TILE_TYPE_CONFIG[type];
+                  {PALETTE_ENTRIES.map((entry) => {
+                    if (entry.kind === "family") {
+                      return (
+                        <button
+                          key="family"
+                          className="palette-item"
+                          style={{ "--tile-accent": FAMILY_PALETTE_COLOR } as CSSProperties}
+                          draggable
+                          onClick={handleFamilyPaletteClick}
+                          onDragStart={handleFamilyPaletteDragStart}
+                          onDragEnd={handlePaletteDragEnd}
+                          title="Click to create Family; drag onto the map to place it."
+                        >
+                          <CircuitBoard size={19} />
+                          Family
+                        </button>
+                      );
+                    }
+                    const config = TILE_TYPE_CONFIG[entry.type];
                     const Icon = config.icon;
-                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(type, "cyber") : getTileColor(type, themePaletteId);
+                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(entry.type, "cyber") : getTileColor(entry.type, themePaletteId);
                     return (
                       <button
-                        key={type}
+                        key={entry.type}
                         className="palette-item"
                         style={{ "--tile-accent": paletteAccent } as CSSProperties}
                         draggable
-                        onClick={() => handlePaletteClick(type)}
-                        onDragStart={(event) => handlePaletteDragStart(event, type)}
+                        onClick={() => handlePaletteClick(entry.type)}
+                        onDragStart={(event) => handlePaletteDragStart(event, entry.type)}
                         onDragEnd={handlePaletteDragEnd}
                         title={`Click to create ${config.label}; drag onto the map to place it.`}
                       >
@@ -2041,7 +2286,14 @@ function AtlasEditor() {
               onConnect={handleConnect}
               onNodeDragStart={handleNodeDragStart}
               onNodeDragStop={handleNodeDragStop}
-              onNodeClick={(_, node) => selectTileAndFocus(node.id)}
+              onNodeClick={(_, node) => {
+                if (node.type === "familyNode") {
+                  const family = node.data?.family as Family | undefined;
+                  if (family) setSelection({ kind: "family", id: family.id });
+                  return;
+                }
+                selectTileAndFocus(node.id);
+              }}
               onNodeContextMenu={handleNodeContextMenu}
               onEdgeClick={(_, edge) => setSelection({ kind: "link", id: edge.id })}
               onError={handleReactFlowError}
@@ -2059,7 +2311,15 @@ function AtlasEditor() {
               maxZoom={1.8}
             >
               <Background color="var(--canvas-grid-line)" gap={20} size={1} />
-              <MiniMap pannable zoomable nodeColor={(node) => getTileColor((node.data.tile as Tile).type, themePaletteId)} />
+              <MiniMap
+                pannable
+                zoomable
+                nodeColor={(node) => {
+                  const family = node.data.family as Family | undefined;
+                  if (family) return family.color || "#38a3ff";
+                  return getTileColor((node.data.tile as Tile).type, themePaletteId);
+                }}
+              />
               <Controls fitViewOptions={FIT_VIEW_OPTIONS} onInteractiveChange={handleInteractiveChange} />
             </ReactFlow>
             <div className="status-strip">
@@ -2100,11 +2360,14 @@ function AtlasEditor() {
             mode={appMode}
             selection={selection}
             onUpdateTile={handleUpdateTile}
+            onUpdateFamily={handleUpdateFamily}
             onUpdateStack={handleUpdateStack}
             onUnstack={handleUnstack}
             onDeleteTile={handleDeleteTile}
+            onDeleteFamily={handleDeleteFamily}
             onDuplicateTile={handleDuplicateTile}
             onAddSubtile={handleAddSubtile}
+            onToggleTileFamily={handleToggleTileFamily}
             onUpdateLink={handleUpdateLink}
             onDeleteLink={handleDeleteLink}
             onPromoteTile={handlePromoteTile}
@@ -2176,12 +2439,12 @@ function buildStackState(atlas: Atlas): StackState {
   return { stacks, hiddenMemberIds, memberToRepresentative, stackByRepresentative };
 }
 
-function withAtlasStacks(atlas: Atlas): Atlas {
-  return { ...atlas, stacks: atlas.stacks ?? [] };
+function withAtlasDefaults(atlas: Atlas): Atlas {
+  return { ...atlas, stacks: atlas.stacks ?? [], families: atlas.families ?? [] };
 }
 
-function sanitizeAtlasStacks(atlas: Atlas): Atlas {
-  return { ...atlas, stacks: sanitizeStacks(atlas) };
+function sanitizeAtlas(atlas: Atlas): Atlas {
+  return { ...atlas, stacks: sanitizeStacks(atlas), families: sanitizeFamilies(atlas) };
 }
 
 function sanitizeStacks(atlas: Atlas): TileStack[] {
@@ -2236,6 +2499,33 @@ function sanitizeStacks(atlas: Atlas): TileStack[] {
   }
 
   return sanitized;
+}
+
+function sanitizeFamilies(atlas: Atlas): Family[] {
+  const tileIds = new Set(atlas.tiles.map((tile) => tile.id));
+  const usedIds = new Set<string>();
+  return (atlas.families ?? [])
+    .slice()
+    .sort((left, right) => left.order - right.order)
+    .map((family) => {
+      const id = uniqueId(family.id, usedIds);
+      usedIds.add(id);
+      return {
+        ...family,
+        id,
+        title: family.title || "Family",
+        description: family.description ?? "",
+        member_tile_ids: family.member_tile_ids.filter((memberId, index, allIds) => tileIds.has(memberId) && allIds.indexOf(memberId) === index),
+        position: family.position ?? { x: 0, y: 0 },
+        size: {
+          width: Math.max(240, family.size?.width ?? 360),
+          height: Math.max(160, family.size?.height ?? 240)
+        },
+        order: Number.isFinite(family.order) ? family.order : 0,
+        color: family.color || null,
+        tag: family.tag || null
+      };
+    });
 }
 
 function canStackSiblingTiles(tile: Tile, tiles: Tile[]): boolean {
@@ -2313,7 +2603,7 @@ function storeSidebarState(state: SidebarState): void {
 }
 
 function normalizePaletteIndex(index: number): number {
-  const count = TILE_TYPES.length;
+  const count = PALETTE_ENTRIES.length;
   if (!Number.isFinite(index) || count === 0) return 0;
   return ((Math.trunc(index) % count) + count) % count;
 }
@@ -2387,7 +2677,12 @@ function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
 function isEditableNodeChange(change: NodeChange, nodes: Node[], mode: AppMode): boolean {
   if (!("id" in change)) return true;
   const node = nodes.find((candidate) => candidate.id === change.id);
+  if (node?.type === "familyNode") return true;
   return isLifecycleEditable(resolveLifecycle(node?.data?.tile as Tile | undefined), mode);
+}
+
+function familyNodeId(familyId: string): string {
+  return `family:${familyId}`;
 }
 
 function asSourcePort(value: string | null | undefined): LinkSourcePort {

@@ -2,18 +2,21 @@ import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { uploadTileIcon } from "../lib/api";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { AppMode, Atlas, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
+import type { AppMode, Atlas, Family, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
   mode: AppMode;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
+  onUpdateFamily: (family: Family) => void;
   onUpdateStack: (stack: TileStack) => void;
   onUnstack: (stackId: string) => void;
   onDeleteTile: (tileId: string) => void;
+  onDeleteFamily: (familyId: string) => void;
   onDuplicateTile: (tileId: string) => void;
   onAddSubtile: (parentId: string) => void;
+  onToggleTileFamily: (tileId: string, familyId: string, included: boolean) => void;
   onUpdateLink: (link: Link) => void;
   onDeleteLink: (linkId: string) => void;
   onPromoteTile: (tileId: string) => void;
@@ -25,11 +28,14 @@ export function Inspector({
   mode,
   selection,
   onUpdateTile,
+  onUpdateFamily,
   onUpdateStack,
   onUnstack,
   onDeleteTile,
+  onDeleteFamily,
   onDuplicateTile,
   onAddSubtile,
+  onToggleTileFamily,
   onUpdateLink,
   onDeleteLink,
   onPromoteTile,
@@ -38,6 +44,69 @@ export function Inspector({
   const selectedTile = selection?.kind === "tile" ? atlas.tiles.find((tile) => tile.id === selection.id) : null;
   const selectedLink = selection?.kind === "link" ? atlas.links.find((link) => link.id === selection.id) : null;
   const selectedStack = selection?.kind === "stack" ? atlas.stacks?.find((stack) => stack.id === selection.id) : null;
+  const selectedFamily = selection?.kind === "family" ? atlas.families?.find((family) => family.id === selection.id) : null;
+
+  if (selectedFamily) {
+    const members = selectedFamily.member_tile_ids.map((memberId) => atlas.tiles.find((tile) => tile.id === memberId)).filter((tile): tile is Tile => Boolean(tile));
+    const familyColor = selectedFamily.color || "#38a3ff";
+
+    return (
+      <aside className="inspector">
+        <div className="panel-title">Family Inspector</div>
+        <div className="inspector__hero inspector__hero--family" style={{ "--family-color": familyColor } as CSSProperties}>
+          <div>
+            <input className="title-input" value={selectedFamily.title} onChange={(event) => onUpdateFamily({ ...selectedFamily, title: event.target.value || "Family" })} />
+            <span>{members.length} member{members.length === 1 ? "" : "s"}</span>
+          </div>
+        </div>
+        <div className="family-inspector">
+          <label>
+            Description
+            <textarea value={selectedFamily.description} onChange={(event) => onUpdateFamily({ ...selectedFamily, description: event.target.value })} />
+          </label>
+          <label>
+            Tag
+            <input value={selectedFamily.tag ?? ""} onChange={(event) => onUpdateFamily({ ...selectedFamily, tag: event.target.value || null })} />
+          </label>
+          <label>
+            Color
+            <span className="family-color-picker">
+              <span className="family-color-picker__swatch" style={{ "--family-color": familyColor } as CSSProperties} />
+              <input type="color" value={familyColor} aria-label="Family color" onChange={(event) => onUpdateFamily({ ...selectedFamily, color: event.target.value })} />
+              <strong>{familyColor.toUpperCase()}</strong>
+            </span>
+          </label>
+          <label>
+            Order
+            <input type="number" value={selectedFamily.order} onChange={(event) => onUpdateFamily({ ...selectedFamily, order: Number(event.target.value) || 0 })} />
+          </label>
+          <div className="family-inspector__readout">
+            <span>Position</span>
+            <strong>{Math.round(selectedFamily.position.x)}, {Math.round(selectedFamily.position.y)}</strong>
+          </div>
+          <div className="family-inspector__readout">
+            <span>Size</span>
+            <strong>{Math.round(selectedFamily.size.width)} x {Math.round(selectedFamily.size.height)}</strong>
+          </div>
+          <div className="family-inspector__members">
+            <span>Members</span>
+            {members.length ? (
+              <ul>
+                {members.map((member) => (
+                  <li key={member.id}>{member.title}</li>
+                ))}
+              </ul>
+            ) : (
+              <strong>No member tiles</strong>
+            )}
+          </div>
+        </div>
+        <button className="danger-button" onClick={() => onDeleteFamily(selectedFamily.id)}>
+          <Trash2 size={16} /> Delete Family
+        </button>
+      </aside>
+    );
+  }
 
   if (selectedStack) {
     const parent = atlas.tiles.find((tile) => tile.id === selectedStack.parent_id);
@@ -212,6 +281,24 @@ export function Inspector({
             />
             Primary Node
           </label>
+        ) : null}
+        {(atlas.families ?? []).length ? (
+          <div className="family-membership">
+            <div className="field-editor__title">Families</div>
+            {(atlas.families ?? [])
+              .slice()
+              .sort((left, right) => left.order - right.order)
+              .map((family) => (
+                <label key={family.id} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={family.member_tile_ids.includes(selectedTile.id)}
+                    onChange={(event) => onToggleTileFamily(selectedTile.id, family.id, event.target.checked)}
+                  />
+                  {family.title}
+                </label>
+              ))}
+          </div>
         ) : null}
         <label>
           Tags
@@ -410,8 +497,8 @@ export function Inspector({
     <aside className="inspector">
       <div className="panel-title">Inspector</div>
       <div className="empty-state">
-        <strong>Select a tile or relationship</strong>
-        <span>Edit details, fields, tags, notes, and relationships here.</span>
+        <strong>Select a tile, relationship, stack, or Family</strong>
+        <span>Edit details, fields, tags, notes, relationships, and grouping here.</span>
       </div>
     </aside>
   );

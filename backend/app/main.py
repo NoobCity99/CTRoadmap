@@ -43,6 +43,7 @@ class AtlasImportPreview(BaseModel):
     tiles: int = 0
     links: int = 0
     views: int = 0
+    families: int = 0
     warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
 
@@ -135,13 +136,14 @@ def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
     record_debug_event(
         "atlas.preview",
         "Atlas import preview validated",
-        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views), "warnings": len(warnings)},
+        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views), "families": len(atlas.families), "warnings": len(warnings)},
     )
     return AtlasImportPreview(
         valid=True,
         tiles=len(atlas.tiles),
         links=len(atlas.links),
         views=len(atlas.views),
+        families=len(atlas.families),
         warnings=warnings,
     )
 

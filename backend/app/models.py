@@ -117,6 +117,20 @@ class Stack(BaseModel):
     name_is_custom: bool = False
 
 
+class Family(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    description: str = ""
+    member_tile_ids: list[str] = Field(default_factory=list)
+    position: Position = Field(default_factory=Position)
+    size: Size = Field(default_factory=lambda: Size(width=360, height=240))
+    order: int = 0
+    color: str | None = None
+    tag: str | None = None
+
+
 class ViewCamera(BaseModel):
     x: float = 0
     y: float = 0
@@ -144,6 +158,7 @@ class Atlas(BaseModel):
     links: list[Link] = Field(default_factory=list)
     views: list[View] = Field(default_factory=list)
     stacks: list[Stack] = Field(default_factory=list)
+    families: list[Family] = Field(default_factory=list)
 
     @field_validator("tiles")
     @classmethod
@@ -185,9 +200,48 @@ class Atlas(BaseModel):
             if tile.type == "flow":
                 validate_flow_steps_references(tile.fields.get("steps", []), tile.id, tile_ids)
         self.stacks = normalize_stacks(self.stacks, tile_by_id)
+        self.families = normalize_families(self.families, tile_ids)
         if not self.views:
             self.views = default_views()
         return self
+
+
+def normalize_families(families: list[Family], tile_ids: set[str]) -> list[Family]:
+    normalized: list[Family] = []
+    used_ids: set[str] = set()
+    for family in sorted(families, key=lambda item: item.order):
+        family_id = unique_family_id(family.id, used_ids)
+        used_ids.add(family_id)
+        member_ids: list[str] = []
+        seen_members: set[str] = set()
+        for member_id in family.member_tile_ids:
+            if member_id not in tile_ids or member_id in seen_members:
+                continue
+            member_ids.append(member_id)
+            seen_members.add(member_id)
+        normalized.append(
+            Family(
+                id=family_id,
+                title=family.title,
+                description=family.description,
+                member_tile_ids=member_ids,
+                position=family.position,
+                size=Size(width=max(family.size.width, 120), height=max(family.size.height, 90)),
+                order=family.order,
+                color=family.color,
+                tag=family.tag,
+            )
+        )
+    return normalized
+
+
+def unique_family_id(family_id: str, used_ids: set[str]) -> str:
+    candidate = family_id
+    index = 2
+    while candidate in used_ids:
+        candidate = f"{family_id}_{index}"
+        index += 1
+    return candidate
 
 
 def normalize_stacks(stacks: list[Stack], tile_by_id: dict[str, Tile]) -> list[Stack]:

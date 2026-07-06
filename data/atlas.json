@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-03T02:46:33.856791+00:00"
+    "updated_at": "2026-07-06T06:07:05.181457+00:00"
   },
   "tiles": [
     {
@@ -129,8 +129,8 @@
       "title": "server 2",
       "parent": null,
       "position": {
-        "x": -699.4735982538732,
-        "y": -554.064887283678
+        "x": -848.4735982538732,
+        "y": -709.064887283678
       },
       "size": {
         "width": 240.0,
@@ -429,8 +429,8 @@
       "title": "test",
       "parent": null,
       "position": {
-        "x": -123.54554669547402,
-        "y": 204.76948951846538
+        "x": -288.8276972947223,
+        "y": 184.10922069355934
       },
       "size": {
         "width": 240.0,
@@ -793,6 +793,19 @@
   ],
   "stacks": [
     {
+      "id": "stack_node_server1_note",
+      "stack_kind": "sibling_type",
+      "parent_id": "node_server1",
+      "tile_type": "note",
+      "member_ids": [
+        "note_note",
+        "note_notes"
+      ],
+      "representative_id": "note_note",
+      "name": "2 Notes",
+      "name_is_custom": false
+    },
+    {
       "id": "stack_mount_samba",
       "stack_kind": "mount_children",
       "parent_id": "mount_samba",
@@ -805,19 +818,27 @@
       "representative_id": "mount_samba",
       "name": "3 Mounted Items",
       "name_is_custom": false
-    },
+    }
+  ],
+  "families": [
     {
-      "id": "stack_node_server1_note",
-      "stack_kind": "sibling_type",
-      "parent_id": "node_server1",
-      "tile_type": "note",
-      "member_ids": [
-        "note_note",
-        "note_notes"
+      "id": "family_new_family",
+      "title": "PINK FAMILY",
+      "description": "",
+      "member_tile_ids": [
+        "node_server_2"
       ],
-      "representative_id": "note_note",
-      "name": "2 Notes",
-      "name_is_custom": false
+      "position": {
+        "x": 31.368734763166245,
+        "y": -628.749133998777
+      },
+      "size": {
+        "width": 1151.0,
+        "height": 659.0
+      },
+      "order": 0,
+      "color": "#f014d3",
+      "tag": null
     }
   ]
 }

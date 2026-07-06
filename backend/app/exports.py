@@ -69,6 +69,7 @@ def render_markdown(atlas: Atlas) -> str:
         f"- Tiles: {len(atlas.tiles)}",
         f"- Relationships: {len(atlas.links)}",
         f"- Views: {len(atlas.views)}",
+        f"- Families: {len(atlas.families)}",
         f"- Stacks: {len(atlas.stacks)}",
         "",
     ]
@@ -132,6 +133,32 @@ def render_markdown(atlas: Atlas) -> str:
         )
         if view.description:
             lines.extend([view.description, ""])
+
+    if atlas.families:
+        lines.extend(["## Families", ""])
+        for family in sorted(atlas.families, key=lambda item: (item.order, item.title.lower())):
+            members = [tile_by_id.get(member_id) for member_id in family.member_tile_ids]
+            member_tiles = [member for member in members if member]
+            lines.extend(
+                [
+                    f"### {family.title}",
+                    "",
+                    f"- ID: `{family.id}`",
+                    f"- Order: {family.order}",
+                    f"- Members: {len(member_tiles)}",
+                ]
+            )
+            if family.tag:
+                lines.append(f"- Tag: {family.tag}")
+            if family.color:
+                lines.append(f"- Color: `{family.color}`")
+            if family.description:
+                lines.extend(["", family.description])
+            if member_tiles:
+                lines.extend(["", "#### Member Tiles", ""])
+                for member in sorted(member_tiles, key=lambda item: item.title.lower()):
+                    lines.append(f"- {member.title} (`{member.type}`)")
+            lines.append("")
 
     if atlas.stacks:
         lines.extend(["## Visual Stacks", ""])

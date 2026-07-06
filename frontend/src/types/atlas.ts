@@ -116,6 +116,18 @@ export interface TileStack {
   name_is_custom?: boolean;
 }
 
+export interface Family {
+  id: string;
+  title: string;
+  description: string;
+  member_tile_ids: string[];
+  position: Position;
+  size: Size;
+  order: number;
+  color?: string | null;
+  tag?: string | null;
+}
+
 export interface View {
   id: string;
   title: string;
@@ -141,6 +153,7 @@ export interface Atlas {
   links: Link[];
   views: View[];
   stacks?: TileStack[];
+  families?: Family[];
 }
 
 export interface ExportResult {
@@ -155,6 +168,7 @@ export interface AtlasImportPreview {
   tiles: number;
   links: number;
   views: number;
+  families: number;
   warnings: string[];
   errors: string[];
 }
@@ -230,4 +244,5 @@ export type Selection =
   | { kind: "tile"; id: string }
   | { kind: "link"; id: string }
   | { kind: "stack"; id: string }
+  | { kind: "family"; id: string }
   | null;

@@ -905,6 +905,109 @@ button:disabled {
   color: #ffb4b4;
 }
 
+.react-flow__node.family-flow-node {
+  pointer-events: none !important;
+}
+
+.family-node {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 240px;
+  min-height: 160px;
+  border: 1px solid color-mix(in srgb, var(--family-color, #38a3ff) 54%, transparent);
+  border-radius: 12px;
+  color: #dbeafe;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--family-color, #38a3ff) 16%, transparent), transparent 48%),
+    color-mix(in srgb, var(--family-color, #38a3ff) 9%, rgba(3, 9, 20, 0.42));
+  box-shadow: inset 0 0 28px color-mix(in srgb, var(--family-color, #38a3ff) 14%, transparent);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.family-node--selected {
+  border-color: color-mix(in srgb, var(--family-color, #38a3ff) 86%, white);
+  box-shadow:
+    inset 0 0 32px color-mix(in srgb, var(--family-color, #38a3ff) 20%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--family-color, #38a3ff) 46%, transparent),
+    0 0 22px color-mix(in srgb, var(--family-color, #38a3ff) 24%, transparent);
+}
+
+.family-node__header {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: calc(100% - 10px);
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--family-color, #38a3ff) 76%, white);
+  border-radius: 12px 0 8px 0;
+  color: #f8fafc;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--family-color, #38a3ff) 92%, #020817), color-mix(in srgb, var(--family-color, #38a3ff) 62%, #020817));
+  clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+  cursor: zoom-in;
+  padding: 0 calc(2ch + 24px) 0 2ch;
+  pointer-events: auto;
+  text-align: center;
+  user-select: none;
+}
+
+.family-node__header strong {
+  overflow: hidden;
+  font-size: 1.29rem;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.48);
+  white-space: nowrap;
+}
+
+.family-node__tag {
+  position: absolute;
+  top: 52px;
+  left: 12px;
+  border: 1px solid color-mix(in srgb, var(--family-color, #38a3ff) 36%, transparent);
+  border-radius: 999px;
+  color: #c8d8f0;
+  background: rgba(3, 9, 20, 0.58);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 7px;
+}
+
+.family-node p {
+  position: absolute;
+  top: 52px;
+  left: 12px;
+  max-width: 70%;
+  margin: 7px 0 0;
+  color: #a9bbd3;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.family-node__tag + p {
+  top: 80px;
+}
+
+.family-node__meta {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  color: #8fa5c4;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.family-node [class*="react-flow__resize"] {
+  pointer-events: auto;
+}
+
 .tile-node {
   width: 248px;
   min-height: 124px;
@@ -1537,6 +1640,11 @@ button:disabled {
   color: #e5eefb;
 }
 
+.inspector__hero--family {
+  border-color: color-mix(in srgb, var(--family-color, #38a3ff) 48%, transparent);
+  color: var(--family-color, #38a3ff);
+}
+
 .inspector__hero span {
   display: block;
   margin-top: 4px;
@@ -1571,6 +1679,76 @@ button:disabled {
   color: #c8d8f0;
   font-weight: 800;
   font-size: 0.82rem;
+}
+
+.family-inspector,
+.family-membership {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.family-inspector__readout,
+.family-inspector__members {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(91, 142, 196, 0.2);
+  border-radius: 7px;
+  padding: 9px 10px;
+  background: rgba(8, 17, 32, 0.52);
+}
+
+.family-inspector__readout span,
+.family-inspector__members span {
+  color: #8fa5c4;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.family-inspector__readout strong,
+.family-inspector__members strong {
+  color: #e5eefb;
+}
+
+.family-inspector__members ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: #dbeafe;
+}
+
+.family-color-picker {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(91, 142, 196, 0.2);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: rgba(8, 17, 32, 0.52);
+}
+
+.family-color-picker__swatch {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(248, 250, 252, 0.44);
+  border-radius: 6px;
+  background: var(--family-color, #38a3ff);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--family-color, #38a3ff) 38%, transparent);
+}
+
+.family-color-picker input {
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+}
+
+.family-color-picker strong {
+  color: #e5eefb;
+  font-size: 0.76rem;
+  letter-spacing: 0;
 }
 
 .flow-editor {

@@ -317,24 +317,44 @@ export function Inspector({
         </label>
         <div className="field-editor">
           <div className="field-editor__title">Fields</div>
-          {fieldEntries.map(([key, value]) => (
-            <label key={key}>
-              {key}
-              {selectedTile.type === "check" && key === "execution_enabled" ? (
-                <input value="false" disabled />
-              ) : (
-                <input
-                  value={String(value)}
-                  onChange={(event) =>
-                    onUpdateTile({
-                      ...selectedTile,
-                      fields: { ...selectedTile.fields, [key]: coerceFieldValue(value, event.target.value) }
-                    })
-                  }
-                />
-              )}
-            </label>
-          ))}
+          {fieldEntries.map(([key, value]) => {
+            const protectedField = selectedTile.type === "check" && key === "execution_enabled";
+            return (
+              <label key={key}>
+                {key}
+                <span className="field-editor__row">
+                  {protectedField ? (
+                    <input value="false" disabled />
+                  ) : (
+                    <input
+                      value={String(value)}
+                      onChange={(event) =>
+                        onUpdateTile({
+                          ...selectedTile,
+                          fields: { ...selectedTile.fields, [key]: coerceFieldValue(value, event.target.value) }
+                        })
+                      }
+                    />
+                  )}
+                  {!protectedField ? (
+                    <button
+                      className="field-editor__remove"
+                      type="button"
+                      title={`Remove ${key}`}
+                      aria-label={`Remove ${key}`}
+                      onClick={() => {
+                        const fields = { ...selectedTile.fields };
+                        delete fields[key];
+                        onUpdateTile({ ...selectedTile, fields });
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  ) : null}
+                </span>
+              </label>
+            );
+          })}
           <button
             className="ghost-button"
             onClick={() => {

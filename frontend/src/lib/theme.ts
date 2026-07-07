@@ -71,6 +71,7 @@ export const THEME_PALETTES: ThemePalette[] = [
       config: "#93c5fd",
       secret_ref: "#f9a8d4",
       flow: "#fde047",
+      iot_device: "#fbbf24",
       url: "#67e8f9",
       check: "#bef264",
       note: "#e2e8f0"
@@ -99,6 +100,7 @@ export const THEME_PALETTES: ThemePalette[] = [
       config: "#fcd34d",
       secret_ref: "#e879f9",
       flow: "#fdba74",
+      iot_device: "#fb923c",
       url: "#22d3ee",
       check: "#84cc16",
       note: "#e5e7eb"
@@ -127,6 +129,7 @@ export const THEME_PALETTES: ThemePalette[] = [
       config: "#edf7ff",
       secret_ref: "#fff3fb",
       flow: "#fff9df",
+      iot_device: "#fff0d7",
       url: "#e7fbff",
       check: "#f4ffe8",
       note: "#f8fbff"

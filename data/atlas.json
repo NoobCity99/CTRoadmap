@@ -3,17 +3,17 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-06T06:07:05.181457+00:00"
+    "updated_at": "2026-07-06T23:42:59.489620+00:00"
   },
   "tiles": [
     {
       "id": "node_server1",
       "type": "node",
-      "title": "server1",
+      "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
         "x": 45.10427313312141,
-        "y": -559.4303038602537
+        "y": -537.6422891495304
       },
       "size": {
         "width": 240.0,
@@ -23,13 +23,21 @@
       "fields": {
         "role": "",
         "hostname": "",
-        "ip": "",
+        "ip": "666.66.6.6",
         "os": "",
         "purpose": "",
-        "primary_node": true
+        "primary_node": true,
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "5f274c4ce5ee40ad93ec27a885a8edf3.png",
+          "url": "/api/assets/icons/5f274c4ce5ee40ad93ec27a885a8edf3.png",
+          "media_type": "image/png"
+        }
       },
       "notes": "",
-      "tags": []
+      "tags": [
+        "DELL"
+      ]
     },
     {
       "id": "mount_samba",
@@ -48,7 +56,13 @@
       "fields": {
         "path": "",
         "source": "",
-        "options": ""
+        "options": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "fff9610f787e4944ae996e906a85db91.png",
+          "url": "/api/assets/icons/fff9610f787e4944ae996e906a85db91.png",
+          "media_type": "image/png"
+        }
       },
       "notes": "",
       "tags": []
@@ -73,7 +87,8 @@
         "ip": "",
         "os": "",
         "purpose": "",
-        "primary_node": false
+        "primary_node": false,
+        "Port: 8080": "555"
       },
       "notes": "",
       "tags": []
@@ -116,7 +131,8 @@
       "fields": {
         "url": "10.0.0.252",
         "protocol": "",
-        "purpose": ""
+        "purpose": "",
+        "Port": "8080"
       },
       "notes": "",
       "tags": [
@@ -129,8 +145,8 @@
       "title": "server 2",
       "parent": null,
       "position": {
-        "x": -848.4735982538732,
-        "y": -709.064887283678
+        "x": -730.5212934458983,
+        "y": -555.7268910333105
       },
       "size": {
         "width": 240.0,
@@ -178,8 +194,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 74.36412140738554,
-        "y": -130.8250337868747
+        "x": 58.5661928218683,
+        "y": -124.5058623526678
       },
       "size": {
         "width": 240.0,
@@ -225,8 +241,8 @@
       "title": "diagnostic",
       "parent": null,
       "position": {
-        "x": 682.0945567741911,
-        "y": -167.0275646059971
+        "x": 674.4046692292299,
+        "y": -117.04329556374957
       },
       "size": {
         "width": 240.0,
@@ -247,8 +263,8 @@
       "title": "backups",
       "parent": "node_server_2",
       "position": {
-        "x": -980.7747891362906,
-        "y": -248.50373099017474
+        "x": -720.3645724554492,
+        "y": -371.1700133852203
       },
       "size": {
         "width": 240.0,
@@ -383,8 +399,8 @@
       "title": "note",
       "parent": "node_server1",
       "position": {
-        "x": 512.4069209858372,
-        "y": -484.7212349144177
+        "x": 673.8945594300216,
+        "y": -352.7114987259178
       },
       "size": {
         "width": 240.0,
@@ -409,8 +425,8 @@
       "title": "notes",
       "parent": "node_server1",
       "position": {
-        "x": 921.5189282661489,
-        "y": -644.278844433934
+        "x": 959.0065667103332,
+        "y": -352.83240409375446
       },
       "size": {
         "width": 240.0,
@@ -444,6 +460,79 @@
       },
       "notes": "",
       "tags": []
+    },
+    {
+      "id": "note_ntoes_3",
+      "type": "note",
+      "title": "ntoes 3",
+      "parent": "node_server1",
+      "position": {
+        "x": 1239.7679677333806,
+        "y": -352.83809042255854
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "text": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "url_webapp_x",
+      "type": "url",
+      "title": "WEBAPP X",
+      "parent": null,
+      "position": {
+        "x": 677.6938272411535,
+        "y": -526.5022815027332
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "url": "",
+        "protocol": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "service_docker",
+      "type": "service",
+      "title": "DOCKER",
+      "parent": null,
+      "position": {
+        "x": 371.18889205863877,
+        "y": -528.3013461627718
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "status": "",
+        "port": "",
+        "purpose": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "1c6366d5aa8f4d7a942af3c74cf826aa.png",
+          "url": "/api/assets/icons/1c6366d5aa8f4d7a942af3c74cf826aa.png",
+          "media_type": "image/png"
+        }
+      },
+      "notes": "",
+      "tags": [
+        "Nextcloud"
+      ]
     }
   ],
   "links": [
@@ -628,18 +717,6 @@
       "directional": true
     },
     {
-      "id": "link_contains_node_server1_note_notes",
-      "from": "node_server1",
-      "to": "note_notes",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
       "id": "link_node_server1_note_note_depends_on",
       "from": "node_server1",
       "to": "note_note",
@@ -648,6 +725,18 @@
       "to_port": "in",
       "lifecycle": "live",
       "label": ".",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_service_docker_hosts",
+      "from": "node_server1",
+      "to": "service_docker",
+      "type": "hosts",
+      "from_port": "out",
+      "to_port": "in",
+      "lifecycle": "live",
+      "label": "hosts",
       "notes": "",
       "directional": true
     }
@@ -674,7 +763,7 @@
         "y": 0.0,
         "zoom": 1.0
       },
-      "layout_template": "layered_hierarchy"
+      "layout_template": "canvas_topology"
     },
     {
       "id": "services",
@@ -799,46 +888,26 @@
       "tile_type": "note",
       "member_ids": [
         "note_note",
-        "note_notes"
+        "note_notes",
+        "note_ntoes_3"
       ],
       "representative_id": "note_note",
-      "name": "2 Notes",
+      "name": "3 Notes",
       "name_is_custom": false
     },
     {
-      "id": "stack_mount_samba",
+      "id": "stack_mount_backups",
       "stack_kind": "mount_children",
-      "parent_id": "mount_samba",
+      "parent_id": "mount_backups",
       "tile_type": "mount",
       "member_ids": [
-        "drive_back_ups",
-        "drive_primary",
-        "script_auto_backup_function"
+        "drive_bk1",
+        "drive_bk2"
       ],
-      "representative_id": "mount_samba",
-      "name": "3 Mounted Items",
+      "representative_id": "mount_backups",
+      "name": "2 Mounted Items",
       "name_is_custom": false
     }
   ],
-  "families": [
-    {
-      "id": "family_new_family",
-      "title": "PINK FAMILY",
-      "description": "",
-      "member_tile_ids": [
-        "node_server_2"
-      ],
-      "position": {
-        "x": 31.368734763166245,
-        "y": -628.749133998777
-      },
-      "size": {
-        "width": 1151.0,
-        "height": 659.0
-      },
-      "order": 0,
-      "color": "#f014d3",
-      "tag": null
-    }
-  ]
+  "families": []
 }

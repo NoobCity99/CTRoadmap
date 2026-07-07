@@ -68,7 +68,7 @@ def render_markdown(atlas: Atlas) -> str:
         f"- Updated At: {atlas.metadata.updated_at or 'Not saved'}",
         f"- Tiles: {len(atlas.tiles)}",
         f"- Relationships: {len(atlas.links)}",
-        f"- Views: {len(atlas.views)}",
+        f"- Layers: {len(atlas.views)}",
         f"- Families: {len(atlas.families)}",
         f"- Stacks: {len(atlas.stacks)}",
         "",
@@ -118,7 +118,7 @@ def render_markdown(atlas: Atlas) -> str:
     else:
         lines.append("No relationships recorded.")
 
-    lines.extend(["", "## Views", ""])
+    lines.extend(["", "## Layers", ""])
     for view in atlas.views:
         lines.extend(
             [

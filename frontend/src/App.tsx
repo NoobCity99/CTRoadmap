@@ -17,12 +17,12 @@ import {
   CircuitBoard,
   ChevronDown,
   ChevronUp,
+  BookOpenText,
   Download,
   Eye,
   ExternalLink,
   FileCode2,
   FileText,
-  GitBranch,
   LayoutDashboard,
   Loader2,
   Plus,
@@ -371,7 +371,7 @@ function AtlasEditor() {
         const defaultView = nextAtlas.views.find((view) => view.id === "everything") ?? nextAtlas.views[0];
         if (defaultView) {
           setActiveViewId(defaultView.id);
-          setLayoutTemplate(defaultView.layout_template);
+          setLayoutTemplate(activeTemplateForUi(defaultView.layout_template));
         }
         setStatus("Atlas loaded");
         appendDebugEvent("atlas.load", "Atlas loaded", "info", atlasSummary(nextAtlas));
@@ -587,7 +587,7 @@ function AtlasEditor() {
               connectable: false,
               selectable: true,
               selected: selection?.kind === "family" && selection.id === family.id,
-              zIndex: family.order,
+              zIndex: Math.max(0, Math.min(100, family.order)),
               style: {
                 width: family.size.width,
                 height: family.size.height
@@ -611,6 +611,7 @@ function AtlasEditor() {
         id: tile.id,
         type: "tileNode",
         position,
+        zIndex: 1000,
         draggable: isInteractive && editable && !stack && layoutTemplate === "canvas_topology",
         data: {
           tile,
@@ -642,6 +643,7 @@ function AtlasEditor() {
         id: link.id,
         source: stackState.memberToRepresentative.get(link.from) ?? link.from,
         target: stackState.memberToRepresentative.get(link.to) ?? link.to,
+        zIndex: 500,
         sourceHandle: resolveSourcePort(link),
         targetHandle: resolveTargetPort(link),
         label,
@@ -956,7 +958,7 @@ function AtlasEditor() {
 
         const warningText = preview.warnings.length ? `\n\nWarnings:\n${preview.warnings.join("\n")}` : "";
         const confirmed = window.confirm(
-          `Replace the current atlas with this validated JSON file?\n\nTiles: ${preview.tiles}\nRelationships: ${preview.links}\nViews: ${preview.views}\nFamilies: ${preview.families}${warningText}`
+          `Replace the current atlas with this validated JSON file?\n\nTiles: ${preview.tiles}\nRelationships: ${preview.links}\nLayers: ${preview.views}\nFamilies: ${preview.families}${warningText}`
         );
         if (!confirmed) {
           setStatus("Import canceled");
@@ -975,7 +977,7 @@ function AtlasEditor() {
         const nextView = imported.views.find((view) => view.id === "everything") ?? imported.views[0];
         if (nextView) {
           setActiveViewId(nextView.id);
-          setLayoutTemplate(nextView.layout_template);
+          setLayoutTemplate(activeTemplateForUi(nextView.layout_template));
         }
         setSelection(null);
         setStatus("Atlas imported");
@@ -1004,8 +1006,7 @@ function AtlasEditor() {
   const handleCreateTile = useCallback(
     (type: TileType, position?: { x: number; y: number }, parentId?: string) => {
       if (!atlas) return;
-      const title = window.prompt("Tile title");
-      if (!title) return;
+      const title = nextGeneratedTileTitle(type, atlas.tiles);
       const tileId = createId(type, title, atlas.tiles.map((tile) => tile.id));
       const parentTile = parentId ? atlas.tiles.find((tile) => tile.id === parentId) : null;
       const tile: Tile = {
@@ -1657,10 +1658,10 @@ function AtlasEditor() {
   const handleSelectView = useCallback(
     (view: View) => {
       setActiveViewId(view.id);
-      setLayoutTemplate(view.layout_template);
+      setLayoutTemplate(activeTemplateForUi(view.layout_template));
       setSelection(null);
-      setStatus(`View: ${view.title}`);
-      appendDebugEvent("view.select", "View selected", "info", { id: view.id, title: view.title, layout_template: view.layout_template });
+      setStatus(`Layer: ${view.title}`);
+      appendDebugEvent("view.select", "Layer selected", "info", { id: view.id, title: view.title, layout_template: view.layout_template });
     },
     [appendDebugEvent]
   );
@@ -1680,7 +1681,7 @@ function AtlasEditor() {
 
   const handleCreateView = useCallback(() => {
     if (!atlas) return;
-    const title = window.prompt("View title");
+    const title = window.prompt("Layer title");
     if (!title) return;
     const sourceView = activeView;
     const view: View = {
@@ -1694,39 +1695,39 @@ function AtlasEditor() {
     };
     updateAtlas((current) => ({ ...current, views: [...current.views, view] }));
     setActiveViewId(view.id);
-    setLayoutTemplate(view.layout_template);
-    setStatus(`Created view: ${view.title}`);
-    appendDebugEvent("view.create", "View created", "info", { id: view.id, title: view.title });
+    setLayoutTemplate(activeTemplateForUi(view.layout_template));
+    setStatus(`Created layer: ${view.title}`);
+    appendDebugEvent("view.create", "Layer created", "info", { id: view.id, title: view.title });
   }, [activeView, appendDebugEvent, atlas, layoutTemplate, updateAtlas]);
 
   const handleEditView = useCallback(() => {
     if (!activeView) return;
-    const title = window.prompt("View title", activeView.title);
+    const title = window.prompt("Layer title", activeView.title);
     if (!title) return;
-    const description = window.prompt("View description", activeView.description) ?? activeView.description;
+    const description = window.prompt("Layer description", activeView.description) ?? activeView.description;
     updateAtlas((current) => ({
       ...current,
       views: current.views.map((view) => (view.id === activeView.id ? { ...view, title, description } : view))
     }));
-    setStatus(`Updated view: ${title}`);
-    appendDebugEvent("view.update", "View updated", "info", { id: activeView.id, title });
+    setStatus(`Updated layer: ${title}`);
+    appendDebugEvent("view.update", "Layer updated", "info", { id: activeView.id, title });
   }, [activeView, appendDebugEvent, updateAtlas]);
 
   const handleDeleteView = useCallback(() => {
     if (!atlas || !activeView) return;
     if (atlas.views.length <= 1) {
-      window.alert("At least one view is required.");
+      window.alert("At least one layer is required.");
       return;
     }
-    if (!window.confirm(`Delete view "${activeView.title}"?`)) return;
+    if (!window.confirm(`Delete layer "${activeView.title}"?`)) return;
     const remainingViews = atlas.views.filter((view) => view.id !== activeView.id);
     const nextView = remainingViews.find((view) => view.id === "everything") ?? remainingViews[0];
     updateAtlas((current) => ({ ...current, views: current.views.filter((view) => view.id !== activeView.id) }));
     setActiveViewId(nextView.id);
-    setLayoutTemplate(nextView.layout_template);
+    setLayoutTemplate(activeTemplateForUi(nextView.layout_template));
     setSelection(null);
-    setStatus(`Deleted view: ${activeView.title}`);
-    appendDebugEvent("view.delete", "View deleted", "warning", { id: activeView.id, title: activeView.title });
+    setStatus(`Deleted layer: ${activeView.title}`);
+    appendDebugEvent("view.delete", "Layer deleted", "warning", { id: activeView.id, title: activeView.title });
   }, [activeView, appendDebugEvent, atlas, updateAtlas]);
 
   const handleToggleViewTileType = useCallback(
@@ -2147,9 +2148,19 @@ function AtlasEditor() {
               )}
             </div>
 
+            <div className="panel-title panel-title--spaced">Template</div>
+            <div className="segmented">
+              <button className={layoutTemplate === "canvas_topology" ? "active" : ""} onClick={() => handleTemplateChange("canvas_topology")}>
+                <LayoutDashboard size={15} /> Canvas
+              </button>
+              <button disabled title="Future hierarchy feature placeholder">
+                <BookOpenText size={15} /> TBD
+              </button>
+            </div>
+
             <section className={sidebarState.collapsed.views ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
               <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.views} onClick={() => toggleSidebarSection("views")}>
-                <span className="panel-title">Views</span>
+                <span className="panel-title">Layers</span>
                 <ChevronDown className="sidebar-section__chevron" size={16} />
               </button>
               {!sidebarState.collapsed.views ? (
@@ -2176,16 +2187,6 @@ function AtlasEditor() {
                 </div>
               ) : null}
             </section>
-
-            <div className="panel-title panel-title--spaced">Template</div>
-            <div className="segmented">
-              <button className={layoutTemplate === "canvas_topology" ? "active" : ""} onClick={() => handleTemplateChange("canvas_topology")}>
-                <LayoutDashboard size={15} /> Canvas
-              </button>
-              <button className={layoutTemplate === "layered_hierarchy" ? "active" : ""} onClick={() => handleTemplateChange("layered_hierarchy")}>
-                <GitBranch size={15} /> Layered
-              </button>
-            </div>
 
             <section className={sidebarState.collapsed.filters ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
               <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.filters} onClick={() => toggleSidebarSection("filters")}>
@@ -2264,8 +2265,8 @@ function AtlasEditor() {
                 className="view-tabs__toggle"
                 type="button"
                 onClick={() => setViewBarOpen((open) => !open)}
-                title={viewBarOpen ? "Hide views" : "Show views"}
-                aria-label={viewBarOpen ? "Hide views" : "Show views"}
+                title={viewBarOpen ? "Hide layers" : "Show layers"}
+                aria-label={viewBarOpen ? "Hide layers" : "Show layers"}
                 aria-expanded={viewBarOpen}
               >
                 <Eye size={16} />
@@ -2608,6 +2609,10 @@ function normalizePaletteIndex(index: number): number {
   return ((Math.trunc(index) % count) + count) % count;
 }
 
+function activeTemplateForUi(template: LayoutTemplate): LayoutTemplate {
+  return template === "layered_hierarchy" ? "canvas_topology" : template;
+}
+
 function chooseLinkType(fallback: LinkType): LinkType | null {
   const value = window.prompt(`Relationship type (${LINK_TYPES.join(", ")})`, fallback);
   if (!value) return null;
@@ -2706,6 +2711,21 @@ function createId(prefix: string, label: string, existingIds: string[]): string 
     index += 1;
   }
   return candidate;
+}
+
+function nextGeneratedTileTitle(type: TileType, tiles: Tile[]): string {
+  const label = TILE_TYPE_CONFIG[type].label.toUpperCase();
+  const prefix = `NEW ${label} `;
+  const usedNumbers = new Set<number>();
+  for (const tile of tiles) {
+    const title = tile.title.trim().toUpperCase();
+    if (!title.startsWith(prefix)) continue;
+    const value = Number(title.slice(prefix.length).trim());
+    if (Number.isInteger(value) && value > 0) usedNumbers.add(value);
+  }
+  let index = 1;
+  while (usedNumbers.has(index)) index += 1;
+  return `${prefix}${index}`;
 }
 
 function computeLayeredPositions(tiles: Tile[]): Map<string, { x: number; y: number }> {

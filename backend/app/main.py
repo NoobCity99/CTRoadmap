@@ -246,7 +246,7 @@ def atlas_preview_warnings(atlas: Atlas) -> list[str]:
     if not atlas.tiles:
         warnings.append("The imported atlas has no tiles.")
     if not atlas.views:
-        warnings.append("The imported atlas has no views; default views will be applied.")
+        warnings.append("The imported atlas has no layers; default layers will be applied.")
     return warnings
 
 

@@ -525,46 +525,32 @@
   ],
   "views": [
     {
-      "id": "physical",
-      "title": "Physical",
-      "description": "Hardware, cabling, drives, and mounts",
+      "id": "hardware",
+      "title": "Hardware",
+      "description": "Physical nodes, drives, and IoT devices",
       "visible_types": [
         "node",
         "drive",
-        "mount"
+        "iot_device"
       ],
-      "visible_links": [
-        "contains",
-        "mounted_at",
-        "runs",
-        "hosts",
-        "related_to"
-      ],
+      "visible_links": [],
       "camera": {
         "x": 0,
         "y": 0,
         "zoom": 1
       },
-      "layout_template": "layered_hierarchy"
+      "layout_template": "canvas_topology"
     },
     {
-      "id": "services",
-      "title": "Services",
-      "description": "Applications, daemons, and containers",
+      "id": "software",
+      "title": "Software",
+      "description": "Services, containers, and URLs",
       "visible_types": [
-        "node",
         "service",
         "container",
-        "url",
-        "check"
+        "url"
       ],
-      "visible_links": [
-        "runs",
-        "hosts",
-        "depends_on",
-        "exposes_url",
-        "validates_with"
-      ],
+      "visible_links": [],
       "camera": {
         "x": 0,
         "y": 0,
@@ -573,80 +559,25 @@
       "layout_template": "canvas_topology"
     },
     {
-      "id": "storage",
-      "title": "Storage",
-      "description": "Storage devices and paths",
+      "id": "infrastructure",
+      "title": "Infrastructure",
+      "description": "Scripts, secrets, configs, notes, mounts, flows, and checks",
       "visible_types": [
-        "node",
-        "drive",
-        "mount",
-        "service",
-        "container"
-      ],
-      "visible_links": [
-        "uses_storage",
-        "mounted_at",
-        "backs_up_to",
-        "contains"
-      ],
-      "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
-      },
-      "layout_template": "canvas_topology"
-    },
-    {
-      "id": "security",
-      "title": "Security",
-      "description": "Secret references, configs, and access dependencies",
-      "visible_types": [
-        "node",
         "script",
+        "secret_ref",
         "config",
-        "secret_ref",
+        "note",
+        "mount",
         "flow",
         "check"
       ],
-      "visible_links": [
-        "requires_key",
-        "requires_config",
-        "validates_with",
-        "fails_if"
-      ],
+      "visible_links": [],
       "camera": {
         "x": 0,
         "y": 0,
         "zoom": 1
       },
       "layout_template": "canvas_topology"
-    },
-    {
-      "id": "flows",
-      "title": "Flows",
-      "description": "Operational functions and process flows",
-      "visible_types": [
-        "flow",
-        "script",
-        "service",
-        "url",
-        "check",
-        "secret_ref",
-        "config"
-      ],
-      "visible_links": [
-        "calls",
-        "controls",
-        "requires_key",
-        "requires_config",
-        "fails_if"
-      ],
-      "camera": {
-        "x": 0,
-        "y": 0,
-        "zoom": 1
-      },
-      "layout_template": "layered_hierarchy"
     },
     {
       "id": "everything",

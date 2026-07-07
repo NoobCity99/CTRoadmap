@@ -9,6 +9,7 @@ import {
   KeyRound,
   Network,
   Play,
+  Router,
   Server,
   ShieldCheck,
   SquareTerminal
@@ -26,6 +27,7 @@ export const TILE_TYPES: TileType[] = [
   "config",
   "secret_ref",
   "flow",
+  "iot_device",
   "url",
   "check",
   "note"
@@ -60,6 +62,7 @@ export const TILE_TYPE_CONFIG = {
   config: { label: "Config", icon: FileCog, color: "#a4b8ff" },
   secret_ref: { label: "Secret Ref", icon: KeyRound, color: "#b77cff" },
   flow: { label: "Flow", icon: Play, color: "#ffca45" },
+  iot_device: { label: "IOT Device", icon: Router, color: "#ff9f2f" },
   url: { label: "URL", icon: Globe, color: "#4fdfff" },
   check: { label: "Check", icon: ShieldCheck, color: "#7ce071" },
   note: { label: "Note", icon: CircleHelp, color: "#cbd5e1" }
@@ -100,6 +103,7 @@ export const DEFAULT_FIELDS: Record<TileType, Record<string, unknown>> = {
     stores_secret_value: false
   },
   flow: { trigger: "", purpose: "", steps: [] },
+  iot_device: { ip: "", protocol: "", model: "", purpose: "" },
   url: { url: "", protocol: "", purpose: "" },
   check: { command: "", expected_result: "", execution_enabled: false },
   note: { text: "" }

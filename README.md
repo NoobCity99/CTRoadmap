@@ -119,8 +119,8 @@ Update Advisory is informational only. CTRoadmap does not auto-update, run Docke
 - PLANNING MODE: Plan nodes & connections before going live, visual distinction while planning.
 - Document non-executing checks with command and expected-result fields.
 - Save and reload the canonical atlas at `data/atlas.json`.
-- Create, edit, delete, and switch saved views.
-- Switch between `canvas_topology` and `layered_hierarchy` templates per view.
+- Create, edit, delete, and switch saved layers.
+- Switch between `canvas_topology` and `layered_hierarchy` templates per layer.
 - Import a saved `atlas.json` after backend validation.
 - Download the current atlas JSON from the browser.
 - Export Markdown, YAML, and Mermaid files to `exports/`.

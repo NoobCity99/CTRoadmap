@@ -8,6 +8,7 @@ export type TileType =
   | "config"
   | "secret_ref"
   | "flow"
+  | "iot_device"
   | "url"
   | "check"
   | "note";

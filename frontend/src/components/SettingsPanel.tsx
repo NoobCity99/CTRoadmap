@@ -114,9 +114,9 @@ export function SettingsPanel({
             <strong>{atlas.tiles.length}</strong>
             <span>Links</span>
             <strong>{atlas.links.length}</strong>
-            <span>Views</span>
+            <span>Layers</span>
             <strong>{atlas.views.length}</strong>
-            <span>Active view</span>
+            <span>Active layer</span>
             <strong>{activeView?.title ?? "None"}</strong>
             <span>Layout</span>
             <strong>{layoutTemplate}</strong>

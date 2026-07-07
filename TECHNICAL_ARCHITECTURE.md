@@ -31,17 +31,26 @@ backend/
 
 frontend/
   src/
-    App.tsx              Main editor state, React Flow canvas, API orchestration
+    App.tsx              Editor state, atlas mutation callbacks, workflow orchestration
     main.tsx             React entrypoint
     styles.css           Global UI, canvas, tile, palette, theme styling
     types/atlas.ts       TypeScript mirror of atlas/API contracts
-    lib/api.ts           Fetch wrappers for backend endpoints
+    lib/api.ts           Disciplined API client and download helpers
     lib/constants.ts     Tile/link type UI metadata and defaults
     lib/theme.ts         Local theme/background preference helpers
     lib/validation.ts    Frontend warning helpers
     lib/seed.ts          Demo atlas loader
     lib/debug.ts         Frontend debug event helpers/export
+    lib/atlasSelectors.ts Pure atlas read/derived-state helpers
+    lib/atlasMutations.ts Pure atlas write/sanitize helper functions
+    lib/graphMapping.ts  Atlas-to-React-Flow node/edge mapping
     components/
+      TopBar.tsx         Toolbar/search/settings entry region
+      LeftSidebar.tsx    Palette, layer, filter, search result, warning panel
+      LayerBar.tsx       Canvas layer tab strip
+      CanvasFrame.tsx    React Flow canvas shell and status strip
+      ExportMenu.tsx     3rd Party Export popover
+      SearchBox.tsx      Topbar search input and clear control
       FamilyNode.tsx     React Flow family/grouping rectangle renderer
       TileNode.tsx       React Flow tile renderer
       Inspector.tsx      Right-side tile/link/stack/family inspector
@@ -167,7 +176,7 @@ Backend validation also enforces important safety rules:
 
 The frontend is a React 18 + TypeScript + Vite application. The graph canvas uses React Flow from `@xyflow/react`. Icons come from `lucide-react`.
 
-`frontend/src/App.tsx` is the main orchestration file. It owns most editor state:
+`frontend/src/App.tsx` remains the main orchestration file, but it now delegates pure atlas derivation, React Flow mapping, and large presentational regions to helper modules/components. It still owns the state and callbacks that coordinate editor behavior:
 
 - Loaded atlas data.
 - Active layer, stored internally as the active `View`, and layout template.
@@ -177,6 +186,8 @@ The frontend is a React 18 + TypeScript + Vite application. The graph canvas use
 - Local UI preferences such as theme palette, canvas background, collapsible sidebar sections, and layer bar visibility.
 - Import/export/debug/update/settings workflows.
 - Topbar workflows such as manual Save, Import atlas.json, Download your Atlas, Load Demo, and the consolidated 3rd Party Export menu.
+
+Pure atlas helpers live under `frontend/src/lib/atlasSelectors.ts` and `frontend/src/lib/atlasMutations.ts`. React Flow node/edge mapping lives in `frontend/src/lib/graphMapping.ts`. Presentational UI regions such as the top bar, sidebar, canvas frame, layer bar, export menu, and search box live in `frontend/src/components/` and receive props from `App.tsx`.
 
 `TileNode.tsx` renders each tile on the canvas. It handles:
 
@@ -241,7 +252,7 @@ The layered hierarchy logic is intentionally retained in code and data contracts
 
 ## Backend/Frontend Wiring
 
-The frontend API client in `frontend/src/lib/api.ts` uses relative fetch URLs:
+The frontend API client in `frontend/src/lib/api.ts` uses relative fetch URLs and is the single place that should call `fetch` for backend endpoints. UI components and orchestration code should use the exported API functions instead of hand-rolling requests.
 
 ```text
 loadAtlas()          -> GET  /api/atlas
@@ -251,6 +262,8 @@ uploadTileIcon()     -> POST /api/assets/icons
 generateExport()     -> POST /api/export/{format}
 downloadExport()     -> GET  /api/export/{format}/download
 ```
+
+`api.ts` centralizes request discipline: JSON requests, `FormData` uploads, empty-response requests, and `ApiError` creation. Error messages prefer FastAPI JSON `detail`, then plain response text, then HTTP status text. This keeps call sites focused on workflow-specific status, alerts, and debug events.
 
 Because URLs are relative, local development can use Vite's dev server with backend proxying/configuration as needed, while Docker serves the compiled frontend and backend from the same FastAPI origin.
 

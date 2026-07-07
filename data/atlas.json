@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-06T23:42:59.489620+00:00"
+    "updated_at": "2026-07-07T06:44:31.379688+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
-        "x": 45.10427313312141,
-        "y": -537.6422891495304
+        "x": 30.463954199810814,
+        "y": -531.8045836854208
       },
       "size": {
         "width": 240.0,
@@ -71,10 +71,10 @@
       "id": "node_micro_server",
       "type": "node",
       "title": "micro server",
-      "parent": null,
+      "parent": "node_new_node_1",
       "position": {
-        "x": -324.7823571673013,
-        "y": -551.5698809108867
+        "x": -191.3237203831543,
+        "y": -993.227111951257
       },
       "size": {
         "width": 240.0,
@@ -82,13 +82,10 @@
       },
       "lifecycle": "live",
       "fields": {
-        "role": "",
-        "hostname": "",
-        "ip": "",
-        "os": "",
-        "purpose": "",
-        "primary_node": false,
-        "Port: 8080": "555"
+        "role": "TEST",
+        "hostname": "SPLIT",
+        "ip": "55.55..5..354",
+        "primary_node": false
       },
       "notes": "",
       "tags": []
@@ -120,8 +117,8 @@
       "title": "STATUS PAGE",
       "parent": "node_micro_server",
       "position": {
-        "x": -533.4003817249725,
-        "y": -128.64470024586737
+        "x": -1118.474758940436,
+        "y": 181.9075165075297
       },
       "size": {
         "width": 240.0,
@@ -145,8 +142,8 @@
       "title": "server 2",
       "parent": null,
       "position": {
-        "x": -730.5212934458983,
-        "y": -555.7268910333105
+        "x": -1295.2803946441713,
+        "y": -58.56443901320931
       },
       "size": {
         "width": 240.0,
@@ -233,7 +230,9 @@
         "purpose": ""
       },
       "notes": "",
-      "tags": []
+      "tags": [
+        "TAG"
+      ]
     },
     {
       "id": "script_diagnostic",
@@ -485,10 +484,10 @@
       "id": "url_webapp_x",
       "type": "url",
       "title": "WEBAPP X",
-      "parent": null,
+      "parent": "node_server1",
       "position": {
         "x": 677.6938272411535,
-        "y": -526.5022815027332
+        "y": -529.5022815027332
       },
       "size": {
         "width": 240.0,
@@ -507,7 +506,7 @@
       "id": "service_docker",
       "type": "service",
       "title": "DOCKER",
-      "parent": null,
+      "parent": "node_server1",
       "position": {
         "x": 371.18889205863877,
         "y": -528.3013461627718
@@ -533,6 +532,139 @@
       "tags": [
         "Nextcloud"
       ]
+    },
+    {
+      "id": "mount_new_mount_1",
+      "type": "mount",
+      "title": "NEW MOUNT 1",
+      "parent": null,
+      "position": {
+        "x": -1402.1375892578617,
+        "y": -459.4793368079589
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "path": "",
+        "source": "",
+        "options": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_new_secret_ref_1",
+      "type": "secret_ref",
+      "title": "NEW SECRET REF 1",
+      "parent": null,
+      "position": {
+        "x": -279.92700680399594,
+        "y": 479.607064056897
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "host": "",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "secret_ref_new_secret_ref_2",
+      "type": "secret_ref",
+      "title": "NEW SECRET REF 2",
+      "parent": null,
+      "position": {
+        "x": 73.4540713984893,
+        "y": 483.904073178323
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "host": "",
+        "path": "",
+        "purpose": "",
+        "allowed_command": "",
+        "stores_secret_value": false
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "node_new_node_1",
+      "type": "node",
+      "title": "NEW NODE 1",
+      "parent": null,
+      "position": {
+        "x": -539.7707829147867,
+        "y": -783.2785776498549
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "primary_node": false,
+        "TEST": "HAP",
+        "HAP": "TEST",
+        "GLIP": "HELEJ"
+      },
+      "notes": "",
+      "tags": [
+        "TEST"
+      ]
+    },
+    {
+      "id": "flow_new_flow_1",
+      "type": "flow",
+      "title": "NEW FLOW 1",
+      "parent": "node_micro_server",
+      "position": {
+        "x": -1028.9767065673639,
+        "y": -624.4766393035952
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "purpose": "",
+        "steps": [
+          {
+            "order": 1,
+            "from": "node_server1",
+            "to": "mount_samba",
+            "action": "SAVE STUFF"
+          },
+          {
+            "order": 2,
+            "from": "node_server1",
+            "to": "mount_samba",
+            "action": "ACCESS STUFF"
+          }
+        ],
+        "URL": "123.321.564",
+        "path": "/mnt/source"
+      },
+      "notes": "",
+      "tags": [
+        "SLOW"
+      ]
     }
   ],
   "links": [
@@ -547,18 +679,6 @@
       "label": "magic packet",
       "notes": "",
       "directional": true
-    },
-    {
-      "id": "link_node_micro_server_url_url_hosts",
-      "from": "node_micro_server",
-      "to": "url_url",
-      "type": "hosts",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "hosts",
-      "notes": "",
-      "directional": false
     },
     {
       "id": "link_url_url_flow_wake_sleep_runs",
@@ -739,6 +859,78 @@
       "label": "hosts",
       "notes": "",
       "directional": true
+    },
+    {
+      "id": "link_flow_new_flow_1_mount_new_mount_1_calls",
+      "from": "flow_new_flow_1",
+      "to": "mount_new_mount_1",
+      "type": "calls",
+      "from_port": "out",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "calls",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_flow_new_flow_1_url_url_fails_if",
+      "from": "flow_new_flow_1",
+      "to": "url_url",
+      "type": "fails_if",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "fails if",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_micro_server_flow_new_flow_1",
+      "from": "node_micro_server",
+      "to": "flow_new_flow_1",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server1_url_webapp_x",
+      "from": "node_server1",
+      "to": "url_webapp_x",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server1_service_docker",
+      "from": "node_server1",
+      "to": "service_docker",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_new_node_1_node_micro_server",
+      "from": "node_new_node_1",
+      "to": "node_micro_server",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
     }
   ],
   "views": [
@@ -871,6 +1063,26 @@
       "title": "Everything",
       "description": "All atlas objects and relationships",
       "visible_types": [],
+      "visible_links": [],
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "layout_template": "canvas_topology"
+    },
+    {
+      "id": "view_hardware",
+      "title": "Stuff",
+      "description": "Files",
+      "visible_types": [
+        "node",
+        "service",
+        "container",
+        "script",
+        "config",
+        "note"
+      ],
       "visible_links": [],
       "camera": {
         "x": 0.0,

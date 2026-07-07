@@ -1,10 +1,5 @@
 import {
   applyNodeChanges,
-  Background,
-  Controls,
-  MarkerType,
-  MiniMap,
-  ReactFlow,
   ReactFlowProvider,
   useReactFlow,
   type Connection,
@@ -13,28 +8,8 @@ import {
   type Node,
   type NodeChange
 } from "@xyflow/react";
+import { Loader2 } from "lucide-react";
 import {
-  CircuitBoard,
-  ChevronDown,
-  ChevronUp,
-  BookOpenText,
-  Download,
-  Eye,
-  ExternalLink,
-  FileCode2,
-  FileText,
-  LayoutDashboard,
-  Loader2,
-  Plus,
-  Save,
-  Search,
-  Settings,
-  Trash2,
-  Upload,
-  X
-} from "lucide-react";
-import {
-  type CSSProperties,
   type DragEvent,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
@@ -45,10 +20,11 @@ import {
   useRef,
   useState
 } from "react";
-import { FamilyNode } from "./components/FamilyNode";
+import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
 import { Inspector } from "./components/Inspector";
+import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { TileNode } from "./components/TileNode";
+import { TopBar, type UpdateNoticeView } from "./components/TopBar";
 import {
   clearBackendDebugLog,
   downloadAtlasJson,
@@ -64,15 +40,42 @@ import {
   saveAtlas,
   saveUpdateSettings
 } from "./lib/api";
-import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
+import { DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
+import {
+  activeTemplateForUi,
+  buildStackState,
+  canConnectTiles,
+  canStackMountChildren,
+  canStackSiblingTiles,
+  closestTileToParent,
+  emptyStackState,
+  getActiveView,
+  getChildrenByParent,
+  getLifecycleCounts,
+  getSearchResults,
+  getVisibleLinks,
+  getVisibleTiles,
+  isLifecycleEditable,
+  resolveLifecycle,
+  toggleViewSelection,
+  type SearchResult
+} from "./lib/atlasSelectors";
+import {
+  cloneFields,
+  createId,
+  defaultMountStackName,
+  defaultStackName,
+  nextGeneratedTileTitle,
+  sanitizeAtlas,
+  withAtlasDefaults
+} from "./lib/atlasMutations";
+import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes } from "./lib/graphMapping";
 import { createSeedAtlas } from "./lib/seed";
 import {
   getAssociatedCanvasBackground,
-  getLinkColor,
   getStoredCanvasBackground,
   getStoredThemePalette,
-  getTileColor,
   storeCanvasBackground,
   storeThemePalette
 } from "./lib/theme";
@@ -102,7 +105,6 @@ import type {
   View
 } from "./types/atlas";
 
-const nodeTypes = { tileNode: TileNode, familyNode: FamilyNode };
 const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
 const FAMILY_DRAG_MIME = "application/ctroadmap-family";
 const FAMILY_PALETTE_COLOR = "#38a3ff";
@@ -113,46 +115,9 @@ const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && doc
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
 const AUTOSAVE_DEBOUNCE_MS = 1000;
 
-type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
 type SaveReason = "autosave" | "manual" | "export";
-type PaletteEntry = { kind: "tile"; type: TileType } | { kind: "family" };
 
 const PALETTE_ENTRIES: PaletteEntry[] = [...TILE_TYPES.map((type) => ({ kind: "tile" as const, type })), { kind: "family" }];
-
-interface SidebarState {
-  collapsed: Record<SidebarSectionId, boolean>;
-  paletteIndex: number;
-}
-
-type SearchResult =
-  | { kind: "tile"; id: string; title: string; detail: string }
-  | { kind: "link"; id: string; title: string; detail: string };
-
-interface StackContextMenu {
-  x: number;
-  y: number;
-  tileId: string;
-  stackId?: string;
-  canStack: boolean;
-  canStackMountChildren: boolean;
-  tileType: TileType;
-}
-
-interface StackRenderInfo {
-  id: string;
-  kind: "sibling_type" | "mount_children";
-  badgeShape: "circle" | "hex";
-  count: number;
-  name: string;
-  subtitle: string;
-}
-
-interface StackState {
-  stacks: TileStack[];
-  hiddenMemberIds: Set<string>;
-  memberToRepresentative: Map<string, string>;
-  stackByRepresentative: Map<string, StackRenderInfo>;
-}
 
 function App() {
   return (
@@ -197,7 +162,7 @@ function AtlasEditor() {
   const [viewBarOpen, setViewBarOpen] = useState(true);
   const [appMode, setAppMode] = useState<AppMode>("live");
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
-  const [stackContextMenu, setStackContextMenu] = useState<StackContextMenu | null>(null);
+  const [stackContextMenu, setStackContextMenu] = useState<StackContextMenuView | null>(null);
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [canvasBackgroundId, setCanvasBackgroundId] = useState<CanvasBackgroundId>(() => getStoredCanvasBackground());
@@ -418,50 +383,20 @@ function AtlasEditor() {
       });
   }, [appendDebugEvent]);
 
-  const activeView = useMemo(() => {
-    if (!atlas) return null;
-    return atlas.views.find((view) => view.id === activeViewId) ?? atlas.views[0] ?? null;
-  }, [atlas, activeViewId]);
+  const activeView = useMemo(() => getActiveView(atlas, activeViewId), [atlas, activeViewId]);
 
-  const collapsedPaletteEntries = useMemo(() => {
+  const collapsedPaletteEntries = useMemo<CollapsedPaletteEntry[]>(() => {
     const activeIndex = normalizePaletteIndex(sidebarState.paletteIndex);
     return [
       { slot: "previous", entry: PALETTE_ENTRIES[normalizePaletteIndex(activeIndex - 1)], interactive: false },
       { slot: "active", entry: PALETTE_ENTRIES[activeIndex], interactive: true },
       { slot: "next", entry: PALETTE_ENTRIES[normalizePaletteIndex(activeIndex + 1)], interactive: false }
-    ] as const;
+    ];
   }, [sidebarState.paletteIndex]);
 
-  const lifecycleCounts = useMemo(() => {
-    const counts = {
-      liveTiles: 0,
-      plannedTiles: 0,
-      liveLinks: 0,
-      plannedLinks: 0
-    };
-    if (!atlas) return counts;
-    for (const tile of atlas.tiles) {
-      if (resolveLifecycle(tile) === "planned") counts.plannedTiles += 1;
-      else counts.liveTiles += 1;
-    }
-    for (const link of atlas.links) {
-      if (resolveLifecycle(link) === "planned") counts.plannedLinks += 1;
-      else counts.liveLinks += 1;
-    }
-    return counts;
-  }, [atlas]);
+  const lifecycleCounts = useMemo(() => getLifecycleCounts(atlas), [atlas]);
 
-  const childrenByParent = useMemo(() => {
-    const grouped = new Map<string, Tile[]>();
-    if (!atlas) return grouped;
-    for (const tile of atlas.tiles) {
-      if (!tile.parent) continue;
-      const children = grouped.get(tile.parent) ?? [];
-      children.push(tile);
-      grouped.set(tile.parent, children);
-    }
-    return grouped;
-  }, [atlas]);
+  const childrenByParent = useMemo(() => getChildrenByParent(atlas), [atlas]);
 
   const stackState = useMemo(() => (atlas ? buildStackState(atlas) : emptyStackState()), [atlas]);
 
@@ -506,166 +441,39 @@ function AtlasEditor() {
     [appendDebugEvent, commitDirtyAtlas]
   );
 
-  const searchResults = useMemo<SearchResult[]>(() => {
-    if (!atlas) return [];
-    const query = searchTerm.trim().toLowerCase();
-    if (!query) return [];
-    const tileMatches = atlas.tiles
-      .filter((tile) => {
-        const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
-        const searchable = `${tile.title} ${tile.type} ${resolveLifecycle(tile)} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
-        return allowedByView && searchable.includes(query);
-      })
-      .map<SearchResult>((tile) => ({
-        kind: "tile",
-        id: tile.id,
-        title: tile.title,
-        detail: `${resolveLifecycle(tile)} ${TILE_TYPE_CONFIG[tile.type].label} tile`
-      }));
-    const linkMatches = atlas.links
-      .filter((link) => {
-        const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
-        const searchable = `${link.type} ${resolveLifecycle(link)} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
-        return allowedByView && searchable.includes(query);
-      })
-      .map<SearchResult>((link) => {
-        const source = atlas.tiles.find((tile) => tile.id === link.from)?.title ?? link.from;
-        const target = atlas.tiles.find((tile) => tile.id === link.to)?.title ?? link.to;
-        return {
-          kind: "link",
-          id: link.id,
-          title: link.label || link.type,
-          detail: `${resolveLifecycle(link)}: ${source} -> ${target}`
-        };
-      });
-    return [...tileMatches, ...linkMatches].slice(0, 30);
-  }, [activeView, atlas, searchTerm]);
+  const searchResults = useMemo<SearchResult[]>(() => getSearchResults(atlas, activeView, searchTerm), [activeView, atlas, searchTerm]);
 
-  const visibleTiles = useMemo(() => {
-    if (!atlas) return [];
-    const query = searchTerm.trim().toLowerCase();
-    return atlas.tiles.filter((tile) => {
-      const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
-      const searchable = `${tile.title} ${tile.type} ${resolveLifecycle(tile)} ${tile.notes ?? ""} ${(tile.tags ?? []).join(" ")} ${JSON.stringify(tile.fields)}`.toLowerCase();
-      const allowedBySearch = !query || searchable.includes(query);
-      return allowedByView && allowedBySearch && !stackState.hiddenMemberIds.has(tile.id);
-    });
-  }, [activeView, atlas, searchTerm, stackState.hiddenMemberIds]);
+  const visibleTiles = useMemo(() => getVisibleTiles(atlas, activeView, searchTerm, stackState), [activeView, atlas, searchTerm, stackState]);
 
   const visibleTileIds = useMemo(() => new Set(visibleTiles.map((tile) => tile.id)), [visibleTiles]);
 
-  const visibleLinks = useMemo(() => {
-    if (!atlas) return [];
-    return atlas.links.filter((link) => {
-      const allowedByView = !activeView?.visible_links.length || activeView.visible_links.includes(link.type);
-      const searchable = `${link.type} ${resolveLifecycle(link)} ${link.label ?? ""} ${link.notes ?? ""}`.toLowerCase();
-      const renderedSource = stackState.memberToRepresentative.get(link.from) ?? link.from;
-      const renderedTarget = stackState.memberToRepresentative.get(link.to) ?? link.to;
-      const allowedBySearch =
-        !searchTerm.trim() ||
-        searchable.includes(searchTerm.trim().toLowerCase()) ||
-        visibleTileIds.has(renderedSource) ||
-        visibleTileIds.has(renderedTarget);
-      return allowedByView && allowedBySearch && renderedSource !== renderedTarget && visibleTileIds.has(renderedSource) && visibleTileIds.has(renderedTarget);
-    });
-  }, [activeView, atlas, searchTerm, stackState.memberToRepresentative, visibleTileIds]);
+  const visibleLinks = useMemo(() => getVisibleLinks(atlas, activeView, searchTerm, visibleTileIds, stackState), [activeView, atlas, searchTerm, stackState, visibleTileIds]);
 
-  const derivedNodes: Node[] = useMemo(() => {
-    if (!atlas) return [];
-    const layoutPositions = layoutTemplate === "layered_hierarchy" ? computeLayeredPositions(visibleTiles) : new Map<string, { x: number; y: number }>();
-    const familyNodes: Node[] =
-      layoutTemplate === "canvas_topology"
-        ? [...(atlas.families ?? [])]
-            .sort((left, right) => left.order - right.order)
-            .map((family) => ({
-              id: familyNodeId(family.id),
-              type: "familyNode",
-              className: "family-flow-node",
-              position: family.position,
-              draggable: isInteractive,
-              dragHandle: ".family-node__header",
-              connectable: false,
-              selectable: true,
-              selected: selection?.kind === "family" && selection.id === family.id,
-              zIndex: Math.max(0, Math.min(100, family.order)),
-              style: {
-                width: family.size.width,
-                height: family.size.height
-              },
-              data: {
-                family,
-                memberCount: family.member_tile_ids.filter((memberId) => atlas.tiles.some((tile) => tile.id === memberId)).length,
-                onResizeFamily: handleResizeFamily,
-                onFocusFamily: handleFocusFamily
-              }
-            }))
-        : [];
-
-    const tileNodes = visibleTiles.map((tile) => {
-      const parentTitle = tile.parent ? atlas.tiles.find((candidate) => candidate.id === tile.parent)?.title : undefined;
-      const position = layoutPositions.get(tile.id) ?? tile.position;
-      const lifecycle = resolveLifecycle(tile);
-      const editable = isLifecycleEditable(lifecycle, appMode);
-      const stack = stackState.stackByRepresentative.get(tile.id);
-      return {
-        id: tile.id,
-        type: "tileNode",
-        position,
-        zIndex: 1000,
-        draggable: isInteractive && editable && !stack && layoutTemplate === "canvas_topology",
-        data: {
-          tile,
-          parentTitle,
-          accentColor: getTileColor(tile.type, themePaletteId),
-          iconAccentColor: themePaletteId === "blueprint" ? getTileColor(tile.type, "cyber") : getTileColor(tile.type, themePaletteId),
-          hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
-          lifecycle,
-          isMuted: !editable,
-          stack
-        }
-      };
-    });
-    return [...familyNodes, ...tileNodes];
-  }, [appMode, atlas, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, layoutTemplate, selection, stackState.stackByRepresentative, themePaletteId, visibleTiles]);
+  const derivedNodes: Node[] = useMemo(
+    () =>
+      mapAtlasToNodes({
+        appMode,
+        atlas,
+        childrenByParent,
+        isInteractive,
+        layoutTemplate,
+        selection,
+        stackState,
+        themePaletteId,
+        visibleTiles,
+        visibleLinks,
+        onFocusFamily: handleFocusFamily,
+        onResizeFamily: handleResizeFamily
+      }),
+    [appMode, atlas, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, layoutTemplate, selection, stackState, themePaletteId, visibleLinks, visibleTiles]
+  );
 
   useEffect(() => {
     if (isNodeDragging.current) return;
     setFlowNodes(derivedNodes);
   }, [derivedNodes]);
 
-  const edges: Edge[] = useMemo(() => {
-    return visibleLinks.map((link) => {
-      const lifecycle = resolveLifecycle(link);
-      const editable = isLifecycleEditable(lifecycle, appMode);
-      const isBlueprint = themePaletteId === "blueprint";
-      const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
-      return {
-        id: link.id,
-        source: stackState.memberToRepresentative.get(link.from) ?? link.from,
-        target: stackState.memberToRepresentative.get(link.to) ?? link.to,
-        zIndex: 500,
-        sourceHandle: resolveSourcePort(link),
-        targetHandle: resolveTargetPort(link),
-        label,
-        animated: editable && ["calls", "controls", "fails_if"].includes(link.type),
-        markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
-        style: {
-          stroke: editable ? getLinkColor(link.type, themePaletteId) : "rgba(148, 163, 184, 0.55)",
-          strokeWidth: editable ? 2 : 1.5,
-          opacity: editable ? 1 : 0.55
-        },
-        labelStyle: {
-          fill: isBlueprint ? (editable ? "#06245a" : "rgba(6, 36, 90, 0.7)") : editable ? "#f8fafc" : "#94a3b8",
-          fontSize: 12,
-          fontWeight: 700
-        },
-        labelBgStyle: {
-          fill: isBlueprint ? "rgba(238, 247, 255, 0.86)" : "rgba(5, 10, 22, 0.88)",
-          fillOpacity: 0.9
-        }
-      };
-    });
-  }, [appMode, stackState.memberToRepresentative, themePaletteId, visibleLinks]);
+  const edges: Edge[] = useMemo(() => mapAtlasToEdges(appMode, themePaletteId, visibleLinks, stackState), [appMode, stackState, themePaletteId, visibleLinks]);
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
     const current = latestAtlasRef.current;
@@ -1830,7 +1638,7 @@ function AtlasEditor() {
     ? atlas.links.filter((link) => !atlas.tiles.some((tile) => tile.id === link.from) || !atlas.tiles.some((tile) => tile.id === link.to)).length
     : 0;
   const warnings = useMemo(() => (atlas ? validateAtlasWarnings(atlas) : []), [atlas]);
-  const updateNotice = useMemo(() => {
+  const updateNotice = useMemo<UpdateNoticeView | null>(() => {
     if (!updateAdvisory) return null;
     if (isUpdateNoticeSnoozed(updateAdvisory)) return null;
     if (updateAdvisory.status === "available") {
@@ -1888,515 +1696,173 @@ function AtlasEditor() {
     );
   }
 
-  const BrandIcon = BRAND_ICON;
-
   return (
     <div className="app-shell" data-theme={themePaletteId}>
-        <header className="topbar">
-          <div className="topbar__main">
-            <div className="brand">
-              <div className="brand__mark">
-                <BrandIcon size={28} />
-              </div>
-              <div>
-                <strong>CTRoadmap</strong>
-                <span>Local Infrastructure Atlas</span>
-              </div>
-            </div>
-            <div className="topbar__actions">
-              <button className="toolbar-button toolbar-button--icon-only" onClick={handleSave} disabled={isSaving} title="Save" aria-label="Save">
-                {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-              </button>
-              <span className={saveStatusClass}>{saveStatusText}</span>
-              <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import atlas.json">
-                <Upload size={18} /> Import atlas.json
-              </button>
-              <input
-                ref={fileInputRef}
-                className="hidden-input"
-                type="file"
-                accept="application/json,.json"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  if (file) void handleImportAtlas(file);
-                }}
-              />
-              <button className="toolbar-button" onClick={handleDownloadAtlasJson} title="Download your Atlas">
-                <Download size={18} /> Download your Atlas
-              </button>
-              <button className="toolbar-button" onClick={handleLoadSeed} title="Load Demo">
-                <Upload size={18} /> Load Demo
-              </button>
-              <div className="toolbar-menu" ref={exportMenuRef}>
-                <button
-                  className="toolbar-button"
-                  type="button"
-                  aria-haspopup="menu"
-                  aria-expanded={exportMenuOpen}
-                  onClick={() => setExportMenuOpen((open) => !open)}
-                  disabled={Boolean(isExporting)}
-                  title="3rd Party Export"
-                >
-                  {isExporting ? <Loader2 className="spin" size={18} /> : <Download size={18} />} 3rd Party Export
-                </button>
-                {exportMenuOpen ? (
-                  <div className="toolbar-popover" role="menu" aria-label="3rd Party Export">
-                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("markdown")}>
-                      <FileText size={16} /> Markdown
-                    </button>
-                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("yaml")}>
-                      <Download size={16} /> YAML
-                    </button>
-                    <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => void handleToolbarExport("mermaid")}>
-                      <FileCode2 size={16} /> Mermaid
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-              <button
-                className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}
-                onClick={() => {
-                  const nextMode: AppMode = appMode === "planning" ? "live" : "planning";
-                  setAppMode(nextMode);
-                  setSelection(null);
-                  setStatus(nextMode === "planning" ? "Planning Mode" : "Live View");
-                  appendDebugEvent("planning.mode", nextMode === "planning" ? "Planning Mode enabled" : "Live View enabled", "info", { mode: nextMode });
-                }}
-                title="Planning Mode"
-              >
-                <Plus size={18} /> Planning Mode
-              </button>
-              {updateNotice ? (
-                <div className={`update-advisory update-advisory--${updateNotice.tone}`}>
-                  <div>
-                    <strong>{updateNotice.title}</strong>
-                    <span>{updateNotice.message}</span>
-                  </div>
-                  {updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url ? (
-                    <button className="mini-icon-button" onClick={handleViewReleaseNotes} title="View release notes" aria-label="View release notes">
-                      <ExternalLink size={15} />
-                    </button>
-                  ) : null}
-                  <button className="mini-icon-button" onClick={() => void handleCopyUpdateCommand()} title="Copy update command" aria-label="Copy update command">
-                    <Download size={15} />
-                  </button>
-                  <button className="mini-icon-button" onClick={handleRemindUpdateLater} title="Remind me later" aria-label="Remind me later">
-                    <X size={15} />
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          <div className="topbar__right">
-            <div className="search-box">
-              <Search size={18} />
-              <input ref={searchInputRef} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tiles..." />
-              {searchTerm ? (
-                <button
-                  className="search-box__clear"
-                  type="button"
-                  aria-label="Clear search"
-                  title="Clear search"
-                  onClick={() => {
-                    setSearchTerm("");
-                    searchInputRef.current?.focus();
-                  }}
-                >
-                  <X size={15} />
-                </button>
-              ) : null}
-            </div>
-            <button className="icon-button" onClick={handleToggleSettings} title={settingsOpen ? "Close settings" : "Settings"} aria-label={settingsOpen ? "Close settings" : "Settings"} aria-expanded={settingsOpen}>
-              <Settings size={19} />
-            </button>
-          </div>
-        </header>
+      <TopBar
+        appMode={appMode}
+        exportMenuOpen={exportMenuOpen}
+        exportMenuRef={exportMenuRef}
+        fileInputRef={fileInputRef}
+        isExporting={isExporting}
+        isSaving={isSaving}
+        saveStatusClass={saveStatusClass}
+        saveStatusText={saveStatusText}
+        searchInputRef={searchInputRef}
+        searchTerm={searchTerm}
+        settingsOpen={settingsOpen}
+        updateAdvisory={updateAdvisory}
+        updateNotice={updateNotice}
+        onCopyUpdateCommand={() => void handleCopyUpdateCommand()}
+        onExportMenuToggle={() => setExportMenuOpen((open) => !open)}
+        onFileSelected={(file) => void handleImportAtlas(file)}
+        onLoadSeed={handleLoadSeed}
+        onDownloadAtlasJson={handleDownloadAtlasJson}
+        onRemindUpdateLater={handleRemindUpdateLater}
+        onSave={() => void handleSave()}
+        onSearchChange={setSearchTerm}
+        onToggleAppMode={() => {
+          const nextMode: AppMode = appMode === "planning" ? "live" : "planning";
+          setAppMode(nextMode);
+          setSelection(null);
+          setStatus(nextMode === "planning" ? "Planning Mode" : "Live View");
+          appendDebugEvent("planning.mode", nextMode === "planning" ? "Planning Mode enabled" : "Live View enabled", "info", { mode: nextMode });
+        }}
+        onToggleSettings={handleToggleSettings}
+        onToolbarExport={(format) => void handleToolbarExport(format)}
+        onViewReleaseNotes={handleViewReleaseNotes}
+      />
 
-        <main className="workspace">
-          <aside className="sidebar">
-            <section className={sidebarState.collapsed.tilePalette ? "sidebar-section sidebar-section--collapsed" : "sidebar-section"}>
-              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.tilePalette} onClick={() => toggleSidebarSection("tilePalette")}>
-                <span className="panel-title">Tile Palette</span>
-                <ChevronDown className="sidebar-section__chevron" size={16} />
-              </button>
-              {sidebarState.collapsed.tilePalette ? (
-                <div
-                  className="tile-palette tile-palette--collapsed"
-                  onWheel={handleCollapsedPaletteWheel}
-                  onTouchStart={handleCollapsedPaletteTouchStart}
-                  onTouchEnd={handleCollapsedPaletteTouchEnd}
-                >
-                  <button className="palette-cycle-button" type="button" onClick={() => cycleCollapsedPalette(-1)} title="Previous tile type" aria-label="Previous tile type">
-                    <ChevronUp size={16} />
-                  </button>
-                  {collapsedPaletteEntries.map(({ slot, entry, interactive }) => {
-                    if (entry.kind === "family") {
-                      const style = { "--tile-accent": FAMILY_PALETTE_COLOR } as CSSProperties;
-                      return interactive ? (
-                        <button
-                          key={`${slot}-family`}
-                          className="palette-item palette-item--collapsed palette-item--active-slot"
-                          style={style}
-                          draggable
-                          onClick={handleFamilyPaletteClick}
-                          onDragStart={handleFamilyPaletteDragStart}
-                          onDragEnd={handlePaletteDragEnd}
-                          title="Click to create Family; drag onto the map to place it."
-                        >
-                          <CircuitBoard size={19} />
-                          Family
-                        </button>
-                      ) : (
-                        <div key={`${slot}-family`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
-                          <CircuitBoard size={19} />
-                          Family
-                        </div>
-                      );
-                    }
-                    const config = TILE_TYPE_CONFIG[entry.type];
-                    const Icon = config.icon;
-                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(entry.type, "cyber") : getTileColor(entry.type, themePaletteId);
-                    const style = { "--tile-accent": paletteAccent } as CSSProperties;
-                    return interactive ? (
-                      <button
-                        key={`${slot}-${entry.type}`}
-                        className="palette-item palette-item--collapsed palette-item--active-slot"
-                        style={style}
-                        draggable
-                        onClick={() => handlePaletteClick(entry.type)}
-                        onDragStart={(event) => handlePaletteDragStart(event, entry.type)}
-                        onDragEnd={handlePaletteDragEnd}
-                        title={`Click to create ${config.label}; drag onto the map to place it.`}
-                      >
-                        <Icon size={19} />
-                        {config.label}
-                      </button>
-                    ) : (
-                      <div key={`${slot}-${entry.type}`} className="palette-item palette-item--collapsed palette-item--reference" style={style} aria-hidden="true">
-                        <Icon size={19} />
-                        {config.label}
-                      </div>
-                    );
-                  })}
-                  <button className="palette-cycle-button" type="button" onClick={() => cycleCollapsedPalette(1)} title="Next tile type" aria-label="Next tile type">
-                    <ChevronDown size={16} />
-                  </button>
-                </div>
-              ) : (
-                <div className="tile-palette">
-                  {PALETTE_ENTRIES.map((entry) => {
-                    if (entry.kind === "family") {
-                      return (
-                        <button
-                          key="family"
-                          className="palette-item"
-                          style={{ "--tile-accent": FAMILY_PALETTE_COLOR } as CSSProperties}
-                          draggable
-                          onClick={handleFamilyPaletteClick}
-                          onDragStart={handleFamilyPaletteDragStart}
-                          onDragEnd={handlePaletteDragEnd}
-                          title="Click to create Family; drag onto the map to place it."
-                        >
-                          <CircuitBoard size={19} />
-                          Family
-                        </button>
-                      );
-                    }
-                    const config = TILE_TYPE_CONFIG[entry.type];
-                    const Icon = config.icon;
-                    const paletteAccent = themePaletteId === "blueprint" ? getTileColor(entry.type, "cyber") : getTileColor(entry.type, themePaletteId);
-                    return (
-                      <button
-                        key={entry.type}
-                        className="palette-item"
-                        style={{ "--tile-accent": paletteAccent } as CSSProperties}
-                        draggable
-                        onClick={() => handlePaletteClick(entry.type)}
-                        onDragStart={(event) => handlePaletteDragStart(event, entry.type)}
-                        onDragEnd={handlePaletteDragEnd}
-                        title={`Click to create ${config.label}; drag onto the map to place it.`}
-                      >
-                        <Icon size={19} />
-                        {config.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
+      <main className="workspace">
+        <LeftSidebar
+          activeView={activeView}
+          activeViewId={activeViewId}
+          atlas={atlas}
+          collapsedPaletteEntries={collapsedPaletteEntries}
+          familyPaletteColor={FAMILY_PALETTE_COLOR}
+          layoutTemplate={layoutTemplate}
+          searchResults={searchResults}
+          searchTerm={searchTerm}
+          selection={selection}
+          sidebarState={sidebarState}
+          themePaletteId={themePaletteId}
+          warnings={warnings}
+          onCollapsedPaletteTouchEnd={handleCollapsedPaletteTouchEnd}
+          onCollapsedPaletteTouchStart={handleCollapsedPaletteTouchStart}
+          onCollapsedPaletteWheel={handleCollapsedPaletteWheel}
+          onCreateView={handleCreateView}
+          onCycleCollapsedPalette={cycleCollapsedPalette}
+          onDeleteView={handleDeleteView}
+          onEditView={handleEditView}
+          onFamilyPaletteClick={handleFamilyPaletteClick}
+          onFamilyPaletteDragStart={handleFamilyPaletteDragStart}
+          onPaletteClick={handlePaletteClick}
+          onPaletteDragEnd={handlePaletteDragEnd}
+          onPaletteDragStart={handlePaletteDragStart}
+          onSelectSearchResult={selectSearchResult}
+          onSelectView={handleSelectView}
+          onSelectWarningLink={(linkId) => setSelection({ kind: "link", id: linkId })}
+          onSelectWarningTile={selectTileAndFocus}
+          onTemplateChange={handleTemplateChange}
+          onToggleSidebarSection={toggleSidebarSection}
+          onToggleViewLinkType={handleToggleViewLinkType}
+          onToggleViewTileType={handleToggleViewTileType}
+        />
 
-            <div className="panel-title panel-title--spaced">Search Results</div>
-            <div className="search-results">
-              {searchTerm.trim() ? (
-                searchResults.length ? (
-                  searchResults.map((result) => (
-                    <button
-                      key={`${result.kind}-${result.id}`}
-                      className={selection?.kind === result.kind && selection.id === result.id ? "search-result search-result--active" : "search-result"}
-                      onClick={() => selectSearchResult(result)}
-                    >
-                      <span>{result.kind}</span>
-                      <strong>{result.title}</strong>
-                      <small>{result.detail}</small>
-                    </button>
-                  ))
-                ) : (
-                  <div className="warning-empty">No matches</div>
-                )
-              ) : (
-                <div className="warning-empty">Use search to find tiles and relationships</div>
-              )}
-            </div>
+        <CanvasFrame
+          activeViewId={activeViewId}
+          appMode={appMode}
+          brokenLinkCount={brokenLinkCount}
+          canvasBackgroundId={canvasBackgroundId}
+          canvasRef={canvasRef}
+          edges={edges}
+          exportResults={exportResults}
+          fitViewOptions={FIT_VIEW_OPTIONS}
+          flowNodes={flowNodes}
+          isInteractive={isInteractive}
+          layoutTemplate={layoutTemplate}
+          lifecycleCounts={lifecycleCounts}
+          searchResultsCount={searchResults.length}
+          searchTerm={searchTerm}
+          stackContextMenu={stackContextMenu}
+          status={status}
+          themePaletteId={themePaletteId}
+          viewBarOpen={viewBarOpen}
+          views={atlas.views}
+          visibleLinks={visibleLinks}
+          visibleTiles={visibleTiles}
+          warningsCount={warnings.length}
+          onCanvasDoubleClick={handleCanvasDoubleClick}
+          onCanvasDragOver={handleCanvasDragOver}
+          onCanvasDrop={handleCanvasDrop}
+          onConnect={handleConnect}
+          onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
+          onInteractiveChange={handleInteractiveChange}
+          onNodeClick={(node) => {
+            if (node.type === "familyNode") {
+              const family = node.data?.family as Family | undefined;
+              if (family) setSelection({ kind: "family", id: family.id });
+              return;
+            }
+            selectTileAndFocus(node.id);
+          }}
+          onNodeContextMenu={handleNodeContextMenu}
+          onNodeDragStart={handleNodeDragStart}
+          onNodeDragStop={handleNodeDragStop}
+          onNodesChange={handleNodesChange}
+          onPaneClick={() => {
+            setSelection(null);
+            setStackContextMenu(null);
+          }}
+          onReactFlowError={handleReactFlowError}
+          onSelectView={handleSelectView}
+          onStackMountChildren={handleStackMountChildren}
+          onStackSiblings={handleStackSiblings}
+          onToggleViewBar={() => setViewBarOpen((open) => !open)}
+          onUnstack={handleUnstack}
+        />
 
-            <div className="panel-title panel-title--spaced">Template</div>
-            <div className="segmented">
-              <button className={layoutTemplate === "canvas_topology" ? "active" : ""} onClick={() => handleTemplateChange("canvas_topology")}>
-                <LayoutDashboard size={15} /> Canvas
-              </button>
-              <button disabled title="Future hierarchy feature placeholder">
-                <BookOpenText size={15} /> TBD
-              </button>
-            </div>
+        <Inspector
+          atlas={atlas}
+          mode={appMode}
+          selection={selection}
+          onUpdateTile={handleUpdateTile}
+          onUpdateFamily={handleUpdateFamily}
+          onUpdateStack={handleUpdateStack}
+          onUnstack={handleUnstack}
+          onDeleteTile={handleDeleteTile}
+          onDeleteFamily={handleDeleteFamily}
+          onDuplicateTile={handleDuplicateTile}
+          onAddSubtile={handleAddSubtile}
+          onToggleTileFamily={handleToggleTileFamily}
+          onUpdateLink={handleUpdateLink}
+          onDeleteLink={handleDeleteLink}
+          onPromoteTile={handlePromoteTile}
+          onPromoteLink={handlePromoteLink}
+        />
+      </main>
 
-            <section className={sidebarState.collapsed.views ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
-              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.views} onClick={() => toggleSidebarSection("views")}>
-                <span className="panel-title">Layers</span>
-                <ChevronDown className="sidebar-section__chevron" size={16} />
-              </button>
-              {!sidebarState.collapsed.views ? (
-                <div className="sidebar-section__body">
-                  <div className="view-list">
-                    {atlas.views.map((view) => (
-                      <button key={view.id} className={activeViewId === view.id ? "view-button view-button--active" : "view-button"} onClick={() => handleSelectView(view)}>
-                        <Eye size={16} />
-                        {view.title}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="view-actions">
-                    <button className="small-button" onClick={handleCreateView}>
-                      <Plus size={15} /> New
-                    </button>
-                    <button className="small-button" onClick={handleEditView} disabled={!activeView}>
-                      <Settings size={15} /> Edit
-                    </button>
-                    <button className="small-button small-button--danger" onClick={handleDeleteView} disabled={!activeView || atlas.views.length <= 1}>
-                      <Trash2 size={15} /> Delete
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </section>
-
-            <section className={sidebarState.collapsed.filters ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
-              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.filters} onClick={() => toggleSidebarSection("filters")}>
-                <span className="panel-title">Filters</span>
-                <ChevronDown className="sidebar-section__chevron" size={16} />
-              </button>
-              {!sidebarState.collapsed.filters ? (
-                <div className="filter-grid">
-                  {TILE_TYPES.map((type) => (
-                    <label key={type} className="filter-check">
-                      <input
-                        type="checkbox"
-                        checked={!activeView?.visible_types.length || activeView.visible_types.includes(type)}
-                        onChange={() => handleToggleViewTileType(type)}
-                      />
-                      {TILE_TYPE_CONFIG[type].label}
-                    </label>
-                  ))}
-                </div>
-              ) : null}
-            </section>
-
-            <section className={sidebarState.collapsed.relationships ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
-              <button className="sidebar-section__header" type="button" aria-expanded={!sidebarState.collapsed.relationships} onClick={() => toggleSidebarSection("relationships")}>
-                <span className="panel-title">Relationships</span>
-                <ChevronDown className="sidebar-section__chevron" size={16} />
-              </button>
-              {!sidebarState.collapsed.relationships ? (
-                <div className="filter-grid filter-grid--links">
-                  {LINK_TYPES.map((type) => (
-                    <label key={type} className="filter-check">
-                      <input
-                        type="checkbox"
-                        checked={!activeView?.visible_links.length || activeView.visible_links.includes(type)}
-                        onChange={() => handleToggleViewLinkType(type)}
-                      />
-                      {type}
-                    </label>
-                  ))}
-                </div>
-              ) : null}
-            </section>
-
-            <div className="panel-title panel-title--spaced">Warnings</div>
-            <div className="warning-list">
-              {warnings.length ? (
-                warnings.slice(0, 8).map((warning) => (
-                  <button
-                    key={warning.id}
-                    className={`warning-item warning-item--${warning.severity}`}
-                    onClick={() => {
-                      if (warning.targetKind === "tile" && warning.targetId) selectTileAndFocus(warning.targetId);
-                      if (warning.targetKind === "link" && warning.targetId) setSelection({ kind: "link", id: warning.targetId });
-                    }}
-                  >
-                    {warning.message}
-                  </button>
-                ))
-              ) : (
-                <div className="warning-empty">No validation warnings</div>
-              )}
-              {warnings.length > 8 ? <div className="warning-empty">+{warnings.length - 8} more warnings</div> : null}
-            </div>
-          </aside>
-
-          <section
-            ref={canvasRef}
-            className={`canvas-frame canvas-frame--${layoutTemplate}`}
-            data-background={canvasBackgroundId}
-            onDragOver={handleCanvasDragOver}
-            onDrop={handleCanvasDrop}
-            onDoubleClick={handleCanvasDoubleClick}
-          >
-            <div className={viewBarOpen ? "view-tabs" : "view-tabs view-tabs--collapsed"}>
-              <button
-                className="view-tabs__toggle"
-                type="button"
-                onClick={() => setViewBarOpen((open) => !open)}
-                title={viewBarOpen ? "Hide layers" : "Show layers"}
-                aria-label={viewBarOpen ? "Hide layers" : "Show layers"}
-                aria-expanded={viewBarOpen}
-              >
-                <Eye size={16} />
-              </button>
-              {viewBarOpen
-                ? atlas.views.map((view) => (
-                    <button key={view.id} className={activeViewId === view.id ? "active" : ""} onClick={() => handleSelectView(view)}>
-                      {view.title}
-                    </button>
-                  ))
-                : null}
-            </div>
-            <ReactFlow
-              nodes={flowNodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              onNodesChange={handleNodesChange}
-              onConnect={handleConnect}
-              onNodeDragStart={handleNodeDragStart}
-              onNodeDragStop={handleNodeDragStop}
-              onNodeClick={(_, node) => {
-                if (node.type === "familyNode") {
-                  const family = node.data?.family as Family | undefined;
-                  if (family) setSelection({ kind: "family", id: family.id });
-                  return;
-                }
-                selectTileAndFocus(node.id);
-              }}
-              onNodeContextMenu={handleNodeContextMenu}
-              onEdgeClick={(_, edge) => setSelection({ kind: "link", id: edge.id })}
-              onError={handleReactFlowError}
-              onPaneClick={() => {
-                setSelection(null);
-                setStackContextMenu(null);
-              }}
-              nodesDraggable={isInteractive && layoutTemplate === "canvas_topology"}
-              nodesConnectable={isInteractive}
-              elementsSelectable
-              fitView
-              fitViewOptions={FIT_VIEW_OPTIONS}
-              zoomOnDoubleClick={false}
-              minZoom={0.2}
-              maxZoom={1.8}
-            >
-              <Background color="var(--canvas-grid-line)" gap={20} size={1} />
-              <MiniMap
-                pannable
-                zoomable
-                nodeColor={(node) => {
-                  const family = node.data.family as Family | undefined;
-                  if (family) return family.color || "#38a3ff";
-                  return getTileColor((node.data.tile as Tile).type, themePaletteId);
-                }}
-              />
-              <Controls fitViewOptions={FIT_VIEW_OPTIONS} onInteractiveChange={handleInteractiveChange} />
-            </ReactFlow>
-            <div className="status-strip">
-              <span>{status}</span>
-              <span>{visibleTiles.length} tiles</span>
-              <span>{visibleLinks.length} links</span>
-              <span>{appMode === "planning" ? "Planning Mode" : "Live View"}</span>
-              {lifecycleCounts.plannedTiles || lifecycleCounts.plannedLinks ? <span>{lifecycleCounts.plannedTiles} planned tiles / {lifecycleCounts.plannedLinks} planned links</span> : null}
-              {searchTerm.trim() ? <span>{searchResults.length} search results</span> : null}
-              {brokenLinkCount > 0 ? <strong>{brokenLinkCount} broken links</strong> : <span>No broken links</span>}
-              {warnings.length > 0 ? <strong>{warnings.length} warnings</strong> : null}
-              {exportResults.markdown ? <span>Markdown ready</span> : null}
-              {exportResults.yaml ? <span>YAML ready</span> : null}
-              {exportResults.mermaid ? <span>Mermaid ready</span> : null}
-            </div>
-            {stackContextMenu ? (
-              <div className="canvas-context-menu" style={{ left: stackContextMenu.x, top: stackContextMenu.y }}>
-                {stackContextMenu.canStack ? (
-                  <button onClick={() => handleStackSiblings(stackContextMenu.tileId)}>Stack sibling {TILE_TYPE_CONFIG[stackContextMenu.tileType].label} tiles</button>
-                ) : null}
-                {stackContextMenu.canStackMountChildren ? <button onClick={() => handleStackMountChildren(stackContextMenu.tileId)}>Stack mounted items</button> : null}
-                {stackContextMenu.stackId ? (
-                  <button
-                    onClick={() => {
-                      if (stackContextMenu.stackId) handleUnstack(stackContextMenu.stackId);
-                    }}
-                  >
-                    Unstack
-                  </button>
-                ) : null}
-                {!stackContextMenu.canStack && !stackContextMenu.canStackMountChildren && !stackContextMenu.stackId ? <span>No stack actions</span> : null}
-              </div>
-            ) : null}
-          </section>
-
-          <Inspector
-            atlas={atlas}
-            mode={appMode}
-            selection={selection}
-            onUpdateTile={handleUpdateTile}
-            onUpdateFamily={handleUpdateFamily}
-            onUpdateStack={handleUpdateStack}
-            onUnstack={handleUnstack}
-            onDeleteTile={handleDeleteTile}
-            onDeleteFamily={handleDeleteFamily}
-            onDuplicateTile={handleDuplicateTile}
-            onAddSubtile={handleAddSubtile}
-            onToggleTileFamily={handleToggleTileFamily}
-            onUpdateLink={handleUpdateLink}
-            onDeleteLink={handleDeleteLink}
-            onPromoteTile={handlePromoteTile}
-            onPromoteLink={handlePromoteLink}
-          />
-        </main>
-        {settingsOpen ? (
-          <SettingsPanel
-            atlas={atlas}
-            activeView={activeView}
-            appVersion={appVersion}
-            backendHealth={backendHealth}
-            debugEvents={debugEvents}
-            layoutTemplate={layoutTemplate}
-            canvasBackgroundId={canvasBackgroundId}
-            paletteId={themePaletteId}
-            updateAdvisory={updateAdvisory}
-            onClearDebugLog={handleClearDebugLog}
-            onClose={() => setSettingsOpen(false)}
-            onCopyUpdateCommand={handleCopyUpdateCommand}
-            onExportDebugLog={handleExportDebugLog}
-            onCanvasBackgroundChange={handleCanvasBackgroundChange}
-            onPaletteChange={handlePaletteChange}
-            onUpdateSettings={handleUpdateSettings}
-            onViewReleaseNotes={handleViewReleaseNotes}
-          />
-        ) : null}
-      </div>
+      {settingsOpen ? (
+        <SettingsPanel
+          atlas={atlas}
+          activeView={activeView}
+          appVersion={appVersion}
+          backendHealth={backendHealth}
+          debugEvents={debugEvents}
+          layoutTemplate={layoutTemplate}
+          canvasBackgroundId={canvasBackgroundId}
+          paletteId={themePaletteId}
+          updateAdvisory={updateAdvisory}
+          onClearDebugLog={handleClearDebugLog}
+          onClose={() => setSettingsOpen(false)}
+          onCopyUpdateCommand={handleCopyUpdateCommand}
+          onExportDebugLog={handleExportDebugLog}
+          onCanvasBackgroundChange={handleCanvasBackgroundChange}
+          onPaletteChange={handlePaletteChange}
+          onUpdateSettings={handleUpdateSettings}
+          onViewReleaseNotes={handleViewReleaseNotes}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -2404,165 +1870,6 @@ function chooseTileType(fallback: TileType): TileType | null {
   const value = window.prompt(`Tile type (${TILE_TYPES.join(", ")})`, fallback);
   if (!value) return null;
   return TILE_TYPES.includes(value as TileType) ? (value as TileType) : fallback;
-}
-
-function emptyStackState(): StackState {
-  return {
-    stacks: [],
-    hiddenMemberIds: new Set(),
-    memberToRepresentative: new Map(),
-    stackByRepresentative: new Map()
-  };
-}
-
-function buildStackState(atlas: Atlas): StackState {
-  const stacks = sanitizeStacks(atlas);
-  const hiddenMemberIds = new Set<string>();
-  const memberToRepresentative = new Map<string, string>();
-  const stackByRepresentative = new Map<string, StackRenderInfo>();
-
-  for (const stack of stacks) {
-    const stackKind = stack.stack_kind ?? "sibling_type";
-    for (const memberId of stack.member_ids) {
-      memberToRepresentative.set(memberId, stack.representative_id);
-      if (stackKind === "mount_children" || memberId !== stack.representative_id) hiddenMemberIds.add(memberId);
-    }
-    stackByRepresentative.set(stack.representative_id, {
-      id: stack.id,
-      kind: stackKind,
-      badgeShape: stackKind === "mount_children" ? "hex" : "circle",
-      count: stack.member_ids.length,
-      name: stack.name,
-      subtitle: stackKind === "mount_children" ? `${stack.member_ids.length} Mounted Items` : `${stack.member_ids.length} ${TILE_TYPE_CONFIG[stack.tile_type].label} tiles`
-    });
-  }
-
-  return { stacks, hiddenMemberIds, memberToRepresentative, stackByRepresentative };
-}
-
-function withAtlasDefaults(atlas: Atlas): Atlas {
-  return { ...atlas, stacks: atlas.stacks ?? [], families: atlas.families ?? [] };
-}
-
-function sanitizeAtlas(atlas: Atlas): Atlas {
-  return { ...atlas, stacks: sanitizeStacks(atlas), families: sanitizeFamilies(atlas) };
-}
-
-function sanitizeStacks(atlas: Atlas): TileStack[] {
-  const tileById = new Map(atlas.tiles.map((tile) => [tile.id, tile]));
-  const usedIds = new Set<string>();
-  const sanitized: TileStack[] = [];
-
-  for (const stack of atlas.stacks ?? []) {
-    const stackKind = stack.stack_kind ?? "sibling_type";
-    const parent = tileById.get(stack.parent_id);
-    if (!parent) continue;
-    if (stackKind === "mount_children") {
-      if (parent.type !== "mount" || stack.representative_id !== parent.id) continue;
-      const memberIds = stack.member_ids.filter((memberId, index, allIds) => {
-        const member = tileById.get(memberId);
-        return Boolean(member && member.parent === parent.id && allIds.indexOf(memberId) === index);
-      });
-      if (memberIds.length < 2) continue;
-      const id = uniqueId(stack.id, usedIds);
-      usedIds.add(id);
-      sanitized.push({
-        ...stack,
-        id,
-        stack_kind: "mount_children",
-        tile_type: "mount",
-        member_ids: memberIds,
-        representative_id: parent.id,
-        name: stack.name_is_custom ? stack.name : defaultMountStackName(memberIds.length),
-        name_is_custom: Boolean(stack.name_is_custom)
-      });
-      continue;
-    }
-    const memberIds = stack.member_ids.filter((memberId, index, allIds) => {
-      const member = tileById.get(memberId);
-      return Boolean(member && member.parent === stack.parent_id && member.type === stack.tile_type && allIds.indexOf(memberId) === index);
-    });
-    if (memberIds.length < 2) continue;
-    const members = memberIds.map((memberId) => tileById.get(memberId)).filter((tile): tile is Tile => Boolean(tile));
-    const representative = memberIds.includes(stack.representative_id) ? tileById.get(stack.representative_id) : closestTileToParent(members, parent);
-    if (!representative) continue;
-    const id = uniqueId(stack.id, usedIds);
-    usedIds.add(id);
-    sanitized.push({
-      ...stack,
-      id,
-      stack_kind: "sibling_type",
-      member_ids: memberIds,
-      representative_id: representative.id,
-      name: stack.name_is_custom ? stack.name : defaultStackName(memberIds.length, stack.tile_type),
-      name_is_custom: Boolean(stack.name_is_custom)
-    });
-  }
-
-  return sanitized;
-}
-
-function sanitizeFamilies(atlas: Atlas): Family[] {
-  const tileIds = new Set(atlas.tiles.map((tile) => tile.id));
-  const usedIds = new Set<string>();
-  return (atlas.families ?? [])
-    .slice()
-    .sort((left, right) => left.order - right.order)
-    .map((family) => {
-      const id = uniqueId(family.id, usedIds);
-      usedIds.add(id);
-      return {
-        ...family,
-        id,
-        title: family.title || "Family",
-        description: family.description ?? "",
-        member_tile_ids: family.member_tile_ids.filter((memberId, index, allIds) => tileIds.has(memberId) && allIds.indexOf(memberId) === index),
-        position: family.position ?? { x: 0, y: 0 },
-        size: {
-          width: Math.max(240, family.size?.width ?? 360),
-          height: Math.max(160, family.size?.height ?? 240)
-        },
-        order: Number.isFinite(family.order) ? family.order : 0,
-        color: family.color || null,
-        tag: family.tag || null
-      };
-    });
-}
-
-function canStackSiblingTiles(tile: Tile, tiles: Tile[]): boolean {
-  if (!tile.parent) return false;
-  return tiles.filter((candidate) => candidate.parent === tile.parent && candidate.type === tile.type).length >= 2;
-}
-
-function canStackMountChildren(tile: Tile, tiles: Tile[]): boolean {
-  return tile.type === "mount" && tiles.filter((candidate) => candidate.parent === tile.id).length >= 2;
-}
-
-function closestTileToParent(members: Tile[], parent: Tile): Tile {
-  return members.reduce((closest, member) => (distanceSquared(member.position, parent.position) < distanceSquared(closest.position, parent.position) ? member : closest), members[0]);
-}
-
-function distanceSquared(left: { x: number; y: number }, right: { x: number; y: number }): number {
-  return (left.x - right.x) ** 2 + (left.y - right.y) ** 2;
-}
-
-function defaultStackName(count: number, tileType: TileType): string {
-  const label = TILE_TYPE_CONFIG[tileType].label;
-  return `${count} ${label}${label.endsWith("s") ? "" : "s"}`;
-}
-
-function defaultMountStackName(count: number): string {
-  return `${count} Mounted Items`;
-}
-
-function uniqueId(baseId: string, usedIds: Set<string>): string {
-  let candidate = baseId;
-  let index = 2;
-  while (usedIds.has(candidate)) {
-    candidate = `${baseId}_${index}`;
-    index += 1;
-  }
-  return candidate;
 }
 
 function defaultSidebarState(): SidebarState {
@@ -2609,10 +1916,6 @@ function normalizePaletteIndex(index: number): number {
   return ((Math.trunc(index) % count) + count) % count;
 }
 
-function activeTemplateForUi(template: LayoutTemplate): LayoutTemplate {
-  return template === "layered_hierarchy" ? "canvas_topology" : template;
-}
-
 function chooseLinkType(fallback: LinkType): LinkType | null {
   const value = window.prompt(`Relationship type (${LINK_TYPES.join(", ")})`, fallback);
   if (!value) return null;
@@ -2631,29 +1934,6 @@ function defaultLinkType(
   if (sourceTile?.type === "flow" || targetTile?.type === "flow") return "calls";
   if (fromPort === "out" && toPort === "in") return "calls";
   return "depends_on";
-}
-
-function resolveSourcePort(link: Link): LinkSourcePort {
-  return link.from_port ?? (link.type === "contains" ? "child" : "out");
-}
-
-function resolveTargetPort(link: Link): LinkTargetPort {
-  return link.to_port ?? (link.type === "contains" ? "parent" : "in");
-}
-
-function resolveLifecycle(item: Tile | Link | undefined | null): Lifecycle {
-  return item?.lifecycle === "planned" ? "planned" : "live";
-}
-
-function isLifecycleEditable(lifecycle: Lifecycle, mode: AppMode): boolean {
-  return mode === "planning" ? lifecycle === "planned" : lifecycle === "live";
-}
-
-function canConnectTiles(sourceTile: Tile, targetTile: Tile, mode: AppMode): boolean {
-  if (mode === "planning") {
-    return resolveLifecycle(sourceTile) === "planned" || resolveLifecycle(targetTile) === "planned";
-  }
-  return resolveLifecycle(sourceTile) === "live" && resolveLifecycle(targetTile) === "live";
 }
 
 function updateNoticeKey(advisory: UpdateAdvisory | null): string {
@@ -2679,97 +1959,12 @@ function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
   return false;
 }
 
-function isEditableNodeChange(change: NodeChange, nodes: Node[], mode: AppMode): boolean {
-  if (!("id" in change)) return true;
-  const node = nodes.find((candidate) => candidate.id === change.id);
-  if (node?.type === "familyNode") return true;
-  return isLifecycleEditable(resolveLifecycle(node?.data?.tile as Tile | undefined), mode);
-}
-
-function familyNodeId(familyId: string): string {
-  return `family:${familyId}`;
-}
-
 function asSourcePort(value: string | null | undefined): LinkSourcePort {
   return value === "child" ? "child" : "out";
 }
 
 function asTargetPort(value: string | null | undefined): LinkTargetPort {
   return value === "parent" ? "parent" : "in";
-}
-
-function createId(prefix: string, label: string, existingIds: string[]): string {
-  const base = `${prefix}_${label}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 80);
-  let candidate = base || `${prefix}_${Date.now()}`;
-  let index = 2;
-  while (existingIds.includes(candidate)) {
-    candidate = `${base}_${index}`;
-    index += 1;
-  }
-  return candidate;
-}
-
-function nextGeneratedTileTitle(type: TileType, tiles: Tile[]): string {
-  const label = TILE_TYPE_CONFIG[type].label.toUpperCase();
-  const prefix = `NEW ${label} `;
-  const usedNumbers = new Set<number>();
-  for (const tile of tiles) {
-    const title = tile.title.trim().toUpperCase();
-    if (!title.startsWith(prefix)) continue;
-    const value = Number(title.slice(prefix.length).trim());
-    if (Number.isInteger(value) && value > 0) usedNumbers.add(value);
-  }
-  let index = 1;
-  while (usedNumbers.has(index)) index += 1;
-  return `${prefix}${index}`;
-}
-
-function computeLayeredPositions(tiles: Tile[]): Map<string, { x: number; y: number }> {
-  const positions = new Map<string, { x: number; y: number }>();
-  const byParent = new Map<string, Tile[]>();
-  const roots = tiles.filter((tile) => !tile.parent || !tiles.some((candidate) => candidate.id === tile.parent));
-
-  for (const tile of tiles) {
-    if (!tile.parent) continue;
-    const siblings = byParent.get(tile.parent) ?? [];
-    siblings.push(tile);
-    byParent.set(tile.parent, siblings);
-  }
-
-  function place(tile: Tile, depth: number, row: { value: number }) {
-    positions.set(tile.id, { x: 140 + depth * 330, y: 120 + row.value * 138 });
-    row.value += 1;
-    for (const child of byParent.get(tile.id) ?? []) {
-      place(child, depth + 1, row);
-    }
-  }
-
-  roots.forEach((tile, index) => {
-    const row = { value: index === 0 ? 0 : positions.size + 1 };
-    place(tile, 0, row);
-  });
-
-  return positions;
-}
-
-function cloneFields(fields: Record<string, unknown>): Record<string, unknown> {
-  return JSON.parse(JSON.stringify(fields)) as Record<string, unknown>;
-}
-
-function toggleViewSelection<T extends string>(current: T[], all: readonly T[], value: T): T[] {
-  const selected = new Set(current.length ? current : all);
-  if (selected.has(value)) {
-    selected.delete(value);
-  } else {
-    selected.add(value);
-  }
-  if (selected.size === 0) return current;
-  if (selected.size === all.length) return [];
-  return all.filter((item) => selected.has(item));
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

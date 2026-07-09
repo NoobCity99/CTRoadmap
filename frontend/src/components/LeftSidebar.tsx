@@ -5,6 +5,7 @@ import { getTileColor } from "../lib/theme";
 import type { SearchResult } from "../lib/atlasSelectors";
 import type { Atlas, AtlasWarning, LayoutTemplate, LinkType, Selection, ThemePaletteId, TileType, View } from "../types/atlas";
 import { HandbookToc } from "./HandbookToc";
+import type { HandbookThemeMode } from "./HandbookView";
 
 export type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
 export type PaletteEntry = { kind: "tile"; type: TileType } | { kind: "family" };
@@ -26,6 +27,7 @@ interface LeftSidebarProps {
   atlas: Atlas;
   collapsedPaletteEntries: readonly CollapsedPaletteEntry[];
   familyPaletteColor: string;
+  handbookThemeMode: HandbookThemeMode;
   layoutTemplate: LayoutTemplate;
   searchResults: SearchResult[];
   searchTerm: string;
@@ -44,6 +46,7 @@ interface LeftSidebarProps {
   onEditView: () => void;
   onFamilyPaletteClick: () => void;
   onFamilyPaletteDragStart: (event: DragEvent<HTMLButtonElement>) => void;
+  onHandbookThemeModeChange: (mode: HandbookThemeMode) => void;
   onMoveHandbookFamily: (familyId: string, direction: -1 | 1) => void;
   onPaletteClick: (type: TileType) => void;
   onPaletteDragEnd: () => void;
@@ -66,6 +69,7 @@ export function LeftSidebar({
   atlas,
   collapsedPaletteEntries,
   familyPaletteColor,
+  handbookThemeMode,
   layoutTemplate,
   searchResults,
   searchTerm,
@@ -84,6 +88,7 @@ export function LeftSidebar({
   onEditView,
   onFamilyPaletteClick,
   onFamilyPaletteDragStart,
+  onHandbookThemeModeChange,
   onMoveHandbookFamily,
   onPaletteClick,
   onPaletteDragEnd,
@@ -109,6 +114,15 @@ export function LeftSidebar({
           </button>
           <button className="active" onClick={() => onTemplateChange("handbook")}>
             <BookOpenText size={15} /> Handbook
+          </button>
+        </div>
+        <div className="panel-title panel-title--spaced">Display</div>
+        <div className="segmented">
+          <button className={handbookThemeMode === "dark" ? "active" : ""} onClick={() => onHandbookThemeModeChange("dark")}>
+            Dark
+          </button>
+          <button className={handbookThemeMode === "light" ? "active" : ""} onClick={() => onHandbookThemeModeChange("light")}>
+            Light
           </button>
         </div>
         <HandbookToc

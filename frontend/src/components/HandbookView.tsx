@@ -4,18 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import { buildHandbookDocument, buildHandbookVolumeOutline, findHandbookVolumeForTile, tileAnchor, type HandbookChapter, type HandbookTileSection, type HandbookVolume } from "../lib/handbook";
 import { resolveLifecycle } from "../lib/atlasSelectors";
-import type { Atlas, Selection, Tile, TileIconRef } from "../types/atlas";
+import type { Atlas, LinkType, Selection, Tile, TileIconRef } from "../types/atlas";
+
+export type HandbookThemeMode = "dark" | "light";
 
 interface HandbookViewProps {
   atlas: Atlas;
   selectedVolumeId: string | null;
+  themeMode: HandbookThemeMode;
   selection: Selection;
   onNotesFocus: () => void;
   onSelectTile: (tileId: string) => void;
   onUpdateTile: (tile: Tile) => void;
 }
 
-export function HandbookView({ atlas, selectedVolumeId, selection, onNotesFocus, onSelectTile, onUpdateTile }: HandbookViewProps) {
+export function HandbookView({ atlas, selectedVolumeId, themeMode, selection, onNotesFocus, onSelectTile, onUpdateTile }: HandbookViewProps) {
   const document = useMemo(() => buildHandbookDocument(atlas), [atlas]);
   const selectedVolumeIndex = document.volumes.findIndex((volume) => volume.id === selectedVolumeId);
   const selectedVolume = selectedVolumeIndex >= 0 ? document.volumes[selectedVolumeIndex] : null;
@@ -41,31 +44,58 @@ export function HandbookView({ atlas, selectedVolumeId, selection, onNotesFocus,
 
   useEffect(() => {
     const scroller = scrollerRef.current;
-    if (!scroller) return;
-    const headings = Array.from(scroller.querySelectorAll<HTMLElement>("[data-handbook-anchor='true']"));
-    if (!headings.length) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top)[0];
-        if (visible?.target instanceof HTMLElement) setActiveAnchorId(visible.target.id);
-      },
-      { root: scroller, rootMargin: "-12% 0px -72% 0px", threshold: [0, 1] }
-    );
-    headings.forEach((heading) => observer.observe(heading));
-    return () => observer.disconnect();
-  }, [selectedVolume]);
+    if (!scroller || !outlineItems.length) return;
+
+    let animationFrame = 0;
+    const updateActiveAnchor = () => {
+      animationFrame = 0;
+      const anchors = outlineItems
+        .map((item) => ({ item, element: globalThis.document.getElementById(item.id) }))
+        .filter((entry): entry is { item: (typeof outlineItems)[number]; element: HTMLElement } => entry.element instanceof HTMLElement);
+      if (!anchors.length) return;
+
+      const scrollerRect = scroller.getBoundingClientRect();
+      const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+      if (atBottom) {
+        setActiveAnchorId(anchors[anchors.length - 1].item.id);
+        return;
+      }
+
+      const threshold = scrollerRect.top + Math.min(140, scroller.clientHeight * 0.28);
+      const active = anchors.reduce((current, candidate) => {
+        const top = candidate.element.getBoundingClientRect().top;
+        if (top <= threshold) return candidate;
+        return current;
+      }, anchors[0]);
+      setActiveAnchorId(active.item.id);
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateActiveAnchor);
+    };
+
+    scheduleUpdate();
+    scroller.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      scroller.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [outlineItems, selectedVolume]);
 
   useEffect(() => {
     if (!selectedTileId || !selectedVolume) return;
     const volume = findHandbookVolumeForTile(document, selectedTileId);
     if (volume?.id !== selectedVolume.id) return;
-    window.requestAnimationFrame(() => scrollToAnchor(tileAnchor(selectedTileId)));
+    const anchorId = tileAnchor(selectedTileId);
+    setActiveAnchorId(anchorId);
+    window.requestAnimationFrame(() => scrollToAnchor(anchorId));
   }, [document, selectedTileId, selectedVolume]);
 
   return (
-    <section className="handbook-shell">
+    <section className={themeMode === "light" ? "handbook-shell handbook-shell--light" : "handbook-shell"}>
       <div ref={scrollerRef} className="handbook-document">
         <div className="handbook-document__masthead">
           <span>Handbook</span>
@@ -101,6 +131,7 @@ export function HandbookView({ atlas, selectedVolumeId, selection, onNotesFocus,
               }
               style={{ "--volume-color": item.color, "--outline-indent": `${item.depth * 12}px` } as CSSProperties}
               onClick={() => {
+                setActiveAnchorId(item.id);
                 if (item.tileId) onSelectTile(item.tileId);
                 scrollToAnchor(item.id);
               }}
@@ -314,18 +345,42 @@ function TileArticle({
       </label>
 
       <div className="handbook-relationships">
-        <span>Relationships</span>
+        <span>{tile.title} Relationships</span>
         {relationships.length ? (
-          relationships.map((relationship) => (
-            <p key={relationship.id} className={relationship.lifecycle === "planned" ? "handbook-relationship handbook-relationship--planned" : "handbook-relationship"}>
-              {relationship.sentence}
-            </p>
-          ))
+          <RelationshipGroups relationships={relationships} />
         ) : (
           <p className="handbook-relationship handbook-relationship--empty">No relationships recorded.</p>
         )}
       </div>
     </article>
+  );
+}
+
+function RelationshipGroups({ relationships }: { relationships: HandbookTileSection["relationships"] }) {
+  const groups = new Map<LinkType, { label: string; relationships: HandbookTileSection["relationships"] }>();
+  for (const relationship of relationships) {
+    const group = groups.get(relationship.type) ?? { label: relationship.label, relationships: [] };
+    group.relationships.push(relationship);
+    groups.set(relationship.type, group);
+  }
+
+  return (
+    <div className="handbook-relationship-groups">
+      {Array.from(groups.entries()).map(([type, group]) => (
+        <div key={type} className="handbook-relationship-group">
+          <strong>{group.label}</strong>
+          <p>
+            {group.relationships.map((relationship, index) => (
+              <span key={relationship.id} className="handbook-relationship-target">
+                {index > 0 ? ", " : ""}
+                {relationship.endpointTitle}
+                {relationship.lifecycle === "planned" ? <em>PLANNED</em> : null}
+              </span>
+            ))}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 

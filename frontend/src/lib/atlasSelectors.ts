@@ -154,7 +154,7 @@ export function sanitizeFamilies(atlas: Atlas) {
         position: family.position ?? { x: 0, y: 0 },
         size: {
           width: Math.max(240, family.size?.width ?? 360),
-          height: Math.max(160, family.size?.height ?? 240)
+          height: Math.max(42, family.size?.height ?? 240)
         },
         order: Number.isFinite(family.order) ? family.order : 0,
         color: family.color || null,

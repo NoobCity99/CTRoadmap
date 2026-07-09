@@ -21,7 +21,7 @@ import {
   useState
 } from "react";
 import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
-import { HandbookView } from "./components/HandbookView";
+import { HandbookView, type HandbookThemeMode } from "./components/HandbookView";
 import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -116,6 +116,7 @@ const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
 const UPDATE_NOTICE_SNOOZE_HOURS = 24;
 const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
+const HANDBOOK_THEME_STORAGE_KEY = "ctroadmap.handbookThemeMode";
 const AUTOSAVE_DEBOUNCE_MS = 1000;
 
 type SaveReason = "autosave" | "manual" | "export";
@@ -160,6 +161,7 @@ function AtlasEditor() {
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
   const [selectedHandbookVolumeId, setSelectedHandbookVolumeId] = useState<string | null>(null);
+  const [handbookThemeMode, setHandbookThemeMode] = useState<HandbookThemeMode>(() => getStoredHandbookThemeMode());
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -357,6 +359,14 @@ function AtlasEditor() {
   }, [themePaletteId]);
 
   useEffect(() => {
+    try {
+      window.localStorage.setItem(HANDBOOK_THEME_STORAGE_KEY, handbookThemeMode);
+    } catch {
+      // Local UI state is optional; storage failures should not block atlas editing.
+    }
+  }, [handbookThemeMode]);
+
+  useEffect(() => {
     storeCanvasBackground(canvasBackgroundId);
   }, [canvasBackgroundId]);
 
@@ -434,7 +444,7 @@ function AtlasEditor() {
                 ...family,
                 size: {
                   width: Math.max(240, size.width),
-                  height: Math.max(160, size.height)
+                  height: Math.max(42, size.height)
                 }
               }
             : family
@@ -1875,6 +1885,7 @@ function AtlasEditor() {
           atlas={atlas}
           collapsedPaletteEntries={collapsedPaletteEntries}
           familyPaletteColor={FAMILY_PALETTE_COLOR}
+          handbookThemeMode={handbookThemeMode}
           layoutTemplate={layoutTemplate}
           searchResults={searchResults}
           searchTerm={searchTerm}
@@ -1893,6 +1904,7 @@ function AtlasEditor() {
           onEditView={handleEditView}
           onFamilyPaletteClick={handleFamilyPaletteClick}
           onFamilyPaletteDragStart={handleFamilyPaletteDragStart}
+          onHandbookThemeModeChange={setHandbookThemeMode}
           onMoveHandbookFamily={handleMoveHandbookFamily}
           onPaletteClick={handlePaletteClick}
           onPaletteDragEnd={handlePaletteDragEnd}
@@ -1913,6 +1925,7 @@ function AtlasEditor() {
           <HandbookView
             atlas={atlas}
             selectedVolumeId={selectedHandbookVolumeId}
+            themeMode={handbookThemeMode}
             selection={selection}
             onNotesFocus={() => setSelection(null)}
             onSelectTile={(tileId) => setSelection({ kind: "tile", id: tileId })}
@@ -2060,6 +2073,15 @@ function storeSidebarState(state: SidebarState): void {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(state));
   } catch {
     // Local UI state is optional; storage failures should not block atlas editing.
+  }
+}
+
+function getStoredHandbookThemeMode(): HandbookThemeMode {
+  try {
+    const stored = window.localStorage.getItem(HANDBOOK_THEME_STORAGE_KEY);
+    return stored === "light" ? "light" : "dark";
+  } catch {
+    return "dark";
   }
 }
 

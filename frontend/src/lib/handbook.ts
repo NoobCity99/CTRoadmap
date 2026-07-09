@@ -1,6 +1,6 @@
 import { TILE_TYPE_CONFIG } from "./constants";
 import { resolveLifecycle } from "./atlasSelectors";
-import type { Atlas, Family, Link, Tile } from "../types/atlas";
+import type { Atlas, Family, LinkType, Tile } from "../types/atlas";
 
 export interface HandbookTileSection {
   tile: Tile;
@@ -46,7 +46,9 @@ export interface HandbookDocument {
 
 export interface HandbookRelationship {
   id: string;
-  sentence: string;
+  type: LinkType;
+  label: string;
+  endpointTitle: string;
   lifecycle: "live" | "planned";
 }
 
@@ -181,21 +183,20 @@ function relationshipsForTile(tileId: string, atlas: Atlas): HandbookRelationshi
   const tileById = new Map(atlas.tiles.map((tile) => [tile.id, tile]));
   return atlas.links
     .filter((link) => link.from === tileId || link.to === tileId)
-    .map((link) => ({
-      id: link.id,
-      sentence: describeLink(link, tileById),
-      lifecycle: resolveLifecycle(link)
-    }));
+    .map((link) => {
+      const endpointId = link.from === tileId ? link.to : link.from;
+      return {
+        id: link.id,
+        type: link.type,
+        label: relationshipLabel(link.type),
+        endpointTitle: tileById.get(endpointId)?.title ?? endpointId,
+        lifecycle: resolveLifecycle(link)
+      };
+    });
 }
 
-function describeLink(link: Link, tileById: Map<string, Tile>): string {
-  const source = tileById.get(link.from);
-  const target = tileById.get(link.to);
-  const sourceTitle = source?.title ?? link.from;
-  const targetTitle = target?.title ?? link.to;
-  const label = link.label || link.type.replace(/_/g, " ");
-  if (link.type === "contains") return `${sourceTitle} contains ${targetTitle}.`;
-  return `${sourceTitle} ${label} ${targetTitle}.`;
+function relationshipLabel(type: LinkType): string {
+  return type.replace(/_/g, " ").toUpperCase();
 }
 
 function warningsForTile(tile: Tile, tileById: Map<string, Tile>): string[] {

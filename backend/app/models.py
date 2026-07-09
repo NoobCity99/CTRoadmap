@@ -238,7 +238,7 @@ def normalize_families(families: list[Family], tile_by_id: dict[str, Tile]) -> l
                 description=family.description,
                 member_tile_ids=member_ids,
                 position=family.position,
-                size=Size(width=max(family.size.width, 120), height=max(family.size.height, 90)),
+                size=Size(width=max(family.size.width, 120), height=max(family.size.height, 42)),
                 order=family.order,
                 color=family.color,
                 tag=family.tag,

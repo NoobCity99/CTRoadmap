@@ -2,6 +2,7 @@ import { TILE_TYPE_CONFIG } from "./constants";
 import type {
   AppMode,
   Atlas,
+  Family,
   LayoutTemplate,
   Lifecycle,
   Link,
@@ -122,30 +123,97 @@ export function sanitizeStacks(atlas: Atlas): TileStack[] {
 }
 
 export function sanitizeFamilies(atlas: Atlas) {
-  const tileIds = new Set(atlas.tiles.map((tile) => tile.id));
+  const tileById = new Map(atlas.tiles.map((tile) => [tile.id, tile]));
   const usedIds = new Set<string>();
+  const claimedTileIds = new Set<string>();
   return (atlas.families ?? [])
     .slice()
     .sort((left, right) => left.order - right.order)
     .map((family) => {
       const id = uniqueId(family.id, usedIds);
       usedIds.add(id);
+      const memberTileIds: string[] = [];
+      const seenMembers = new Set<string>();
+      for (const seedId of family.member_tile_ids) {
+        if (!tileById.has(seedId)) continue;
+        const closure = getFamilyTreeClosure(seedId, atlas.tiles);
+        if ([...closure].some((memberId) => claimedTileIds.has(memberId))) continue;
+        for (const tile of atlas.tiles) {
+          if (!closure.has(tile.id) || seenMembers.has(tile.id)) continue;
+          memberTileIds.push(tile.id);
+          seenMembers.add(tile.id);
+          claimedTileIds.add(tile.id);
+        }
+      }
       return {
         ...family,
         id,
         title: family.title || "Family",
         description: family.description ?? "",
-        member_tile_ids: family.member_tile_ids.filter((memberId, index, allIds) => tileIds.has(memberId) && allIds.indexOf(memberId) === index),
+        member_tile_ids: memberTileIds,
         position: family.position ?? { x: 0, y: 0 },
         size: {
           width: Math.max(240, family.size?.width ?? 360),
-          height: Math.max(160, family.size?.height ?? 240)
+          height: Math.max(42, family.size?.height ?? 240)
         },
         order: Number.isFinite(family.order) ? family.order : 0,
         color: family.color || null,
         tag: family.tag || null
       };
     });
+}
+
+export interface FamilyMembershipState {
+  checked: boolean;
+  inherited: boolean;
+}
+
+export function getFamilyMembershipState(tileId: string, family: Family, tiles: Tile[]): FamilyMembershipState {
+  const memberIds = new Set(family.member_tile_ids);
+  if (!memberIds.has(tileId)) return { checked: false, inherited: false };
+  const ancestorIds = getAncestorIds(tileId, tiles);
+  return { checked: true, inherited: ancestorIds.some((ancestorId) => memberIds.has(ancestorId)) };
+}
+
+export function getFamilyTreeClosure(seedId: string, tiles: Tile[]): Set<string> {
+  const tileById = new Map(tiles.map((tile) => [tile.id, tile]));
+  const childrenByParent = new Map<string, string[]>();
+  for (const tile of tiles) {
+    if (!tile.parent || !tileById.has(tile.parent)) continue;
+    const children = childrenByParent.get(tile.parent) ?? [];
+    children.push(tile.id);
+    childrenByParent.set(tile.parent, children);
+  }
+
+  const closure = new Set<string>();
+  let current = tileById.get(seedId);
+  while (current && !closure.has(current.id)) {
+    closure.add(current.id);
+    current = current.parent ? tileById.get(current.parent) : undefined;
+  }
+
+  const queue = [seedId];
+  while (queue.length) {
+    const tileId = queue.shift();
+    if (!tileId) continue;
+    closure.add(tileId);
+    queue.push(...(childrenByParent.get(tileId) ?? []));
+  }
+
+  return closure;
+}
+
+function getAncestorIds(tileId: string, tiles: Tile[]): string[] {
+  const tileById = new Map(tiles.map((tile) => [tile.id, tile]));
+  const ancestors: string[] = [];
+  const seen = new Set<string>();
+  let current = tileById.get(tileId);
+  while (current?.parent && !seen.has(current.parent)) {
+    seen.add(current.parent);
+    ancestors.push(current.parent);
+    current = tileById.get(current.parent);
+  }
+  return ancestors;
 }
 
 export function canStackSiblingTiles(tile: Tile, tiles: Tile[]): boolean {
@@ -171,7 +239,7 @@ export function defaultMountStackName(count: number): string {
 }
 
 export function activeTemplateForUi(template: LayoutTemplate): LayoutTemplate {
-  return template === "layered_hierarchy" ? "canvas_topology" : template;
+  return template === "layered_hierarchy" ? "handbook" : template;
 }
 
 export function resolveSourcePort(link: Link): LinkSourcePort {

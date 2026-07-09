@@ -11,12 +11,12 @@ export interface FamilyNodeData extends Record<string, unknown> {
 
 const DEFAULT_FAMILY_COLOR = "#38a3ff";
 
-export function FamilyNode({ data, selected, width, height }: NodeProps) {
+export function FamilyNode({ data, selected }: NodeProps) {
   const { family, memberCount, onResizeFamily, onFocusFamily } = data as FamilyNodeData;
   const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null);
   const color = family.color || DEFAULT_FAMILY_COLOR;
-  const renderedWidth = previewSize?.width ?? width ?? family.size.width;
-  const renderedHeight = previewSize?.height ?? height ?? family.size.height;
+  const renderedWidth = previewSize?.width ?? family.size.width;
+  const renderedHeight = previewSize?.height ?? family.size.height;
   const style = {
     "--family-color": color,
     width: renderedWidth,
@@ -24,11 +24,17 @@ export function FamilyNode({ data, selected, width, height }: NodeProps) {
   } as CSSProperties;
 
   return (
-    <div className={selected ? "family-node family-node--selected" : "family-node"} style={style}>
+    <div
+      className={[
+        "family-node",
+        selected ? "family-node--selected" : ""
+      ].filter(Boolean).join(" ")}
+      style={style}
+    >
       <NodeResizer
         isVisible={selected}
         minWidth={240}
-        minHeight={160}
+        minHeight={42}
         color={color}
         onResize={(_, params) => setPreviewSize({ width: Math.round(params.width), height: Math.round(params.height) })}
         onResizeEnd={(_, params) => {

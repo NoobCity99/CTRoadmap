@@ -40,7 +40,7 @@ LinkType = Literal[
     "related_to",
 ]
 
-LayoutTemplate = Literal["canvas_topology", "layered_hierarchy"]
+LayoutTemplate = Literal["canvas_topology", "layered_hierarchy", "handbook"]
 LinkSourcePort = Literal["out", "child"]
 LinkTargetPort = Literal["in", "parent"]
 Lifecycle = Literal["live", "planned"]
@@ -201,25 +201,36 @@ class Atlas(BaseModel):
             if tile.type == "flow":
                 validate_flow_steps_references(tile.fields.get("steps", []), tile.id, tile_ids)
         self.stacks = normalize_stacks(self.stacks, tile_by_id)
-        self.families = normalize_families(self.families, tile_ids)
+        self.families = normalize_families(self.families, tile_by_id)
         if not self.views:
             self.views = default_views()
         return self
 
 
-def normalize_families(families: list[Family], tile_ids: set[str]) -> list[Family]:
+def normalize_families(families: list[Family], tile_by_id: dict[str, Tile]) -> list[Family]:
     normalized: list[Family] = []
     used_ids: set[str] = set()
-    for family in sorted(families, key=lambda item: item.order):
+    claimed_tile_ids: set[str] = set()
+    tile_ids = set(tile_by_id)
+    children_by_parent = children_by_parent_id(tile_by_id)
+
+    for _, family in sorted(enumerate(families), key=lambda entry: (entry[1].order, entry[0])):
         family_id = unique_family_id(family.id, used_ids)
         used_ids.add(family_id)
         member_ids: list[str] = []
         seen_members: set[str] = set()
-        for member_id in family.member_tile_ids:
-            if member_id not in tile_ids or member_id in seen_members:
+        for seed_id in family.member_tile_ids:
+            if seed_id not in tile_ids:
                 continue
-            member_ids.append(member_id)
-            seen_members.add(member_id)
+            closure = family_tree_closure(seed_id, tile_by_id, children_by_parent)
+            if closure & claimed_tile_ids:
+                continue
+            for tile in tile_by_id.values():
+                if tile.id not in closure or tile.id in seen_members:
+                    continue
+                member_ids.append(tile.id)
+                seen_members.add(tile.id)
+                claimed_tile_ids.add(tile.id)
         normalized.append(
             Family(
                 id=family_id,
@@ -227,13 +238,39 @@ def normalize_families(families: list[Family], tile_ids: set[str]) -> list[Famil
                 description=family.description,
                 member_tile_ids=member_ids,
                 position=family.position,
-                size=Size(width=max(family.size.width, 120), height=max(family.size.height, 90)),
+                size=Size(width=max(family.size.width, 120), height=max(family.size.height, 42)),
                 order=family.order,
                 color=family.color,
                 tag=family.tag,
             )
         )
     return normalized
+
+
+def children_by_parent_id(tile_by_id: dict[str, Tile]) -> dict[str, list[str]]:
+    children: dict[str, list[str]] = {}
+    for tile in tile_by_id.values():
+        if tile.parent and tile.parent in tile_by_id:
+            children.setdefault(tile.parent, []).append(tile.id)
+    return children
+
+
+def family_tree_closure(seed_id: str, tile_by_id: dict[str, Tile], children_by_parent: dict[str, list[str]]) -> set[str]:
+    closure: set[str] = set()
+    current = tile_by_id.get(seed_id)
+    while current:
+        if current.id in closure:
+            break
+        closure.add(current.id)
+        current = tile_by_id.get(current.parent) if current.parent else None
+
+    queue = [seed_id]
+    while queue:
+        tile_id = queue.pop(0)
+        closure.add(tile_id)
+        queue.extend(children_by_parent.get(tile_id, []))
+
+    return closure
 
 
 def unique_family_id(family_id: str, used_ids: set[str]) -> str:

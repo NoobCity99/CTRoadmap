@@ -1,11 +1,13 @@
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { uploadTileIcon } from "../lib/api";
+import { getFamilyMembershipState } from "../lib/atlasSelectors";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { AppMode, Atlas, Family, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
+import type { AppMode, Atlas, Family, FlowStep, LayoutTemplate, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
+  layoutTemplate: LayoutTemplate;
   mode: AppMode;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
@@ -25,6 +27,7 @@ interface InspectorProps {
 
 export function Inspector({
   atlas,
+  layoutTemplate,
   mode,
   selection,
   onUpdateTile,
@@ -45,6 +48,7 @@ export function Inspector({
   const selectedLink = selection?.kind === "link" ? atlas.links.find((link) => link.id === selection.id) : null;
   const selectedStack = selection?.kind === "stack" ? atlas.stacks?.find((stack) => stack.id === selection.id) : null;
   const selectedFamily = selection?.kind === "family" ? atlas.families?.find((family) => family.id === selection.id) : null;
+  const handbookMode = layoutTemplate === "handbook";
 
   if (selectedFamily) {
     const members = selectedFamily.member_tile_ids.map((memberId) => atlas.tiles.find((tile) => tile.id === memberId)).filter((tile): tile is Tile => Boolean(tile));
@@ -78,7 +82,7 @@ export function Inspector({
           </label>
           <label>
             Order
-            <input type="number" value={selectedFamily.order} onChange={(event) => onUpdateFamily({ ...selectedFamily, order: Number(event.target.value) || 0 })} />
+            <input type="number" disabled={handbookMode} value={selectedFamily.order} onChange={(event) => onUpdateFamily({ ...selectedFamily, order: Number(event.target.value) || 0 })} />
           </label>
           <div className="family-inspector__readout">
             <span>Position</span>
@@ -101,7 +105,7 @@ export function Inspector({
             )}
           </div>
         </div>
-        <button className="danger-button" onClick={() => onDeleteFamily(selectedFamily.id)}>
+        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteFamily(selectedFamily.id)}>
           <Trash2 size={16} /> Delete Family
         </button>
       </aside>
@@ -153,7 +157,7 @@ export function Inspector({
             </ul>
           </div>
         </div>
-        <button className="ghost-button" onClick={() => onUnstack(selectedStack.id)}>
+        <button className="ghost-button" disabled={handbookMode} onClick={() => onUnstack(selectedStack.id)}>
           Unstack
         </button>
       </aside>
@@ -241,6 +245,7 @@ export function Inspector({
         <label>
           Type
           <select
+            disabled={handbookMode}
             value={selectedTile.type}
             onChange={(event) => onUpdateTile({ ...selectedTile, type: event.target.value as TileType })}
           >
@@ -254,6 +259,7 @@ export function Inspector({
         <label>
           Parent
           <select
+            disabled={handbookMode}
             value={selectedTile.parent ?? ""}
             onChange={(event) => onUpdateTile({ ...selectedTile, parent: event.target.value || null })}
           >
@@ -288,16 +294,21 @@ export function Inspector({
             {(atlas.families ?? [])
               .slice()
               .sort((left, right) => left.order - right.order)
-              .map((family) => (
-                <label key={family.id} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={family.member_tile_ids.includes(selectedTile.id)}
-                    onChange={(event) => onToggleTileFamily(selectedTile.id, family.id, event.target.checked)}
-                  />
-                  {family.title}
-                </label>
-              ))}
+              .map((family) => {
+                const membership = getFamilyMembershipState(selectedTile.id, family, atlas.tiles);
+                return (
+                  <label key={family.id} className={membership.inherited ? "checkbox-label checkbox-label--muted" : "checkbox-label"}>
+                    <input
+                      type="checkbox"
+                      checked={membership.checked}
+                      disabled={handbookMode || membership.inherited}
+                      onChange={(event) => onToggleTileFamily(selectedTile.id, family.id, event.target.checked)}
+                    />
+                    {family.title}
+                    {membership.inherited ? <small>Included through parent/child tree</small> : null}
+                  </label>
+                );
+              })}
           </div>
         ) : null}
         <label>
@@ -374,13 +385,13 @@ export function Inspector({
             onChange={(event) => onUpdateTile({ ...selectedTile, notes: event.target.value })}
           />
         </label>
-        <button className="ghost-button" onClick={() => onAddSubtile(selectedTile.id)}>
+        <button className="ghost-button" disabled={handbookMode} onClick={() => onAddSubtile(selectedTile.id)}>
           <Plus size={16} /> Add Subtile
         </button>
-        <button className="ghost-button" onClick={() => onDuplicateTile(selectedTile.id)}>
+        <button className="ghost-button" disabled={handbookMode} onClick={() => onDuplicateTile(selectedTile.id)}>
           <Copy size={16} /> Duplicate Tile
         </button>
-        <button className="danger-button" onClick={() => onDeleteTile(selectedTile.id)}>
+        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteTile(selectedTile.id)}>
           <Trash2 size={16} /> Delete Tile
         </button>
         </fieldset>
@@ -419,6 +430,7 @@ export function Inspector({
         <label>
           From
           <select
+            disabled={handbookMode}
             value={selectedLink.from}
             onChange={(event) => onUpdateLink({ ...selectedLink, from: event.target.value })}
           >
@@ -432,6 +444,7 @@ export function Inspector({
         <label>
           To
           <select
+            disabled={handbookMode}
             value={selectedLink.to}
             onChange={(event) => onUpdateLink({ ...selectedLink, to: event.target.value })}
           >
@@ -445,6 +458,7 @@ export function Inspector({
         <label>
           Type
           <select
+            disabled={handbookMode}
             value={selectedLink.type}
             onChange={(event) => {
               const type = event.target.value as LinkType;
@@ -466,6 +480,7 @@ export function Inspector({
         <label>
           From Port
           <select
+            disabled={handbookMode}
             value={resolveSourcePort(selectedLink)}
             onChange={(event) => onUpdateLink({ ...selectedLink, from_port: event.target.value as LinkSourcePort })}
           >
@@ -476,6 +491,7 @@ export function Inspector({
         <label>
           To Port
           <select
+            disabled={handbookMode}
             value={resolveTargetPort(selectedLink)}
             onChange={(event) => onUpdateLink({ ...selectedLink, to_port: event.target.value as LinkTargetPort })}
           >
@@ -493,6 +509,7 @@ export function Inspector({
         <label className="checkbox-label">
           <input
             type="checkbox"
+            disabled={handbookMode}
             checked={selectedLink.directional ?? true}
             onChange={(event) => onUpdateLink({ ...selectedLink, directional: event.target.checked })}
           />
@@ -505,7 +522,7 @@ export function Inspector({
             onChange={(event) => onUpdateLink({ ...selectedLink, notes: event.target.value })}
           />
         </label>
-        <button className="danger-button" onClick={() => onDeleteLink(selectedLink.id)}>
+        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteLink(selectedLink.id)}>
           <Trash2 size={16} /> Delete Link
         </button>
         </fieldset>

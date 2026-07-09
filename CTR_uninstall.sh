@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-INSTALL_DIR="${CTR_INSTALL_DIR:-$HOME/ctroadmap-beta}"
+INSTALL_DIR="${CTR_INSTALL_DIR:-$(pwd)}"
 COMPOSE_FILE="$INSTALL_DIR/docker-compose.yml"
 
 fail() {

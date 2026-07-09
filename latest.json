@@ -1,11 +1,11 @@
 {
-  "latest_version": "0.1.2-beta",
+  "latest_version": "0.2.0-beta",
   "channel": "beta",
   "targets": {
     "docker": {
       "update_command": "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d",
       "release_notes_url": "https://github.com/NoobCity99/CTRoadmap/releases",
-      "notes": "Pull the latest beta image and restart the Docker Compose service."
+      "notes": "v0.2.0 beta is available. Pull the latest beta image and restart the Docker Compose service."
     },
     "linux_desktop": {
       "download_url": "",

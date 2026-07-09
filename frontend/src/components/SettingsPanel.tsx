@@ -1,4 +1,5 @@
 import { Download, ExternalLink, ServerCog, Trash2, X } from "lucide-react";
+import { DiscordInviteSettingsBanner } from "./DiscordInvite";
 import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
 import type { AppVersion, Atlas, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
 
@@ -59,6 +60,8 @@ export function SettingsPanel({
             <X size={17} />
           </button>
         </header>
+
+        <DiscordInviteSettingsBanner />
 
         <div className="settings-section">
           <div className="settings-section__title">Palette</div>

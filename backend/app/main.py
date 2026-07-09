@@ -20,7 +20,7 @@ from .storage import read_atlas, write_atlas
 from .update_advisory import AppVersion, UpdateAdvisory, UpdateSettings, UpdateState, get_app_version, get_update_advisory, update_settings
 
 
-app = FastAPI(title="CTRoadmap", version="0.1.0")
+app = FastAPI(title="CTRoadmap", version="0.2.0-beta")
 
 
 MAX_ICON_BYTES = 512 * 1024

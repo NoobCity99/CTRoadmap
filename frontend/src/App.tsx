@@ -21,6 +21,7 @@ import {
   useState
 } from "react";
 import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
+import { DiscordInviteModal, DISCORD_INVITE_STORAGE_KEY, DISCORD_INVITE_VERSION } from "./components/DiscordInvite";
 import { HandbookView, type HandbookThemeMode } from "./components/HandbookView";
 import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
@@ -118,6 +119,7 @@ const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && doc
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
 const HANDBOOK_THEME_STORAGE_KEY = "ctroadmap.handbookThemeMode";
 const AUTOSAVE_DEBOUNCE_MS = 1000;
+const DISCORD_INVITE_REMINDER_MS = 24 * 60 * 60 * 1000;
 
 type SaveReason = "autosave" | "manual" | "export";
 
@@ -151,6 +153,7 @@ function AtlasEditor() {
   const queuedSaveRef = useRef(false);
   const currentSavePromiseRef = useRef<Promise<Atlas | null> | null>(null);
   const saveCurrentAtlasRef = useRef<(reason: SaveReason) => Promise<Atlas | null>>(() => Promise.resolve(null));
+  const discordInvitePreviewMode = useMemo(() => isDiscordInvitePreviewMode(), []);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
@@ -180,6 +183,7 @@ function AtlasEditor() {
   const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [isInteractive, setIsInteractive] = useState(true);
+  const [discordInviteModalOpen, setDiscordInviteModalOpen] = useState(discordInvitePreviewMode);
 
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
     setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
@@ -373,6 +377,14 @@ function AtlasEditor() {
   useEffect(() => {
     storeSidebarState(sidebarState);
   }, [sidebarState]);
+
+  useEffect(() => {
+    if (discordInvitePreviewMode) return;
+    if (appVersion?.current_version !== DISCORD_INVITE_VERSION) return;
+    if (shouldShowDiscordInviteModal()) {
+      setDiscordInviteModalOpen(true);
+    }
+  }, [appVersion, discordInvitePreviewMode]);
 
   useEffect(() => {
     loadAppVersion()
@@ -710,6 +722,22 @@ function AtlasEditor() {
     window.open(url, "_blank", "noopener,noreferrer");
     appendDebugEvent("app.update.release_notes", "Release notes opened", "info", { url });
   }, [appendDebugEvent, updateAdvisory]);
+
+  const handleDismissDiscordInvite = useCallback(() => {
+    if (!discordInvitePreviewMode) {
+      recordDiscordInviteDismissal();
+    }
+    setDiscordInviteModalOpen(false);
+    appendDebugEvent("discord.invite.dismiss", "Discord invite dismissed", "info", { preview: discordInvitePreviewMode });
+  }, [appendDebugEvent, discordInvitePreviewMode]);
+
+  const handleJoinDiscordInvite = useCallback(() => {
+    if (!discordInvitePreviewMode) {
+      recordDiscordInviteCompleted();
+    }
+    setDiscordInviteModalOpen(false);
+    appendDebugEvent("discord.invite.join", "Discord invite opened", "info", { preview: discordInvitePreviewMode });
+  }, [appendDebugEvent, discordInvitePreviewMode]);
 
   const handleRemindUpdateLater = useCallback(() => {
     const key = updateNoticeKey(updateAdvisory);
@@ -2028,6 +2056,8 @@ function AtlasEditor() {
           onViewReleaseNotes={handleViewReleaseNotes}
         />
       ) : null}
+
+      {discordInviteModalOpen ? <DiscordInviteModal onClose={handleDismissDiscordInvite} onInviteClick={handleJoinDiscordInvite} /> : null}
     </div>
   );
 }
@@ -2132,6 +2162,75 @@ function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
   if (Date.now() < expiresAt) return true;
   window.localStorage.removeItem(key);
   return false;
+}
+
+interface DiscordInviteStorageState {
+  dismissCount?: number;
+  lastDismissedAt?: string;
+  completed?: boolean;
+}
+
+function isDiscordInvitePreviewMode(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).get("previewDiscordInvite") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function readDiscordInviteState(): DiscordInviteStorageState | null {
+  try {
+    const stored = window.localStorage.getItem(DISCORD_INVITE_STORAGE_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as DiscordInviteStorageState;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function shouldShowDiscordInviteModal(): boolean {
+  const state = readDiscordInviteState();
+  if (!state) return true;
+  if (state.completed) return false;
+  const dismissCount = Number(state.dismissCount ?? 0);
+  if (dismissCount >= 2) return false;
+  if (dismissCount <= 0) return true;
+  const lastDismissedAt = state.lastDismissedAt ? new Date(state.lastDismissedAt) : null;
+  if (!lastDismissedAt || Number.isNaN(lastDismissedAt.getTime())) return true;
+  return Date.now() - lastDismissedAt.getTime() >= DISCORD_INVITE_REMINDER_MS;
+}
+
+function recordDiscordInviteDismissal(): void {
+  try {
+    const state = readDiscordInviteState();
+    const dismissCount = Math.min(2, Number(state?.dismissCount ?? 0) + 1);
+    window.localStorage.setItem(
+      DISCORD_INVITE_STORAGE_KEY,
+      JSON.stringify({
+        dismissCount,
+        lastDismissedAt: new Date().toISOString(),
+        completed: false
+      })
+    );
+  } catch {
+    // The invite is UI-only; storage failures should not affect atlas editing.
+  }
+}
+
+function recordDiscordInviteCompleted(): void {
+  try {
+    window.localStorage.setItem(
+      DISCORD_INVITE_STORAGE_KEY,
+      JSON.stringify({
+        dismissCount: 2,
+        lastDismissedAt: new Date().toISOString(),
+        completed: true
+      })
+    );
+  } catch {
+    // The invite is UI-only; storage failures should not affect atlas editing.
+  }
 }
 
 function asSourcePort(value: string | null | undefined): LinkSourcePort {

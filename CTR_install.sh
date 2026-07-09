@@ -40,7 +40,7 @@ services:
     image: $IMAGE_NAME
     container_name: ctroadmap-beta
     ports:
-      - "8088:8088"
+      - "127.0.0.1:8088:8088"
     volumes:
       - ./data:/app/data
       - ./exports:/app/exports

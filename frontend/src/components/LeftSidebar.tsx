@@ -4,6 +4,7 @@ import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
 import { getTileColor } from "../lib/theme";
 import type { SearchResult } from "../lib/atlasSelectors";
 import type { Atlas, AtlasWarning, LayoutTemplate, LinkType, Selection, ThemePaletteId, TileType, View } from "../types/atlas";
+import { HandbookToc } from "./HandbookToc";
 
 export type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
 export type PaletteEntry = { kind: "tile"; type: TileType } | { kind: "family" };
@@ -28,6 +29,8 @@ interface LeftSidebarProps {
   layoutTemplate: LayoutTemplate;
   searchResults: SearchResult[];
   searchTerm: string;
+  selectedHandbookTileId: string | null;
+  selectedHandbookVolumeId: string | null;
   selection: Selection;
   sidebarState: SidebarState;
   themePaletteId: ThemePaletteId;
@@ -41,10 +44,13 @@ interface LeftSidebarProps {
   onEditView: () => void;
   onFamilyPaletteClick: () => void;
   onFamilyPaletteDragStart: (event: DragEvent<HTMLButtonElement>) => void;
+  onMoveHandbookFamily: (familyId: string, direction: -1 | 1) => void;
   onPaletteClick: (type: TileType) => void;
   onPaletteDragEnd: () => void;
   onPaletteDragStart: (event: DragEvent<HTMLButtonElement>, type: TileType) => void;
   onSelectSearchResult: (result: SearchResult) => void;
+  onSelectHandbookTile: (volumeId: string, tileId: string) => void;
+  onSelectHandbookVolume: (volumeId: string) => void;
   onSelectView: (view: View) => void;
   onSelectWarningLink: (linkId: string) => void;
   onSelectWarningTile: (tileId: string) => void;
@@ -63,6 +69,8 @@ export function LeftSidebar({
   layoutTemplate,
   searchResults,
   searchTerm,
+  selectedHandbookTileId,
+  selectedHandbookVolumeId,
   selection,
   sidebarState,
   themePaletteId,
@@ -76,10 +84,13 @@ export function LeftSidebar({
   onEditView,
   onFamilyPaletteClick,
   onFamilyPaletteDragStart,
+  onMoveHandbookFamily,
   onPaletteClick,
   onPaletteDragEnd,
   onPaletteDragStart,
   onSelectSearchResult,
+  onSelectHandbookTile,
+  onSelectHandbookVolume,
   onSelectView,
   onSelectWarningLink,
   onSelectWarningTile,
@@ -88,6 +99,30 @@ export function LeftSidebar({
   onToggleViewLinkType,
   onToggleViewTileType
 }: LeftSidebarProps) {
+  if (layoutTemplate === "handbook") {
+    return (
+      <aside className="sidebar">
+        <div className="panel-title panel-title--spaced">Template</div>
+        <div className="segmented">
+          <button onClick={() => onTemplateChange("canvas_topology")}>
+            <LayoutDashboard size={15} /> Canvas
+          </button>
+          <button className="active" onClick={() => onTemplateChange("handbook")}>
+            <BookOpenText size={15} /> Handbook
+          </button>
+        </div>
+        <HandbookToc
+          atlas={atlas}
+          selectedTileId={selectedHandbookTileId}
+          selectedVolumeId={selectedHandbookVolumeId}
+          onMoveFamily={onMoveHandbookFamily}
+          onSelectTile={onSelectHandbookTile}
+          onSelectVolume={onSelectHandbookVolume}
+        />
+      </aside>
+    );
+  }
+
   return (
     <aside className="sidebar">
       <section className={sidebarState.collapsed.tilePalette ? "sidebar-section sidebar-section--collapsed" : "sidebar-section"}>
@@ -173,8 +208,8 @@ export function LeftSidebar({
         <button className={layoutTemplate === "canvas_topology" ? "active" : ""} onClick={() => onTemplateChange("canvas_topology")}>
           <LayoutDashboard size={15} /> Canvas
         </button>
-        <button disabled title="Future hierarchy feature placeholder">
-          <BookOpenText size={15} /> TBD
+        <button onClick={() => onTemplateChange("handbook")}>
+          <BookOpenText size={15} /> Handbook
         </button>
       </div>
 

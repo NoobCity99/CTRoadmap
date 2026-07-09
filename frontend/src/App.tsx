@@ -21,6 +21,7 @@ import {
   useState
 } from "react";
 import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
+import { HandbookView } from "./components/HandbookView";
 import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -52,6 +53,7 @@ import {
   emptyStackState,
   getActiveView,
   getChildrenByParent,
+  getFamilyTreeClosure,
   getLifecycleCounts,
   getSearchResults,
   getVisibleLinks,
@@ -80,6 +82,7 @@ import {
   storeThemePalette
 } from "./lib/theme";
 import { validateAtlasWarnings } from "./lib/validation";
+import { buildHandbookDocument, findHandbookVolumeForTile } from "./lib/handbook";
 import type {
   Atlas,
   AppVersion,
@@ -156,6 +159,7 @@ function AtlasEditor() {
   const [updateNoticeRevision, setUpdateNoticeRevision] = useState(0);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
+  const [selectedHandbookVolumeId, setSelectedHandbookVolumeId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -814,6 +818,10 @@ function AtlasEditor() {
   const handleCreateTile = useCallback(
     (type: TileType, position?: { x: number; y: number }, parentId?: string) => {
       if (!atlas) return;
+      if (layoutTemplate !== "canvas_topology") {
+        setStatus("Tile topology changes are available in Canvas template");
+        return;
+      }
       const title = nextGeneratedTileTitle(type, atlas.tiles);
       const tileId = createId(type, title, atlas.tiles.map((tile) => tile.id));
       const parentTile = parentId ? atlas.tiles.find((tile) => tile.id === parentId) : null;
@@ -854,7 +862,7 @@ function AtlasEditor() {
       setStatus(parentId ? "Subtile created" : "Tile created");
       appendDebugEvent(parentId ? "tile.create_subtile" : "tile.create", parentId ? "Subtile created" : "Tile created", "info", { type, parent: parentId ?? null, lifecycle: tile.lifecycle });
     },
-    [appendDebugEvent, appMode, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
   );
 
   const getViewportCenterPosition = useCallback(() => {
@@ -912,13 +920,13 @@ function AtlasEditor() {
   );
 
   const handlePaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>, type: TileType) => {
-    if (!isInteractive) {
+    if (!isInteractive || layoutTemplate !== "canvas_topology") {
       event.preventDefault();
       return;
     }
     event.dataTransfer.setData(TILE_DRAG_MIME, type);
     event.dataTransfer.effectAllowed = "copy";
-  }, [isInteractive]);
+  }, [isInteractive, layoutTemplate]);
 
   const handleFamilyPaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>) => {
     if (!isInteractive || layoutTemplate !== "canvas_topology") {
@@ -935,12 +943,12 @@ function AtlasEditor() {
   }, []);
 
   const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
-    if (!isInteractive) return;
+    if (!isInteractive || layoutTemplate !== "canvas_topology") return;
     const dragTypes = Array.from(event.dataTransfer.types);
     if (!dragTypes.includes(TILE_DRAG_MIME) && !dragTypes.includes(FAMILY_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
-  }, [isInteractive]);
+  }, [isInteractive, layoutTemplate]);
 
   const handleCanvasDrop = useCallback(
     (event: DragEvent<HTMLElement>) => {
@@ -972,6 +980,10 @@ function AtlasEditor() {
         appendDebugEvent("canvas.locked_drop", "Tile drop blocked while interactivity is locked", "warning", getCanvasDebugContext({ type }));
         return;
       }
+      if (layoutTemplate !== "canvas_topology") {
+        setStatus("Tile topology changes are available in Canvas template");
+        return;
+      }
       handleCreateTile(
         type,
         screenToFlowPosition({
@@ -997,6 +1009,10 @@ function AtlasEditor() {
       if (!isInteractive) {
         setStatus("Interactivity locked");
         appendDebugEvent("canvas.locked_connect", "Relationship creation blocked while interactivity is locked", "warning", getCanvasDebugContext());
+        return;
+      }
+      if (layoutTemplate !== "canvas_topology") {
+        setStatus("Relationship changes are available in Canvas template");
         return;
       }
       if (!atlas || !connection.source || !connection.target) return;
@@ -1034,7 +1050,7 @@ function AtlasEditor() {
       setStatus("Relationship created");
       appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort, lifecycle: link.lifecycle });
     },
-    [appendDebugEvent, appMode, atlas, getCanvasDebugContext, isInteractive, updateAtlas]
+    [appendDebugEvent, appMode, atlas, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
   );
 
   const handleNodesChange = useCallback(
@@ -1167,6 +1183,11 @@ function AtlasEditor() {
         setStatus("Selection is read-only in this mode");
         return;
       }
+      const currentTile = latestAtlasRef.current?.tiles.find((candidate) => candidate.id === tile.id);
+      if (layoutTemplate === "handbook" && currentTile && (currentTile.parent !== tile.parent || currentTile.type !== tile.type)) {
+        setStatus("Placement changes are locked in Handbook");
+        return;
+      }
       updateAtlas((current) => {
         const previous = current.tiles.find((candidate) => candidate.id === tile.id);
         let links = current.links;
@@ -1199,23 +1220,37 @@ function AtlasEditor() {
       setStatus("Tile updated");
       appendDebugEvent("tile.update", "Tile updated", "info", { id: tile.id, type: tile.type });
     },
-    [appendDebugEvent, appMode, updateAtlas]
+    [appendDebugEvent, appMode, layoutTemplate, updateAtlas]
   );
 
   const handleUpdateFamily = useCallback(
     (family: Family) => {
       updateAtlas((current) => ({
         ...current,
-        families: (current.families ?? []).map((candidate) => (candidate.id === family.id ? family : candidate))
+        families: (current.families ?? []).map((candidate) => {
+          if (candidate.id !== family.id) return candidate;
+          if (layoutTemplate !== "handbook") return family;
+          return {
+            ...family,
+            member_tile_ids: candidate.member_tile_ids,
+            position: candidate.position,
+            size: candidate.size,
+            order: candidate.order
+          };
+        })
       }));
       setStatus("Family updated");
       appendDebugEvent("family.update", "Family updated", "info", { family_id: family.id });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, layoutTemplate, updateAtlas]
   );
 
   const handleDeleteFamily = useCallback(
     (familyId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Family deletion is locked in Handbook");
+        return;
+      }
       if (!window.confirm("Delete this Family? Member tiles will not be deleted.")) return;
       updateAtlas((current) => ({
         ...current,
@@ -1225,30 +1260,66 @@ function AtlasEditor() {
       setStatus("Family deleted");
       appendDebugEvent("family.delete", "Family deleted", "warning", { family_id: familyId });
     },
+    [appendDebugEvent, layoutTemplate, updateAtlas]
+  );
+
+  const handleMoveHandbookFamily = useCallback(
+    (familyId: string, direction: -1 | 1) => {
+      updateAtlas((current) => {
+        const orderedFamilies = [...(current.families ?? [])].sort((left, right) => left.order - right.order);
+        const index = orderedFamilies.findIndex((family) => family.id === familyId);
+        const targetIndex = index + direction;
+        if (index < 0 || targetIndex < 0 || targetIndex >= orderedFamilies.length) return current;
+        const nextFamilies = [...orderedFamilies];
+        const currentFamily = nextFamilies[index];
+        nextFamilies[index] = nextFamilies[targetIndex];
+        nextFamilies[targetIndex] = currentFamily;
+        const orderById = new Map(nextFamilies.map((family, order) => [family.id, order]));
+        return {
+          ...current,
+          families: (current.families ?? []).map((family) => ({ ...family, order: orderById.get(family.id) ?? family.order }))
+        };
+      });
+      setStatus("Handbook volume order updated");
+      appendDebugEvent("handbook.family_order", "Handbook volume order updated", "info", { family_id: familyId, direction });
+    },
     [appendDebugEvent, updateAtlas]
   );
 
   const handleToggleTileFamily = useCallback(
     (tileId: string, familyId: string, included: boolean) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Family membership changes are locked in Handbook");
+        return;
+      }
       updateAtlas((current) => ({
         ...current,
         families: (current.families ?? []).map((family) => {
-          if (family.id !== familyId) return family;
           const currentMembers = family.member_tile_ids.filter((memberId, index, allIds) => allIds.indexOf(memberId) === index);
           const memberSet = new Set(currentMembers);
-          if (included) memberSet.add(tileId);
-          else memberSet.delete(tileId);
+          const closure = getFamilyTreeClosure(tileId, current.tiles);
+          if (family.id === familyId && included) {
+            for (const memberId of closure) memberSet.add(memberId);
+          } else if (family.id === familyId && !included) {
+            for (const memberId of closure) memberSet.delete(memberId);
+          } else if (included) {
+            for (const memberId of closure) memberSet.delete(memberId);
+          }
           return { ...family, member_tile_ids: Array.from(memberSet) };
         })
       }));
       setStatus(included ? "Tile added to Family" : "Tile removed from Family");
       appendDebugEvent("family.membership", included ? "Tile added to Family" : "Tile removed from Family", "info", { family_id: familyId, tile_id: tileId });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, layoutTemplate, updateAtlas]
   );
 
   const handleDeleteTile = useCallback(
     (tileId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Tile deletion is locked in Handbook");
+        return;
+      }
       const tile = atlas?.tiles.find((candidate) => candidate.id === tileId);
       if (tile && !isLifecycleEditable(resolveLifecycle(tile), appMode)) {
         setStatus("Selection is read-only in this mode");
@@ -1268,11 +1339,15 @@ function AtlasEditor() {
       setStatus("Tile deleted");
       appendDebugEvent("tile.delete", "Tile deleted", "warning", { id: tileId });
     },
-    [appendDebugEvent, appMode, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
   );
 
   const handleDuplicateTile = useCallback(
     (tileId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Tile duplication is locked in Handbook");
+        return;
+      }
       if (!atlas) return;
       const source = atlas.tiles.find((tile) => tile.id === tileId);
       if (!source) return;
@@ -1303,7 +1378,7 @@ function AtlasEditor() {
       setStatus("Tile duplicated");
       appendDebugEvent("tile.duplicate", "Tile duplicated", "info", { source: tileId, duplicate: duplicateId, type: source.type });
     },
-    [appendDebugEvent, appMode, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
   );
 
   const handleUpdateLink = useCallback(
@@ -1314,16 +1389,35 @@ function AtlasEditor() {
       }
       updateAtlas((current) => ({
         ...current,
-        links: current.links.map((candidate) => (candidate.id === link.id ? link : candidate))
+        links: current.links.map((candidate) => {
+          if (candidate.id !== link.id) return candidate;
+          if (
+            layoutTemplate === "handbook" &&
+            (candidate.from !== link.from ||
+              candidate.to !== link.to ||
+              candidate.type !== link.type ||
+              candidate.from_port !== link.from_port ||
+              candidate.to_port !== link.to_port ||
+              candidate.directional !== link.directional)
+          ) {
+            setStatus("Relationship topology is locked in Handbook");
+            return candidate;
+          }
+          return link;
+        })
       }));
       setStatus("Relationship updated");
       appendDebugEvent("link.update", "Relationship updated", "info", { id: link.id, type: link.type });
     },
-    [appendDebugEvent, appMode, updateAtlas]
+    [appendDebugEvent, appMode, layoutTemplate, updateAtlas]
   );
 
   const handleDeleteLink = useCallback(
     (linkId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Relationship deletion is locked in Handbook");
+        return;
+      }
       const link = atlas?.links.find((candidate) => candidate.id === linkId);
       if (link && !isLifecycleEditable(resolveLifecycle(link), appMode)) {
         setStatus("Selection is read-only in this mode");
@@ -1334,11 +1428,15 @@ function AtlasEditor() {
       setStatus("Relationship deleted");
       appendDebugEvent("link.delete", "Relationship deleted", "warning", { id: linkId });
     },
-    [appendDebugEvent, appMode, atlas, updateAtlas]
+    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
   );
 
   const handleStackSiblings = useCallback(
     (tileId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Stack changes are locked in Handbook");
+        return;
+      }
       if (!atlas) return;
       const source = atlas.tiles.find((tile) => tile.id === tileId);
       if (!source?.parent) return;
@@ -1364,11 +1462,15 @@ function AtlasEditor() {
       setStackContextMenu(null);
       appendDebugEvent("stack.create", "Sibling tiles stacked", "info", { stack_id: stack.id, parent_id: stack.parent_id, tile_type: stack.tile_type, members: stack.member_ids.length });
     },
-    [appendDebugEvent, atlas, updateAtlas]
+    [appendDebugEvent, atlas, layoutTemplate, updateAtlas]
   );
 
   const handleStackMountChildren = useCallback(
     (mountTileId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Stack changes are locked in Handbook");
+        return;
+      }
       if (!atlas) return;
       const mountTile = atlas.tiles.find((tile) => tile.id === mountTileId);
       if (!mountTile || mountTile.type !== "mount") return;
@@ -1393,11 +1495,15 @@ function AtlasEditor() {
       setStackContextMenu(null);
       appendDebugEvent("stack.mount_children.create", "Mounted child tiles stacked", "info", { stack_id: stack.id, mount_id: mountTile.id, members: stack.member_ids.length });
     },
-    [appendDebugEvent, atlas, updateAtlas]
+    [appendDebugEvent, atlas, layoutTemplate, updateAtlas]
   );
 
   const handleUpdateStack = useCallback(
     (stack: TileStack) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Stack changes are locked in Handbook");
+        return;
+      }
       updateAtlas((current) => ({
         ...current,
         stacks: (current.stacks ?? []).map((candidate) => (candidate.id === stack.id ? stack : candidate))
@@ -1405,11 +1511,15 @@ function AtlasEditor() {
       setStatus("Stack updated");
       appendDebugEvent("stack.update", "Stack updated", "info", { stack_id: stack.id });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, layoutTemplate, updateAtlas]
   );
 
   const handleUnstack = useCallback(
     (stackId: string) => {
+      if (layoutTemplate === "handbook") {
+        setStatus("Stack changes are locked in Handbook");
+        return;
+      }
       updateAtlas((current) => ({
         ...current,
         stacks: (current.stacks ?? []).filter((stack) => stack.id !== stackId)
@@ -1419,7 +1529,7 @@ function AtlasEditor() {
       setStatus("Stack removed");
       appendDebugEvent("stack.delete", "Stack removed", "info", { stack_id: stackId });
     },
-    [appendDebugEvent, updateAtlas]
+    [appendDebugEvent, layoutTemplate, updateAtlas]
   );
 
   const handlePromoteTile = useCallback(
@@ -1465,8 +1575,10 @@ function AtlasEditor() {
 
   const handleSelectView = useCallback(
     (view: View) => {
+      const nextTemplate = activeTemplateForUi(view.layout_template);
       setActiveViewId(view.id);
-      setLayoutTemplate(activeTemplateForUi(view.layout_template));
+      setLayoutTemplate(nextTemplate);
+      if (nextTemplate === "handbook") setSelectedHandbookVolumeId(null);
       setSelection(null);
       setStatus(`Layer: ${view.title}`);
       appendDebugEvent("view.select", "Layer selected", "info", { id: view.id, title: view.title, layout_template: view.layout_template });
@@ -1476,16 +1588,38 @@ function AtlasEditor() {
 
   const handleTemplateChange = useCallback(
     (nextTemplate: LayoutTemplate) => {
+      if (nextTemplate === "handbook") {
+        const selectedTileId = selection?.kind === "tile" ? selection.id : null;
+        const currentAtlas = latestAtlasRef.current;
+        if (selectedTileId && currentAtlas) {
+          const volume = findHandbookVolumeForTile(buildHandbookDocument(currentAtlas), selectedTileId);
+          setSelectedHandbookVolumeId(volume?.id ?? null);
+        } else {
+          setSelectedHandbookVolumeId(null);
+        }
+      }
       setLayoutTemplate(nextTemplate);
       updateAtlas((current) => ({
         ...current,
         views: current.views.map((view) => (view.id === activeViewId ? { ...view, layout_template: nextTemplate } : view))
       }));
-      setStatus(nextTemplate === "canvas_topology" ? "Canvas topology template" : "Layered hierarchy template");
+      setStatus(nextTemplate === "canvas_topology" ? "Canvas topology template" : "Handbook template");
       appendDebugEvent("view.template", "Layout template changed", "info", { layout_template: nextTemplate });
     },
-    [activeViewId, appendDebugEvent, updateAtlas]
+    [activeViewId, appendDebugEvent, selection, updateAtlas]
   );
+
+  const handleSelectHandbookVolume = useCallback((volumeId: string) => {
+    setSelectedHandbookVolumeId(volumeId);
+    setSelection(null);
+    setStatus("Handbook volume selected");
+  }, []);
+
+  const handleSelectHandbookTile = useCallback((volumeId: string, tileId: string) => {
+    setSelectedHandbookVolumeId(volumeId);
+    setSelection({ kind: "tile", id: tileId });
+    setStatus("Handbook tile selected");
+  }, []);
 
   const handleCreateView = useCallback(() => {
     if (!atlas) return;
@@ -1604,6 +1738,7 @@ function AtlasEditor() {
         return;
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
+        if (layoutTemplate === "handbook") return;
         if (selection?.kind === "tile") {
           event.preventDefault();
           handleDuplicateTile(selection.id);
@@ -1611,6 +1746,7 @@ function AtlasEditor() {
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
+        if (layoutTemplate === "handbook") return;
         if (selection?.kind === "tile") {
           event.preventDefault();
           handleDeleteTile(selection.id);
@@ -1632,7 +1768,7 @@ function AtlasEditor() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleDeleteLink, handleDeleteTile, handleDuplicateTile, handleSave, selection]);
+  }, [handleDeleteLink, handleDeleteTile, handleDuplicateTile, handleSave, layoutTemplate, selection]);
 
   const brokenLinkCount = atlas
     ? atlas.links.filter((link) => !atlas.tiles.some((tile) => tile.id === link.from) || !atlas.tiles.some((tile) => tile.id === link.to)).length
@@ -1742,6 +1878,8 @@ function AtlasEditor() {
           layoutTemplate={layoutTemplate}
           searchResults={searchResults}
           searchTerm={searchTerm}
+          selectedHandbookTileId={selection?.kind === "tile" ? selection.id : null}
+          selectedHandbookVolumeId={selectedHandbookVolumeId}
           selection={selection}
           sidebarState={sidebarState}
           themePaletteId={themePaletteId}
@@ -1755,10 +1893,13 @@ function AtlasEditor() {
           onEditView={handleEditView}
           onFamilyPaletteClick={handleFamilyPaletteClick}
           onFamilyPaletteDragStart={handleFamilyPaletteDragStart}
+          onMoveHandbookFamily={handleMoveHandbookFamily}
           onPaletteClick={handlePaletteClick}
           onPaletteDragEnd={handlePaletteDragEnd}
           onPaletteDragStart={handlePaletteDragStart}
           onSelectSearchResult={selectSearchResult}
+          onSelectHandbookTile={handleSelectHandbookTile}
+          onSelectHandbookVolume={handleSelectHandbookVolume}
           onSelectView={handleSelectView}
           onSelectWarningLink={(linkId) => setSelection({ kind: "link", id: linkId })}
           onSelectWarningTile={selectTileAndFocus}
@@ -1768,61 +1909,73 @@ function AtlasEditor() {
           onToggleViewTileType={handleToggleViewTileType}
         />
 
-        <CanvasFrame
-          activeViewId={activeViewId}
-          appMode={appMode}
-          brokenLinkCount={brokenLinkCount}
-          canvasBackgroundId={canvasBackgroundId}
-          canvasRef={canvasRef}
-          edges={edges}
-          exportResults={exportResults}
-          fitViewOptions={FIT_VIEW_OPTIONS}
-          flowNodes={flowNodes}
-          isInteractive={isInteractive}
-          layoutTemplate={layoutTemplate}
-          lifecycleCounts={lifecycleCounts}
-          searchResultsCount={searchResults.length}
-          searchTerm={searchTerm}
-          stackContextMenu={stackContextMenu}
-          status={status}
-          themePaletteId={themePaletteId}
-          viewBarOpen={viewBarOpen}
-          views={atlas.views}
-          visibleLinks={visibleLinks}
-          visibleTiles={visibleTiles}
-          warningsCount={warnings.length}
-          onCanvasDoubleClick={handleCanvasDoubleClick}
-          onCanvasDragOver={handleCanvasDragOver}
-          onCanvasDrop={handleCanvasDrop}
-          onConnect={handleConnect}
-          onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
-          onInteractiveChange={handleInteractiveChange}
-          onNodeClick={(node) => {
-            if (node.type === "familyNode") {
-              const family = node.data?.family as Family | undefined;
-              if (family) setSelection({ kind: "family", id: family.id });
-              return;
-            }
-            selectTileAndFocus(node.id);
-          }}
-          onNodeContextMenu={handleNodeContextMenu}
-          onNodeDragStart={handleNodeDragStart}
-          onNodeDragStop={handleNodeDragStop}
-          onNodesChange={handleNodesChange}
-          onPaneClick={() => {
-            setSelection(null);
-            setStackContextMenu(null);
-          }}
-          onReactFlowError={handleReactFlowError}
-          onSelectView={handleSelectView}
-          onStackMountChildren={handleStackMountChildren}
-          onStackSiblings={handleStackSiblings}
-          onToggleViewBar={() => setViewBarOpen((open) => !open)}
-          onUnstack={handleUnstack}
-        />
+        {layoutTemplate === "handbook" ? (
+          <HandbookView
+            atlas={atlas}
+            selectedVolumeId={selectedHandbookVolumeId}
+            selection={selection}
+            onNotesFocus={() => setSelection(null)}
+            onSelectTile={(tileId) => setSelection({ kind: "tile", id: tileId })}
+            onUpdateTile={handleUpdateTile}
+          />
+        ) : (
+          <CanvasFrame
+            activeViewId={activeViewId}
+            appMode={appMode}
+            brokenLinkCount={brokenLinkCount}
+            canvasBackgroundId={canvasBackgroundId}
+            canvasRef={canvasRef}
+            edges={edges}
+            exportResults={exportResults}
+            fitViewOptions={FIT_VIEW_OPTIONS}
+            flowNodes={flowNodes}
+            isInteractive={isInteractive}
+            layoutTemplate={layoutTemplate}
+            lifecycleCounts={lifecycleCounts}
+            searchResultsCount={searchResults.length}
+            searchTerm={searchTerm}
+            stackContextMenu={stackContextMenu}
+            status={status}
+            themePaletteId={themePaletteId}
+            viewBarOpen={viewBarOpen}
+            views={atlas.views}
+            visibleLinks={visibleLinks}
+            visibleTiles={visibleTiles}
+            warningsCount={warnings.length}
+            onCanvasDoubleClick={handleCanvasDoubleClick}
+            onCanvasDragOver={handleCanvasDragOver}
+            onCanvasDrop={handleCanvasDrop}
+            onConnect={handleConnect}
+            onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
+            onInteractiveChange={handleInteractiveChange}
+            onNodeClick={(node) => {
+              if (node.type === "familyNode") {
+                const family = node.data?.family as Family | undefined;
+                if (family) setSelection({ kind: "family", id: family.id });
+                return;
+              }
+              selectTileAndFocus(node.id);
+            }}
+            onNodeContextMenu={handleNodeContextMenu}
+            onNodeDragStart={handleNodeDragStart}
+            onNodeDragStop={handleNodeDragStop}
+            onNodesChange={handleNodesChange}
+            onPaneClick={() => {
+              setSelection(null);
+              setStackContextMenu(null);
+            }}
+            onReactFlowError={handleReactFlowError}
+            onSelectView={handleSelectView}
+            onStackMountChildren={handleStackMountChildren}
+            onStackSiblings={handleStackSiblings}
+            onToggleViewBar={() => setViewBarOpen((open) => !open)}
+            onUnstack={handleUnstack}
+          />
+        )}
 
         <Inspector
           atlas={atlas}
+          layoutTemplate={layoutTemplate}
           mode={appMode}
           selection={selection}
           onUpdateTile={handleUpdateTile}

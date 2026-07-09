@@ -31,7 +31,7 @@ export type LinkType =
   | "documents"
   | "related_to";
 
-export type LayoutTemplate = "canvas_topology" | "layered_hierarchy";
+export type LayoutTemplate = "canvas_topology" | "layered_hierarchy" | "handbook";
 export type ExportFormat = "markdown" | "yaml" | "mermaid";
 export type ThemePaletteId = "cyber" | "aurora" | "ember" | "blueprint";
 export type CanvasBackgroundId = "grid" | "hex" | "circuit" | "blueprint" | "pcb_board";

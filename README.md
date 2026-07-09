@@ -43,10 +43,9 @@ Custom install directory:
 CTR_INSTALL_DIR=/opt/ctroadmap-beta ./CTR_install.sh
 ```
 
-Management commands:
+Management commands (run from your install directory):
 
 ```bash
-cd ~/ctroadmap-beta
 docker compose logs -f
 docker compose down
 docker compose up -d
@@ -56,7 +55,7 @@ docker compose pull && docker compose up -d
 Manual beta update:
 
 ```bash
-cd ~/ctroadmap-beta && docker compose pull && docker compose up -d
+docker compose pull && docker compose up -d
 ```
 
 Uninstall:
@@ -70,8 +69,8 @@ chmod +x CTR_uninstall.sh
 Persistent data lives in:
 
 ```text
-~/ctroadmap-beta/data
-~/ctroadmap-beta/exports
+<install-directory>/data
+<install-directory>/exports
 ```
 
 ## Run With Docker
@@ -104,9 +103,7 @@ Backup data:
 cp data/atlas.json data/atlas.backup.json
 ```
 
-
 Update Advisory is informational only. CTRoadmap does not auto-update, run Docker commands, mount the Docker socket, or execute system-management actions.
-
 
 ## Features
 
@@ -151,8 +148,6 @@ Escape           Clear selection
     <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
   </tr>
 </table>
-
-
 
 ## API
 

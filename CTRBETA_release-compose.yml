@@ -3,7 +3,7 @@ services:
     image: ghcr.io/noobcity99/ctroadmap:beta
     container_name: ctroadmap-beta
     ports:
-      - "8088:8088"
+      - "127.0.0.1:8088:8088"
     volumes:
       # Persistent atlas data and generated exports live beside this compose file.
       - ./data:/app/data

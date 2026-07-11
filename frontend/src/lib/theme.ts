@@ -44,6 +44,11 @@ export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
     id: "pcb_board",
     label: "PCB Board",
     description: "Green circuit-board canvas with gold grid and solder pads."
+  },
+  {
+    id: "nes_grid",
+    label: "NES Grid",
+    description: "Light gray 8-bit grid with muted red construction lines."
   }
 ];
 
@@ -142,6 +147,35 @@ export const THEME_PALETTES: ThemePalette[] = [
       validates_with: "#f4ffe8",
       fails_if: "#fff0f4"
     }
+  },
+  {
+    id: "nes",
+    label: "NES",
+    description: "Muted 8-bit console colors with white tiles and solid borders.",
+    swatches: ["#cacbd1", "#7f4a4d", "#005fd7", "#E60012"],
+    tileColors: {
+      node: "#7f4a4d",
+      service: "#005fd7",
+      container: "#0044a5",
+      drive: "#008751",
+      mount: "#3f7f1f",
+      script: "#a54200",
+      config: "#5f574f",
+      secret_ref: "#8b3f96",
+      flow: "#E60012",
+      iot_device: "#b53120",
+      url: "#008787",
+      check: "#008751",
+      note: "#737373"
+    },
+    linkColors: {
+      contains: "#005fd7",
+      calls: "#8b3f96",
+      controls: "#E60012",
+      depends_on: "#5f574f",
+      validates_with: "#008751",
+      fails_if: "#b53120"
+    }
   }
 ];
 
@@ -164,7 +198,9 @@ export function storeCanvasBackground(backgroundId: CanvasBackgroundId): void {
 }
 
 export function getAssociatedCanvasBackground(paletteId: ThemePaletteId): CanvasBackgroundId | null {
-  return paletteId === "blueprint" ? "blueprint" : null;
+  if (paletteId === "blueprint") return "blueprint";
+  if (paletteId === "nes") return "nes_grid";
+  return null;
 }
 
 export function getThemePalette(paletteId: ThemePaletteId): ThemePalette {

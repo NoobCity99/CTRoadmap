@@ -108,12 +108,33 @@ button:disabled {
   --focus-accent: #eaf6ff;
 }
 
+.app-shell[data-theme="nes"] {
+  --panel-bg: rgba(15, 15, 15, 0.9);
+  --panel-border: rgba(202, 203, 209, 0.32);
+  --button-bg: #262626;
+  --button-border: rgba(202, 203, 209, 0.42);
+  --canvas-grid-line: rgba(214, 17, 30, 0.07);
+  --canvas-grid: rgba(214, 17, 30, 0.07);
+  --canvas-glow: transparent;
+  --canvas-bg: #e7ebf0;
+  --focus-accent: #E60012;
+}
+
 .app-shell[data-theme="blueprint"] .topbar,
 .app-shell[data-theme="blueprint"] .left-panel,
 .app-shell[data-theme="blueprint"] .inspector,
 .app-shell[data-theme="blueprint"] .settings-panel {
   background: rgba(0, 30, 92, 0.84);
   border-color: rgba(232, 247, 255, 0.28);
+}
+
+.app-shell[data-theme="nes"] .topbar,
+.app-shell[data-theme="nes"] .left-panel,
+.app-shell[data-theme="nes"] .inspector,
+.app-shell[data-theme="nes"] .settings-panel {
+  background: rgba(15, 15, 15, 0.92);
+  border-color: rgba(202, 203, 209, 0.36);
+  box-shadow: 0 10px 24px rgba(15, 15, 15, 0.26);
 }
 
 .topbar {
@@ -837,6 +858,22 @@ button:disabled {
     #046307;
   background-position: center, 0 0, 0 0, 0 0, center, center;
   background-size: auto, 24px 24px, 32px 32px, 32px 32px, auto, auto;
+}
+
+.canvas-frame[data-background="nes_grid"] {
+  background-image:
+    linear-gradient(rgba(214, 17, 30, 0.07) 3px, transparent 3px),
+    linear-gradient(to right, rgba(214, 17, 30, 0.07) 3px, transparent 3px);
+  background-size: 40px 40px;
+  background-color: #e7ebf0;
+}
+
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="nes_grid"] {
+  background-image:
+    linear-gradient(rgba(214, 17, 30, 0.07) 3px, transparent 3px),
+    linear-gradient(to right, rgba(214, 17, 30, 0.07) 3px, transparent 3px);
+  background-size: 40px 40px;
+  background-color: #e7ebf0;
 }
 
 .view-tabs {
@@ -1605,6 +1642,136 @@ button:disabled {
   color: #061d4d;
   background: rgba(255, 255, 255, 0.42);
   border-color: rgba(0, 65, 186, 0.26);
+}
+
+.app-shell[data-theme="nes"] .tile-node {
+  border: 3px solid var(--tile-accent);
+  border-radius: 4px;
+  color: #0f0f0f;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 rgba(15, 15, 15, 0.24);
+}
+
+.app-shell[data-theme="nes"] .tile-node--parent {
+  outline: 2px solid color-mix(in srgb, var(--tile-accent) 44%, transparent);
+  outline-offset: 5px;
+}
+
+.app-shell[data-theme="nes"] .tile-node--child {
+  border-style: solid;
+}
+
+.app-shell[data-theme="nes"] .tile-node--primary-node {
+  border-color: var(--tile-accent);
+  background: linear-gradient(to bottom, #e7ebf0 0 50%, #ffffff 50% 100%);
+  box-shadow:
+    0 0 0 2px rgba(15, 15, 15, 0.72),
+    5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-theme="nes"] .tile-node--stacked {
+  box-shadow: 5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-theme="nes"] .tile-node--stacked::before,
+.app-shell[data-theme="nes"] .tile-node--stacked::after {
+  border: 2px solid var(--tile-accent);
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.app-shell[data-theme="nes"] .tile-node--selected {
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 6px #0f0f0f,
+    5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-theme="nes"] .tile-node__icon {
+  color: var(--tile-icon-accent, var(--tile-accent));
+  border: 2px solid var(--tile-accent);
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.app-shell[data-theme="nes"] .tile-node__title,
+.app-shell[data-theme="nes"] .tile-node__stack-meta strong,
+.app-shell[data-theme="nes"] .tile-node__field strong,
+.app-shell[data-theme="nes"] .tile-node__field-action {
+  color: #0f0f0f;
+}
+
+.app-shell[data-theme="nes"] .tile-node__type,
+.app-shell[data-theme="nes"] .tile-node__parent,
+.app-shell[data-theme="nes"] .tile-node__field {
+  color: #3f3f3f;
+}
+
+.app-shell[data-theme="nes"] .tile-node__parent,
+.app-shell[data-theme="nes"] .tile-node__stack-meta span {
+  color: var(--tile-accent);
+}
+
+.app-shell[data-theme="nes"] .tile-node__lifecycle {
+  border-color: rgba(15, 15, 15, 0.28);
+  color: #0f0f0f;
+  background: #e7ebf0;
+}
+
+.app-shell[data-theme="nes"] .tile-node__lifecycle--planned {
+  border-color: rgba(165, 66, 0, 0.42);
+  color: #5a2500;
+  background: #ffe0b8;
+}
+
+.app-shell[data-theme="nes"] .tile-node__stack-meta {
+  border: 2px solid color-mix(in srgb, var(--tile-accent) 54%, transparent);
+  border-radius: 4px;
+  background: #f7f7f7;
+}
+
+.app-shell[data-theme="nes"] .tile-node__stack-count {
+  border-color: #0f0f0f;
+  color: #ffffff;
+  background: var(--tile-accent);
+  box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.3);
+}
+
+.app-shell[data-theme="nes"] .tile-node__handle {
+  border-color: #0f0f0f;
+  background: var(--tile-accent);
+}
+
+.app-shell[data-theme="nes"] .tile-node__port-label {
+  color: #0f0f0f;
+  border: 2px solid var(--tile-accent);
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.app-shell[data-theme="nes"] .tile-node__field-action {
+  text-decoration-color: color-mix(in srgb, var(--tile-accent) 52%, transparent);
+}
+
+.app-shell[data-theme="nes"] .tile-node__field-action:hover,
+.app-shell[data-theme="nes"] .tile-node__field-action:focus-visible {
+  color: var(--tile-accent);
+  text-decoration-color: var(--tile-accent);
+}
+
+.app-shell[data-theme="nes"] .tile-node__copy-toast {
+  border-color: #0f0f0f;
+  border-radius: 3px;
+  color: #ffffff;
+  background: #008751;
+  box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.26);
+}
+
+.app-shell[data-theme="nes"] .tile-node__tags span {
+  color: #0f0f0f;
+  background: #e7ebf0;
+  border: 2px solid color-mix(in srgb, var(--tile-accent) 44%, #0f0f0f);
+  border-radius: 3px;
 }
 
 .react-flow__attribution {

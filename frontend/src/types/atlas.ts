@@ -33,8 +33,8 @@ export type LinkType =
 
 export type LayoutTemplate = "canvas_topology" | "layered_hierarchy" | "handbook";
 export type ExportFormat = "markdown" | "yaml" | "mermaid";
-export type ThemePaletteId = "cyber" | "aurora" | "ember" | "blueprint";
-export type CanvasBackgroundId = "grid" | "hex" | "circuit" | "blueprint" | "pcb_board";
+export type ThemePaletteId = "cyber" | "aurora" | "ember" | "blueprint" | "nes";
+export type CanvasBackgroundId = "grid" | "hex" | "circuit" | "blueprint" | "pcb_board" | "nes_grid";
 export type DebugSeverity = "info" | "warning" | "error";
 export type LinkSourcePort = "out" | "child";
 export type LinkTargetPort = "in" | "parent";

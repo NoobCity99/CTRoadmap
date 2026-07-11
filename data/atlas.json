@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-11T08:59:09.931517+00:00"
+    "updated_at": "2026-07-11T10:13:56.884324+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
-        "x": -55.967713084777486,
-        "y": -931.3406946969043
+        "x": 5.1918344718085905,
+        "y": -513.4171197268995
       },
       "size": {
         "width": 240.0,
@@ -29,8 +29,9 @@
         "primary_node": true,
         "icon_ref": {
           "kind": "uploaded",
-          "filename": "5f274c4ce5ee40ad93ec27a885a8edf3.png",
-          "url": "/api/assets/icons/5f274c4ce5ee40ad93ec27a885a8edf3.png",
+          "id": "uploaded:5da6c2bc363346d684280f85c2ce1e1d.png",
+          "filename": "5da6c2bc363346d684280f85c2ce1e1d.png",
+          "url": "/api/assets/icons/5da6c2bc363346d684280f85c2ce1e1d.png",
           "media_type": "image/png"
         }
       },
@@ -45,8 +46,8 @@
       "title": "/samba",
       "parent": "node_server1",
       "position": {
-        "x": 477.11144279780655,
-        "y": -137.444626948893
+        "x": 380.11144279780655,
+        "y": -157.444626948893
       },
       "size": {
         "width": 240.0,
@@ -96,8 +97,8 @@
       "title": "WAKE/SLEEP",
       "parent": null,
       "position": {
-        "x": -641.7334856328034,
-        "y": 138.99321946407665
+        "x": -643.7421481695931,
+        "y": -21.699783479091092
       },
       "size": {
         "width": 240.0,
@@ -118,7 +119,7 @@
       "parent": "node_micro_server",
       "position": {
         "x": -649.3877738231693,
-        "y": -163.76452316573437
+        "y": -282.2756128363206
       },
       "size": {
         "width": 240.0,
@@ -169,8 +170,8 @@
       "title": "SSH KEY",
       "parent": "node_micro_server",
       "position": {
-        "x": -305.92336489462195,
-        "y": 141.09920036282074
+        "x": -309.9320274314116,
+        "y": -36.6284527275054
       },
       "size": {
         "width": 240.0,
@@ -193,8 +194,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 89.07110284006092,
-        "y": 0.5642687219217244
+        "x": 43.54467314091289,
+        "y": -119.45995503037767
       },
       "size": {
         "width": 240.0,
@@ -242,8 +243,8 @@
       "title": "diagnostic",
       "parent": null,
       "position": {
-        "x": -110.1801929693739,
-        "y": -281.5772189799941
+        "x": 30.537862464356408,
+        "y": -300.2016674932819
       },
       "size": {
         "width": 240.0,
@@ -354,8 +355,8 @@
       "title": "redundant",
       "parent": null,
       "position": {
-        "x": 770.1523773363801,
-        "y": -149.62929858930548
+        "x": 681.0894587428429,
+        "y": -158.86302010314375
       },
       "size": {
         "width": 240.0,
@@ -454,7 +455,12 @@
       "fields": {
         "url": "",
         "protocol": "",
-        "purpose": ""
+        "purpose": "",
+        "icon_ref": {
+          "kind": "lucide",
+          "id": "lucide:Pizza",
+          "name": "Pizza"
+        }
       },
       "notes": "",
       "tags": []
@@ -465,8 +471,8 @@
       "title": "DOCKER",
       "parent": "node_server1",
       "position": {
-        "x": 391.5754079108342,
-        "y": -467.1417986061857
+        "x": 368.16305712911156,
+        "y": -521.1169350841201
       },
       "size": {
         "width": 240.0,
@@ -1019,7 +1025,7 @@
         "y": 0.0,
         "zoom": 1.0
       },
-      "layout_template": "canvas_topology"
+      "layout_template": "handbook"
     },
     {
       "id": "view_hardware",
@@ -1044,20 +1050,6 @@
   ],
   "stacks": [
     {
-      "id": "stack_mount_samba",
-      "stack_kind": "mount_children",
-      "parent_id": "mount_samba",
-      "tile_type": "mount",
-      "member_ids": [
-        "drive_back_ups",
-        "drive_primary",
-        "script_auto_backup_function"
-      ],
-      "representative_id": "mount_samba",
-      "name": "3 Mounted Items",
-      "name_is_custom": false
-    },
-    {
       "id": "stack_node_server1_note",
       "stack_kind": "sibling_type",
       "parent_id": "node_server1",
@@ -1069,6 +1061,20 @@
       ],
       "representative_id": "note_note",
       "name": "3 Notes",
+      "name_is_custom": false
+    },
+    {
+      "id": "stack_mount_samba",
+      "stack_kind": "mount_children",
+      "parent_id": "mount_samba",
+      "tile_type": "mount",
+      "member_ids": [
+        "drive_back_ups",
+        "drive_primary",
+        "script_auto_backup_function"
+      ],
+      "representative_id": "mount_samba",
+      "name": "3 Mounted Items",
       "name_is_custom": false
     }
   ],
@@ -1100,7 +1106,7 @@
         "height": 42.0
       },
       "order": 0,
-      "color": "#f406c8",
+      "color": "#dee090",
       "tag": null
     },
     {
@@ -1121,7 +1127,7 @@
         "height": 250.0
       },
       "order": 1,
-      "color": "#10e53b",
+      "color": "#ee7c7c",
       "tag": null
     },
     {
@@ -1147,7 +1153,7 @@
         "height": 586.0
       },
       "order": 2,
-      "color": "#9c07c5",
+      "color": "#ac9bb0",
       "tag": null
     }
   ]

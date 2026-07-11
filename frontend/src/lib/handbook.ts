@@ -185,18 +185,37 @@ function relationshipsForTile(tileId: string, atlas: Atlas): HandbookRelationshi
     .filter((link) => link.from === tileId || link.to === tileId)
     .map((link) => {
       const endpointId = link.from === tileId ? link.to : link.from;
+      const direction = link.from === tileId ? "forward" : "inverse";
       return {
         id: link.id,
         type: link.type,
-        label: relationshipLabel(link.type),
+        label: relationshipLabel(link.type, direction),
         endpointTitle: tileById.get(endpointId)?.title ?? endpointId,
         lifecycle: resolveLifecycle(link)
       };
     });
 }
 
-function relationshipLabel(type: LinkType): string {
-  return type.replace(/_/g, " ").toUpperCase();
+function relationshipLabel(type: LinkType, direction: "forward" | "inverse"): string {
+  const labels: Record<LinkType, { forward: string; inverse: string }> = {
+    contains: { forward: "CONTAINS", inverse: "CONTAINED IN" },
+    runs: { forward: "RUNS", inverse: "RUN BY" },
+    hosts: { forward: "HOSTS", inverse: "HOSTED BY" },
+    calls: { forward: "CALLS", inverse: "CALLED BY" },
+    controls: { forward: "CONTROLS", inverse: "CONTROLLED BY" },
+    depends_on: { forward: "DEPENDS ON", inverse: "REQUIRED BY" },
+    uses_storage: { forward: "USES STORAGE", inverse: "STORAGE USED BY" },
+    mounted_at: { forward: "MOUNTED AT", inverse: "MOUNT POINT FOR" },
+    backs_up_to: { forward: "BACKS UP TO", inverse: "BACKED UP BY" },
+    requires_key: { forward: "REQUIRES KEY", inverse: "KEY REQUIRED BY" },
+    requires_config: { forward: "REQUIRES CONFIG", inverse: "CONFIG REQUIRED BY" },
+    exposes_url: { forward: "EXPOSES URL", inverse: "URL EXPOSED BY" },
+    validates_with: { forward: "VALIDATES WITH", inverse: "VALIDATES" },
+    fails_if: { forward: "FAILS IF", inverse: "FAILURE CONDITION FOR" },
+    documents: { forward: "DOCUMENTS", inverse: "DOCUMENTED BY" },
+    related_to: { forward: "RELATED TO", inverse: "RELATED TO" }
+  };
+  return labels[type][direction];
 }
 
 function warningsForTile(tile: Tile, tileById: Map<string, Tile>): string[] {

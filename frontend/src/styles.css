@@ -2193,9 +2193,12 @@ button:disabled {
 }
 
 .handbook-tile__icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 84%;
+  max-height: 84%;
+  object-fit: contain;
 }
 
 .handbook-tile__heading strong,
@@ -2476,6 +2479,7 @@ button:disabled {
 
 .handbook-shell--light .handbook-document__masthead h1,
 .handbook-shell--light .handbook-volume__header h2,
+.handbook-shell--light .handbook-epilogue h3,
 .handbook-shell--light .handbook-tile__heading,
 .handbook-shell--light .handbook-tile__heading strong {
   color: #182230;
@@ -2523,6 +2527,29 @@ button:disabled {
 .handbook-shell--light .handbook-field strong,
 .handbook-shell--light .handbook-relationship-group p {
   color: #182230;
+}
+
+.handbook-shell--light .handbook-field a {
+  color: #075985;
+  font-weight: 850;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+
+.handbook-shell--light .handbook-field button {
+  color: #166534;
+  font-weight: 850;
+}
+
+.handbook-shell--light .handbook-field a:hover,
+.handbook-shell--light .handbook-field a:focus-visible {
+  color: #0c4a6e;
+}
+
+.handbook-shell--light .handbook-field button:hover,
+.handbook-shell--light .handbook-field button:focus-visible {
+  color: #14532d;
 }
 
 .handbook-shell--light .handbook-relationship-group strong,

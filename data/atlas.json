@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-11T15:16:45.137157+00:00"
+    "updated_at": "2026-07-11T21:17:15.240153+00:00"
   },
   "tiles": [
     {
@@ -33,7 +33,8 @@
           "filename": "5da6c2bc363346d684280f85c2ce1e1d.png",
           "url": "/api/assets/icons/5da6c2bc363346d684280f85c2ce1e1d.png",
           "media_type": "image/png"
-        }
+        },
+        "URL": "555.555.555"
       },
       "notes": "Built this server out of paperclips and chewing gum. Held together with tears and toe-jam. Screwdriver taped to the back of it can be used to jump start it if necessary.  Good luck. \n\nValid users: \nTinkerbell4\nRabbleWilson9\nMom",
       "tags": [
@@ -1025,7 +1026,7 @@
         "y": 0.0,
         "zoom": 1.0
       },
-      "layout_template": "canvas_topology"
+      "layout_template": "handbook"
     },
     {
       "id": "view_hardware",

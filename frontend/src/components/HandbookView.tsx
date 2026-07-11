@@ -5,7 +5,7 @@ import { TILE_TYPE_CONFIG } from "../lib/constants";
 import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import { buildHandbookDocument, buildHandbookVolumeOutline, findHandbookVolumeForTile, tileAnchor, type HandbookChapter, type HandbookTileSection, type HandbookVolume } from "../lib/handbook";
 import { resolveLifecycle } from "../lib/atlasSelectors";
-import type { Atlas, LinkType, Selection, Tile } from "../types/atlas";
+import type { Atlas, Selection, Tile } from "../types/atlas";
 
 export type HandbookThemeMode = "dark" | "light";
 
@@ -360,17 +360,17 @@ function TileArticle({
 }
 
 function RelationshipGroups({ relationships }: { relationships: HandbookTileSection["relationships"] }) {
-  const groups = new Map<LinkType, { label: string; relationships: HandbookTileSection["relationships"] }>();
+  const groups = new Map<string, { label: string; relationships: HandbookTileSection["relationships"] }>();
   for (const relationship of relationships) {
-    const group = groups.get(relationship.type) ?? { label: relationship.label, relationships: [] };
+    const group = groups.get(relationship.label) ?? { label: relationship.label, relationships: [] };
     group.relationships.push(relationship);
-    groups.set(relationship.type, group);
+    groups.set(relationship.label, group);
   }
 
   return (
     <div className="handbook-relationship-groups">
-      {Array.from(groups.entries()).map(([type, group]) => (
-        <div key={type} className="handbook-relationship-group">
+      {Array.from(groups.entries()).map(([label, group]) => (
+        <div key={label} className="handbook-relationship-group">
           <strong>{group.label}</strong>
           <p>
             {group.relationships.map((relationship, index) => (

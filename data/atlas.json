@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-11T10:13:56.884324+00:00"
+    "updated_at": "2026-07-11T15:16:45.137157+00:00"
   },
   "tiles": [
     {
@@ -1025,7 +1025,7 @@
         "y": 0.0,
         "zoom": 1.0
       },
-      "layout_template": "handbook"
+      "layout_template": "canvas_topology"
     },
     {
       "id": "view_hardware",

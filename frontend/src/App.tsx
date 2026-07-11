@@ -608,12 +608,12 @@ function AtlasEditor() {
         families: (current.families ?? []).map((family) =>
           family.id === familyId
             ? {
-                ...family,
-                size: {
-                  width: Math.max(240, size.width),
-                  height: Math.max(42, size.height)
-                }
+              ...family,
+              size: {
+                width: Math.max(240, size.width),
+                height: Math.max(42, size.height)
               }
+            }
             : family
         )
       });
@@ -1056,17 +1056,17 @@ function AtlasEditor() {
       };
       const containsLink: Link | null = parentId
         ? {
-            id: createId("link_contains", `${parentId}_${tileId}`, atlas.links.map((link) => link.id)),
-            from: parentId,
-            to: tileId,
-            type: "contains",
-            from_port: "child",
-            to_port: "parent",
-            lifecycle: appMode === "planning" ? "planned" : "live",
-            label: "contains",
-            notes: "",
-            directional: true
-          }
+          id: createId("link_contains", `${parentId}_${tileId}`, atlas.links.map((link) => link.id)),
+          from: parentId,
+          to: tileId,
+          type: "contains",
+          from_port: "child",
+          to_port: "parent",
+          lifecycle: appMode === "planning" ? "planned" : "live",
+          label: "contains",
+          notes: "",
+          directional: true
+        }
         : null;
       updateAtlas((current) => ({
         ...current,
@@ -1898,9 +1898,9 @@ function AtlasEditor() {
         views: current.views.map((view) =>
           view.id === activeView.id
             ? {
-                ...view,
-                visible_types: toggleViewSelection(view.visible_types, TILE_TYPES, type)
-              }
+              ...view,
+              visible_types: toggleViewSelection(view.visible_types, TILE_TYPES, type)
+            }
             : view
         )
       }));
@@ -1916,9 +1916,9 @@ function AtlasEditor() {
         views: current.views.map((view) =>
           view.id === activeView.id
             ? {
-                ...view,
-                visible_links: toggleViewSelection(view.visible_links, LINK_TYPES, type)
-              }
+              ...view,
+              visible_links: toggleViewSelection(view.visible_links, LINK_TYPES, type)
+            }
             : view
         )
       }));
@@ -2064,7 +2064,7 @@ function AtlasEditor() {
   }
 
   return (
-    <div className="app-shell" data-theme={themePaletteId}>
+    <div className={firstRunPromptVisible ? "app-shell app-shell--with-local-access-prompt" : "app-shell"} data-theme={themePaletteId}>
       <TopBar
         appMode={appMode}
         exportMenuOpen={exportMenuOpen}
@@ -2103,7 +2103,7 @@ function AtlasEditor() {
         <div className="local-access-prompt" role="status">
           <div>
             <strong>Set a Local Access Passcode</strong>
-            <span>Protect this local CTRoadmap workspace with a passphrase of at least 8 characters. Longer passphrases are recommended.</span>
+            <span>CTRoadmap is open on this port to any machine on YOUR network. You can protect this local workspace with an optional passphrase of at least 8 characters.</span>
           </div>
           <button
             className="local-access-prompt__action"

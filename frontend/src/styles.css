@@ -68,8 +68,19 @@ button:disabled {
   --focus-accent: #38a3ff;
   height: 100vh;
   display: grid;
-  grid-template-rows: 86px 1fr;
+  grid-template-areas:
+    "topbar"
+    "workspace";
+  grid-template-rows: 86px minmax(0, 1fr);
   overflow: hidden;
+}
+
+.app-shell--with-local-access-prompt {
+  grid-template-areas:
+    "topbar"
+    "prompt"
+    "workspace";
+  grid-template-rows: 86px auto minmax(0, 1fr);
 }
 
 .app-shell[data-theme="aurora"] {
@@ -138,6 +149,7 @@ button:disabled {
 }
 
 .topbar {
+  grid-area: topbar;
   position: relative;
   z-index: 100;
   display: grid;
@@ -407,6 +419,7 @@ button:disabled {
 }
 
 .workspace {
+  grid-area: workspace;
   min-height: 0;
   display: grid;
   grid-template-columns: 246px minmax(0, 1fr) 320px;
@@ -876,6 +889,15 @@ button:disabled {
   background-color: #e7ebf0;
 }
 
+.canvas-frame[data-background="lt_draft_grid"],
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="lt_draft_grid"] {
+  background-image:
+    linear-gradient(rgba(71, 74, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(to right, rgba(71, 74, 255, 0.09) 1px, transparent 1px);
+  background-size: 49px 49px;
+  background-color: #f0effb;
+}
+
 .view-tabs {
   position: absolute;
   z-index: 5;
@@ -1013,41 +1035,40 @@ button:disabled {
 }
 
 .local-access-prompt {
+  grid-area: prompt;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  border-top: 1px solid rgba(74, 222, 128, 0.72);
-  border-bottom: 1px solid rgba(74, 222, 128, 0.72);
+  gap: 10px;
+  padding: 4px 12px;
+  border: 0;
   background: linear-gradient(135deg, rgba(1, 54, 25, 0.96), rgba(0, 28, 17, 0.98));
   color: #ffffff;
-  box-shadow:
-    inset 0 0 24px rgba(34, 197, 94, 0.18),
-    0 0 24px rgba(34, 197, 94, 0.18);
+  box-shadow: none;
 }
 
 .local-access-prompt div {
   min-width: 0;
   flex: 1;
   display: grid;
-  gap: 3px;
+  gap: 1px;
 }
 
 .local-access-prompt strong {
   color: #ffffff;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
+  line-height: 1.15;
   text-shadow: 0 0 12px rgba(74, 222, 128, 0.52);
 }
 
 .local-access-prompt span {
   color: #ffffff;
-  font-size: 0.82rem;
-  line-height: 1.35;
+  font-size: 0.76rem;
+  line-height: 1.2;
 }
 
 .local-access-prompt__action {
-  min-width: 190px;
-  min-height: 42px;
+  min-width: 178px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1063,9 +1084,9 @@ button:disabled {
 }
 
 .local-access-prompt__dismiss {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   display: inline-grid;
   place-items: center;
   border: 1px solid rgba(254, 202, 202, 0.82);
@@ -3634,7 +3655,18 @@ button:disabled {
   .app-shell {
     height: auto;
     min-height: 100vh;
-    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "topbar"
+      "workspace";
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .app-shell--with-local-access-prompt {
+    grid-template-areas:
+      "topbar"
+      "prompt"
+      "workspace";
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
 
   .topbar {

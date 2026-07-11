@@ -49,6 +49,11 @@ export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
     id: "nes_grid",
     label: "NES Grid",
     description: "Light gray 8-bit grid with muted red construction lines."
+  },
+  {
+    id: "lt_draft_grid",
+    label: "LT Draft Grid",
+    description: "Pale lavender canvas with a wide soft blue grid."
   }
 ];
 

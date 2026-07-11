@@ -832,22 +832,77 @@ button:disabled {
 }
 
 .canvas-frame[data-background="blueprint"] {
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
-    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.09), rgba(0, 45, 145, 0.08) 46rem, rgba(0, 21, 82, 0.28) 86rem),
-    #0041ba;
-  background-size: 36px 36px, 36px 36px, auto, auto;
+  --blueprint-bg: #0041ba;
+  --blueprint-border: 16px;
+  --blueprint-gap: 12px;
+  --blueprint-major-gap: 60px;
+  --blueprint-minor-line: rgba(255, 255, 255, 0.045);
+  --blueprint-major-line: rgba(255, 255, 255, 0.13);
+  --blueprint-cross-line: rgba(255, 255, 255, 0.28);
+  background-color: var(--blueprint-bg);
+  background-image:
+    linear-gradient(var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(to right, var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at center, transparent 0 6px, var(--blueprint-bg) 6px 100%),
+    linear-gradient(var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), rgba(0, 65, 186, 0.04) 46rem, rgba(0, 21, 82, 0.24) 86rem);
+  background-position:
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    calc(var(--blueprint-border) - 30px) calc(var(--blueprint-border) - 30px),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    center;
+  background-size:
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    auto;
+  box-shadow:
+    inset 0 0 0 var(--blueprint-border) var(--blueprint-bg),
+    inset 0 0 0 calc(var(--blueprint-border) + 1px) var(--blueprint-cross-line);
 }
 
 .canvas-frame.canvas-frame--layered_hierarchy[data-background="blueprint"] {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 42%),
-    linear-gradient(rgba(255, 255, 255, 0.085) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.085) 1px, transparent 1px),
-    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), rgba(0, 45, 145, 0.08) 46rem, rgba(0, 21, 82, 0.28) 86rem),
-    #0041ba;
-  background-size: auto, 36px 36px, 36px 36px, auto, auto;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    linear-gradient(var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(to right, var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at center, transparent 0 6px, var(--blueprint-bg) 6px 100%),
+    linear-gradient(var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), rgba(0, 65, 186, 0.04) 46rem, rgba(0, 21, 82, 0.24) 86rem);
+  background-position:
+    center,
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    calc(var(--blueprint-border) - 30px) calc(var(--blueprint-border) - 30px),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    center;
+  background-size:
+    auto,
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    auto;
 }
 
 .canvas-frame[data-background="pcb_board"] {

@@ -4,7 +4,8 @@ import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { deleteTileIcon, listTileIcons, uploadTileIcon } from "../lib/api";
 import { getFamilyMembershipState } from "../lib/atlasSelectors";
-import { iconRefLabel, LINK_TYPES, LUCIDE_ICON_OPTIONS, lucideNameToIconRef, normalizeTileIconRef, TILE_TYPES, TILE_TYPE_CONFIG, TileIconGlyph, uploadedAssetToIconRef, uploadedResultToIconRef } from "../lib/constants";
+import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
+import { iconRefLabel, LUCIDE_ICON_OPTIONS, lucideNameToIconRef, normalizeTileIconRef, TileIconGlyph, uploadedAssetToIconRef, uploadedResultToIconRef } from "../lib/icons";
 import type { AppMode, Atlas, Family, FlowStep, LayoutTemplate, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType, UploadedIconAsset } from "../types/atlas";
 
 interface InspectorProps {

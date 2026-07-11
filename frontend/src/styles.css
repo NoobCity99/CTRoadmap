@@ -1623,6 +1623,35 @@ button:disabled {
   color: #dbeafe;
 }
 
+.connector-routing-panel {
+  margin: 15px 15px 15px 48px !important;
+}
+
+.connector-routing-toggle {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(91, 142, 196, 0.24);
+  color: #dbeafe;
+  background: rgba(8, 17, 32, 0.95);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.2);
+}
+
+.connector-routing-toggle:hover,
+.connector-routing-toggle:focus-visible,
+.connector-routing-toggle[aria-pressed="true"] {
+  color: #f8fafc;
+  border-color: color-mix(in srgb, var(--focus-accent) 56%, rgba(91, 142, 196, 0.24));
+  background: color-mix(in srgb, var(--focus-accent) 22%, rgba(8, 17, 32, 0.95));
+}
+
+@keyframes connector-edge-dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
 .react-flow__minimap {
   background: rgba(3, 7, 18, 0.82);
   border: 1px solid rgba(91, 142, 196, 0.24);

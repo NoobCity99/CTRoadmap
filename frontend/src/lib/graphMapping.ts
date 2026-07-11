@@ -1,6 +1,7 @@
 import { MarkerType, type Edge, type Node, type NodeChange } from "@xyflow/react";
 import { getLinkColor, getTileColor } from "./theme";
 import { isLifecycleEditable, resolveLifecycle, resolveSourcePort, resolveTargetPort, type StackState } from "./atlasSelectors";
+import type { ConnectorRoutingMode, RoutingRect } from "./edgeRouting";
 import type { AppMode, Atlas, Family, LayoutTemplate, Link, ThemePaletteId, Tile } from "../types/atlas";
 
 export interface GraphMappingOptions {
@@ -16,6 +17,11 @@ export interface GraphMappingOptions {
   visibleLinks: Link[];
   onFocusFamily: (family: Family) => void;
   onResizeFamily: (familyId: string, size: { width: number; height: number }) => void;
+}
+
+export interface EdgeMappingOptions {
+  connectorRoutingMode?: ConnectorRoutingMode;
+  routingObstacles?: RoutingRect[];
 }
 
 export function mapAtlasToNodes({
@@ -88,7 +94,8 @@ export function mapAtlasToNodes({
   return [...familyNodes, ...tileNodes];
 }
 
-export function mapAtlasToEdges(appMode: AppMode, themePaletteId: ThemePaletteId, visibleLinks: Link[], stackState: StackState): Edge[] {
+export function mapAtlasToEdges(appMode: AppMode, themePaletteId: ThemePaletteId, visibleLinks: Link[], stackState: StackState, options: EdgeMappingOptions = {}): Edge[] {
+  const useAvoidTiles = options.connectorRoutingMode === "avoid_tiles";
   return visibleLinks.map((link) => {
     const lifecycle = resolveLifecycle(link);
     const editable = isLifecycleEditable(lifecycle, appMode);
@@ -101,7 +108,9 @@ export function mapAtlasToEdges(appMode: AppMode, themePaletteId: ThemePaletteId
       zIndex: 500,
       sourceHandle: resolveSourcePort(link),
       targetHandle: resolveTargetPort(link),
+      type: useAvoidTiles ? "avoidTiles" : undefined,
       label,
+      data: useAvoidTiles ? { obstacles: options.routingObstacles ?? [] } : undefined,
       animated: editable && ["calls", "controls", "fails_if"].includes(link.type),
       markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
       style: {

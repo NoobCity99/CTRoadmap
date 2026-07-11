@@ -2,6 +2,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   ReactFlow,
   type Connection,
   type Edge,
@@ -9,15 +10,19 @@ import {
   type Node,
   type NodeChange
 } from "@xyflow/react";
+import { Spline, Workflow } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
+import { AvoidTilesEdge } from "./AvoidTilesEdge";
 import { FamilyNode } from "./FamilyNode";
 import { TileNode } from "./TileNode";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
+import type { ConnectorRoutingMode } from "../lib/edgeRouting";
 import { getTileColor } from "../lib/theme";
 import type { AppMode, CanvasBackgroundId, ExportFormat, Family, LayoutTemplate, Link, ThemePaletteId, Tile, View } from "../types/atlas";
 import { LayerBar } from "./LayerBar";
 
 const nodeTypes = { tileNode: TileNode, familyNode: FamilyNode };
+const edgeTypes = { avoidTiles: AvoidTilesEdge };
 
 export interface StackContextMenuView {
   x: number;
@@ -35,6 +40,7 @@ interface CanvasFrameProps {
   brokenLinkCount: number;
   canvasBackgroundId: CanvasBackgroundId;
   canvasRef: RefObject<HTMLElement>;
+  connectorRoutingMode: ConnectorRoutingMode;
   edges: Edge[];
   exportResults: Partial<Record<ExportFormat, unknown>>;
   fitViewOptions: FitViewOptions;
@@ -56,6 +62,7 @@ interface CanvasFrameProps {
   onCanvasDragOver: (event: React.DragEvent<HTMLElement>) => void;
   onCanvasDrop: (event: React.DragEvent<HTMLElement>) => void;
   onConnect: (connection: Connection) => void;
+  onConnectorRoutingModeToggle: () => void;
   onEdgeClick: (edge: Edge) => void;
   onInteractiveChange: (interactiveStatus: boolean) => void;
   onNodeClick: (node: Node) => void;
@@ -78,6 +85,7 @@ export function CanvasFrame({
   brokenLinkCount,
   canvasBackgroundId,
   canvasRef,
+  connectorRoutingMode,
   edges,
   exportResults,
   fitViewOptions,
@@ -99,6 +107,7 @@ export function CanvasFrame({
   onCanvasDragOver,
   onCanvasDrop,
   onConnect,
+  onConnectorRoutingModeToggle,
   onEdgeClick,
   onInteractiveChange,
   onNodeClick,
@@ -128,6 +137,7 @@ export function CanvasFrame({
         nodes={flowNodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onConnect={onConnect}
         onNodeDragStart={onNodeDragStart}
@@ -157,6 +167,18 @@ export function CanvasFrame({
           }}
         />
         <Controls fitViewOptions={fitViewOptions} onInteractiveChange={onInteractiveChange} />
+        <Panel position="bottom-left" className="connector-routing-panel">
+          <button
+            className="connector-routing-toggle"
+            type="button"
+            title={connectorRoutingMode === "avoid_tiles" ? "Connector routing: Avoid Tiles. Switch to Curved." : "Connector routing: Curved. Switch to Avoid Tiles."}
+            aria-label={connectorRoutingMode === "avoid_tiles" ? "Switch connector routing to Curved" : "Switch connector routing to Avoid Tiles"}
+            aria-pressed={connectorRoutingMode === "avoid_tiles"}
+            onClick={onConnectorRoutingModeToggle}
+          >
+            {connectorRoutingMode === "avoid_tiles" ? <Spline size={16} /> : <Workflow size={16} />}
+          </button>
+        </Panel>
       </ReactFlow>
       <div className="status-strip">
         <span>{status}</span>

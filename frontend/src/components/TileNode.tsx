@@ -2,7 +2,8 @@ import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
-import { normalizeTileIconRef, TILE_TYPE_CONFIG, TileIconGlyph } from "../lib/constants";
+import { TILE_TYPE_CONFIG } from "../lib/constants";
+import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import type { Tile } from "../types/atlas";
 
 export interface TileNodeData extends Record<string, unknown> {

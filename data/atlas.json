@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-11T05:44:23.397433+00:00"
+    "updated_at": "2026-07-11T08:59:09.931517+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
-        "x": 15.868552978175998,
-        "y": -533.5634822191516
+        "x": -55.967713084777486,
+        "y": -931.3406946969043
       },
       "size": {
         "width": 240.0,
@@ -45,8 +45,8 @@
       "title": "/samba",
       "parent": "node_server1",
       "position": {
-        "x": 380.5231655010474,
-        "y": -131.78288193174882
+        "x": 477.11144279780655,
+        "y": -137.444626948893
       },
       "size": {
         "width": 240.0,
@@ -96,8 +96,8 @@
       "title": "WAKE/SLEEP",
       "parent": null,
       "position": {
-        "x": -639.2502258310317,
-        "y": -116.78254011840961
+        "x": -641.7334856328034,
+        "y": 138.99321946407665
       },
       "size": {
         "width": 240.0,
@@ -117,8 +117,8 @@
       "title": "STATUS PAGE",
       "parent": "node_micro_server",
       "position": {
-        "x": -644.4212542196258,
-        "y": -340.07596909152585
+        "x": -649.3877738231693,
+        "y": -163.76452316573437
       },
       "size": {
         "width": 240.0,
@@ -169,8 +169,8 @@
       "title": "SSH KEY",
       "parent": "node_micro_server",
       "position": {
-        "x": -271.157727669818,
-        "y": -129.57611803029582
+        "x": -305.92336489462195,
+        "y": 141.09920036282074
       },
       "size": {
         "width": 240.0,
@@ -193,8 +193,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 58.5661928218683,
-        "y": -124.5058623526678
+        "x": 89.07110284006092,
+        "y": 0.5642687219217244
       },
       "size": {
         "width": 240.0,
@@ -242,8 +242,8 @@
       "title": "diagnostic",
       "parent": null,
       "position": {
-        "x": 672.4184842383557,
-        "y": -136.9051454724903
+        "x": -110.1801929693739,
+        "y": -281.5772189799941
       },
       "size": {
         "width": 240.0,
@@ -354,8 +354,8 @@
       "title": "redundant",
       "parent": null,
       "position": {
-        "x": 670.8219852655118,
-        "y": 78.83060317369194
+        "x": 770.1523773363801,
+        "y": -149.62929858930548
       },
       "size": {
         "width": 240.0,
@@ -465,8 +465,8 @@
       "title": "DOCKER",
       "parent": "node_server1",
       "position": {
-        "x": 371.18889205863877,
-        "y": -528.3013461627718
+        "x": 391.5754079108342,
+        "y": -467.1417986061857
       },
       "size": {
         "width": 240.0,
@@ -1044,20 +1044,6 @@
   ],
   "stacks": [
     {
-      "id": "stack_node_server1_note",
-      "stack_kind": "sibling_type",
-      "parent_id": "node_server1",
-      "tile_type": "note",
-      "member_ids": [
-        "note_note",
-        "note_notes",
-        "note_ntoes_3"
-      ],
-      "representative_id": "note_note",
-      "name": "3 Notes",
-      "name_is_custom": false
-    },
-    {
       "id": "stack_mount_samba",
       "stack_kind": "mount_children",
       "parent_id": "mount_samba",
@@ -1069,6 +1055,20 @@
       ],
       "representative_id": "mount_samba",
       "name": "3 Mounted Items",
+      "name_is_custom": false
+    },
+    {
+      "id": "stack_node_server1_note",
+      "stack_kind": "sibling_type",
+      "parent_id": "node_server1",
+      "tile_type": "note",
+      "member_ids": [
+        "note_note",
+        "note_notes",
+        "note_ntoes_3"
+      ],
+      "representative_id": "note_note",
+      "name": "3 Notes",
       "name_is_custom": false
     }
   ],

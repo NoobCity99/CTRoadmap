@@ -1,7 +1,8 @@
 import { Copy, ExternalLink } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { normalizeTileIconRef, TILE_TYPE_CONFIG, TileIconGlyph } from "../lib/constants";
+import { TILE_TYPE_CONFIG } from "../lib/constants";
+import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import { buildHandbookDocument, buildHandbookVolumeOutline, findHandbookVolumeForTile, tileAnchor, type HandbookChapter, type HandbookTileSection, type HandbookVolume } from "../lib/handbook";
 import { resolveLifecycle } from "../lib/atlasSelectors";
 import type { Atlas, LinkType, Selection, Tile } from "../types/atlas";

@@ -80,6 +80,7 @@ import {
   sanitizeAtlas,
   withAtlasDefaults
 } from "./lib/atlasMutations";
+import { buildConnectorObstacles, type ConnectorRoutingMode } from "./lib/edgeRouting";
 import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes } from "./lib/graphMapping";
 import { createSeedAtlas } from "./lib/seed";
 import {
@@ -126,6 +127,7 @@ const UPDATE_NOTICE_SNOOZE_HOURS = 24;
 const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
 const HANDBOOK_THEME_STORAGE_KEY = "ctroadmap.handbookThemeMode";
+const CONNECTOR_ROUTING_STORAGE_KEY = "ctroadmap.connectorRoutingMode";
 const LOCAL_ACCESS_PROMPT_PREFIX = "ctroadmap:local-access-prompt:";
 const LOCAL_ACCESS_PROMPT_DELAY_MS = 14 * 24 * 60 * 60 * 1000;
 const AUTOSAVE_DEBOUNCE_MS = 1000;
@@ -188,6 +190,7 @@ function AtlasEditor() {
   const [status, setStatus] = useState("Loading atlas...");
   const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
   const [canvasBackgroundId, setCanvasBackgroundId] = useState<CanvasBackgroundId>(() => getStoredCanvasBackground());
+  const [connectorRoutingMode, setConnectorRoutingMode] = useState<ConnectorRoutingMode>(() => getStoredConnectorRoutingMode());
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -196,6 +199,7 @@ function AtlasEditor() {
   const [exportResults, setExportResults] = useState<Partial<Record<ExportFormat, ExportResult>>>({});
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [isInteractive, setIsInteractive] = useState(true);
+  const [nodeDragInProgress, setNodeDragInProgress] = useState(false);
   const [discordInviteModalOpen, setDiscordInviteModalOpen] = useState(discordInvitePreviewMode);
 
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
@@ -506,6 +510,10 @@ function AtlasEditor() {
   }, [canvasBackgroundId]);
 
   useEffect(() => {
+    storeConnectorRoutingMode(connectorRoutingMode);
+  }, [connectorRoutingMode]);
+
+  useEffect(() => {
     storeSidebarState(sidebarState);
   }, [sidebarState]);
 
@@ -646,7 +654,21 @@ function AtlasEditor() {
     setFlowNodes(derivedNodes);
   }, [derivedNodes]);
 
-  const edges: Edge[] = useMemo(() => mapAtlasToEdges(appMode, themePaletteId, visibleLinks, stackState), [appMode, stackState, themePaletteId, visibleLinks]);
+  const effectiveConnectorRoutingMode: ConnectorRoutingMode = connectorRoutingMode === "avoid_tiles" && layoutTemplate === "canvas_topology" && !nodeDragInProgress ? "avoid_tiles" : "curved";
+
+  const routingObstacles = useMemo(
+    () => (effectiveConnectorRoutingMode === "avoid_tiles" ? buildConnectorObstacles(flowNodes) : []),
+    [effectiveConnectorRoutingMode, flowNodes]
+  );
+
+  const edges: Edge[] = useMemo(
+    () =>
+      mapAtlasToEdges(appMode, themePaletteId, visibleLinks, stackState, {
+        connectorRoutingMode: effectiveConnectorRoutingMode,
+        routingObstacles
+      }),
+    [appMode, effectiveConnectorRoutingMode, routingObstacles, stackState, themePaletteId, visibleLinks]
+  );
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
     const current = latestAtlasRef.current;
@@ -723,6 +745,14 @@ function AtlasEditor() {
     },
     [appendDebugEvent]
   );
+
+  const handleConnectorRoutingModeToggle = useCallback(() => {
+    setConnectorRoutingMode((current) => {
+      const next: ConnectorRoutingMode = current === "avoid_tiles" ? "curved" : "avoid_tiles";
+      appendDebugEvent("settings.connector_routing", "Connector routing mode changed", "info", { mode: next });
+      return next;
+    });
+  }, [appendDebugEvent]);
 
   const toggleSidebarSection = useCallback((section: SidebarSectionId) => {
     setSidebarState((current) => ({
@@ -1251,6 +1281,7 @@ function AtlasEditor() {
       if (!isInteractive) return;
       if (!draggedNodes.some((draggedNode) => draggedNode.type === "familyNode" || isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))) return;
       isNodeDragging.current = true;
+      setNodeDragInProgress(true);
       appendDebugEvent("canvas.node_drag_start", "Canvas node drag started", "info", getCanvasDebugContext({ node_id: node.id, node_type: node.type, dragged_count: draggedNodes.length }));
     },
     [appendDebugEvent, appMode, getCanvasDebugContext, isInteractive]
@@ -1260,10 +1291,12 @@ function AtlasEditor() {
     (_event: MouseEvent | TouchEvent, node: Node, draggedNodes: Node[]) => {
       if (!isInteractive) {
         isNodeDragging.current = false;
+        setNodeDragInProgress(false);
         setFlowNodes(derivedNodes);
         return;
       }
       isNodeDragging.current = false;
+      setNodeDragInProgress(false);
       if (layoutTemplate !== "canvas_topology") {
         setFlowNodes(derivedNodes);
         return;
@@ -2147,6 +2180,7 @@ function AtlasEditor() {
             brokenLinkCount={brokenLinkCount}
             canvasBackgroundId={canvasBackgroundId}
             canvasRef={canvasRef}
+            connectorRoutingMode={connectorRoutingMode}
             edges={edges}
             exportResults={exportResults}
             fitViewOptions={FIT_VIEW_OPTIONS}
@@ -2168,6 +2202,7 @@ function AtlasEditor() {
             onCanvasDragOver={handleCanvasDragOver}
             onCanvasDrop={handleCanvasDrop}
             onConnect={handleConnect}
+            onConnectorRoutingModeToggle={handleConnectorRoutingModeToggle}
             onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
             onInteractiveChange={handleInteractiveChange}
             onNodeClick={(node) => {
@@ -2359,6 +2394,23 @@ function getStoredHandbookThemeMode(): HandbookThemeMode {
     return stored === "light" ? "light" : "dark";
   } catch {
     return "dark";
+  }
+}
+
+function getStoredConnectorRoutingMode(): ConnectorRoutingMode {
+  try {
+    const stored = window.localStorage.getItem(CONNECTOR_ROUTING_STORAGE_KEY);
+    return stored === "avoid_tiles" ? "avoid_tiles" : "curved";
+  } catch {
+    return "curved";
+  }
+}
+
+function storeConnectorRoutingMode(mode: ConnectorRoutingMode): void {
+  try {
+    window.localStorage.setItem(CONNECTOR_ROUTING_STORAGE_KEY, mode);
+  } catch {
+    // Local UI state is optional; storage failures should not block atlas editing.
   }
 }
 

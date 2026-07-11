@@ -2,8 +2,8 @@ import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
-import { TILE_TYPE_CONFIG } from "../lib/constants";
-import type { Tile, TileIconRef } from "../types/atlas";
+import { normalizeTileIconRef, TILE_TYPE_CONFIG, TileIconGlyph } from "../lib/constants";
+import type { Tile } from "../types/atlas";
 
 export interface TileNodeData extends Record<string, unknown> {
   accentColor?: string;
@@ -29,13 +29,13 @@ export function TileNode({ data, selected }: NodeProps) {
   const fieldEntries = getTileFieldPreviews(tile);
   const tags = tile.tags ?? [];
   const isPrimaryNode = tile.type === "node" && tile.fields?.primary_node === true;
-  const iconRef = getTileIconRef(tile);
+  const iconRef = normalizeTileIconRef(tile);
   const [iconFailed, setIconFailed] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
 
   useEffect(() => {
     setIconFailed(false);
-  }, [iconRef?.url]);
+  }, [iconRef?.id]);
 
   async function handleCopyPath(path: string) {
     try {
@@ -71,11 +71,7 @@ export function TileNode({ data, selected }: NodeProps) {
       {stack ? <div className={stack.badgeShape === "hex" ? "tile-node__stack-count tile-node__stack-count--hex" : "tile-node__stack-count"}>{stack.count}</div> : null}
       <div className="tile-node__header">
         <div className="tile-node__icon">
-          {iconRef && !iconFailed ? (
-            <img src={iconRef.url} alt="" onError={() => setIconFailed(true)} />
-          ) : (
-            <Icon size={20} strokeWidth={2.2} />
-          )}
+          <TileIconGlyph fallback={Icon} forceFallback={iconFailed} iconRef={iconRef} onUploadedError={() => setIconFailed(true)} size={20} strokeWidth={2.2} />
         </div>
         <div className="tile-node__title-wrap">
           <div className="tile-node__title">{tile.title}</div>
@@ -137,19 +133,6 @@ function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
   }
   if (typeof value === "object") return "configured";
   return String(value);
-}
-
-function getTileIconRef(tile: Tile): TileIconRef | null {
-  const iconRef = tile.fields?.icon_ref;
-  if (!iconRef || typeof iconRef !== "object") return null;
-  const candidate = iconRef as Partial<TileIconRef>;
-  if (candidate.kind !== "uploaded" || typeof candidate.filename !== "string" || typeof candidate.url !== "string") return null;
-  return {
-    kind: "uploaded",
-    filename: candidate.filename,
-    url: candidate.url,
-    media_type: typeof candidate.media_type === "string" ? candidate.media_type : undefined
-  };
 }
 
 function TileFieldValue({ fieldKey, onCopyPath, value }: { fieldKey: string; onCopyPath: (path: string) => void; value: string }) {

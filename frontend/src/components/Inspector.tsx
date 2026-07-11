@@ -1,9 +1,11 @@
-import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, Plus, Trash2, Upload, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { CSSProperties } from "react";
-import { uploadTileIcon } from "../lib/api";
+import { useEffect, useState } from "react";
+import { deleteTileIcon, listTileIcons, uploadTileIcon } from "../lib/api";
 import { getFamilyMembershipState } from "../lib/atlasSelectors";
-import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import type { AppMode, Atlas, Family, FlowStep, LayoutTemplate, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType } from "../types/atlas";
+import { iconRefLabel, LINK_TYPES, LUCIDE_ICON_OPTIONS, lucideNameToIconRef, normalizeTileIconRef, TILE_TYPES, TILE_TYPE_CONFIG, TileIconGlyph, uploadedAssetToIconRef, uploadedResultToIconRef } from "../lib/constants";
+import type { AppMode, Atlas, Family, FlowStep, LayoutTemplate, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType, UploadedIconAsset } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
@@ -175,7 +177,6 @@ export function Inspector({
     const lifecycle = resolveLifecycle(selectedTile);
     const editable = isLifecycleEditable(lifecycle, mode);
     const primaryNode = selectedTile.type === "node" && selectedTile.fields?.primary_node === true;
-    const iconRef = getTileIconRef(selectedTile);
 
     return (
       <aside className="inspector">
@@ -196,52 +197,7 @@ export function Inspector({
           <ReadOnlyModeNotice lifecycle={lifecycle} mode={mode} kind="tile" onGoLive={lifecycle === "planned" && mode === "live" ? () => onPromoteTile(selectedTile.id) : undefined} />
         ) : null}
         <fieldset disabled={!editable} className="inspector__fieldset">
-        <div className="icon-editor">
-          <div className="field-editor__title">Icon</div>
-          <div className="icon-editor__preview" style={{ "--tile-accent": config.color } as CSSProperties}>
-            {iconRef ? <img src={iconRef.url} alt="" /> : <Icon size={24} strokeWidth={2.2} />}
-          </div>
-          <label className="ghost-button icon-editor__upload">
-            Upload Icon
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0];
-                event.currentTarget.value = "";
-                if (!file) return;
-                void uploadTileIcon(file)
-                  .then((uploaded) =>
-                    onUpdateTile({
-                      ...selectedTile,
-                      fields: {
-                        ...selectedTile.fields,
-                        icon_ref: {
-                          kind: "uploaded",
-                          filename: uploaded.filename,
-                          url: uploaded.url,
-                          media_type: uploaded.media_type
-                        }
-                      }
-                    })
-                  )
-                  .catch((error) => window.alert(error instanceof Error ? error.message : "Icon upload failed"));
-              }}
-            />
-          </label>
-          {iconRef ? (
-            <button
-              className="ghost-button"
-              onClick={() => {
-                const fields = { ...selectedTile.fields };
-                delete fields.icon_ref;
-                onUpdateTile({ ...selectedTile, fields });
-              }}
-            >
-              Reset Icon
-            </button>
-          ) : null}
-        </div>
+        <TileIconEditor defaultIcon={Icon} defaultLabel={config.label} accentColor={config.color} tile={selectedTile} onUpdateTile={onUpdateTile} />
         <label>
           Type
           <select
@@ -547,6 +503,194 @@ interface FlowStepEditorProps {
   onUpdateTile: (tile: Tile) => void;
 }
 
+function TileIconEditor({
+  accentColor,
+  defaultIcon,
+  defaultLabel,
+  onUpdateTile,
+  tile
+}: {
+  accentColor: string;
+  defaultIcon: LucideIcon;
+  defaultLabel: string;
+  onUpdateTile: (tile: Tile) => void;
+  tile: Tile;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [uploadedIcons, setUploadedIcons] = useState<UploadedIconAsset[]>([]);
+  const [loadingUploadedIcons, setLoadingUploadedIcons] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [editingUploadedIcons, setEditingUploadedIcons] = useState(false);
+  const [deletingIconIds, setDeletingIconIds] = useState<Set<string>>(() => new Set());
+  const [loadError, setLoadError] = useState("");
+  const iconRef = normalizeTileIconRef(tile);
+  const selectedIconId = iconRef?.id ?? "default";
+
+  useEffect(() => {
+    if (!expanded) return;
+    let active = true;
+    setLoadingUploadedIcons(true);
+    setLoadError("");
+    void listTileIcons()
+      .then((result) => {
+        if (active) setUploadedIcons(result.icons);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error instanceof Error ? error.message : "Could not load uploaded icons.");
+      })
+      .finally(() => {
+        if (active) setLoadingUploadedIcons(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [expanded]);
+
+  function applyIconRef(nextIconRef: TileIconRef | null) {
+    const fields = { ...tile.fields };
+    if (nextIconRef) fields.icon_ref = nextIconRef;
+    else delete fields.icon_ref;
+    onUpdateTile({ ...tile, fields });
+  }
+
+  function handleUpload(file: File) {
+    setUploadingIcon(true);
+    void uploadTileIcon(file)
+      .then((uploaded) => {
+        const nextIconRef = uploadedResultToIconRef(uploaded);
+        setUploadedIcons((current) => [nextIconRef, ...current.filter((icon) => icon.id !== nextIconRef.id)]);
+        applyIconRef(nextIconRef);
+      })
+      .catch((error) => window.alert(error instanceof Error ? error.message : "Icon upload failed"))
+      .finally(() => setUploadingIcon(false));
+  }
+
+  function handleDeleteUploadedIcon(asset: UploadedIconAsset) {
+    setDeletingIconIds((current) => new Set(current).add(asset.id));
+    void deleteTileIcon(asset.filename)
+      .then(() => {
+        setUploadedIcons((current) => current.filter((icon) => icon.id !== asset.id));
+        if (selectedIconId === asset.id) applyIconRef(null);
+      })
+      .catch((error) => window.alert(error instanceof Error ? error.message : "Icon delete failed"))
+      .finally(() =>
+        setDeletingIconIds((current) => {
+          const next = new Set(current);
+          next.delete(asset.id);
+          return next;
+        })
+      );
+  }
+
+  return (
+    <div className={expanded ? "icon-editor icon-editor--expanded" : "icon-editor"} style={{ "--tile-accent": accentColor } as CSSProperties}>
+      <div className="icon-editor__summary">
+        <div className="icon-editor__preview">
+          <TileIconGlyph fallback={defaultIcon} iconRef={iconRef} size={24} strokeWidth={2.2} />
+        </div>
+        <div className="icon-editor__meta">
+          <div className="field-editor__title">Icon</div>
+          <strong>{iconRefLabel(iconRef, defaultLabel)}</strong>
+          <span>{iconRef?.kind === "uploaded" ? "Uploaded icon" : iconRef?.kind === "lucide" ? "Lucide icon" : "Tile type default"}</span>
+        </div>
+      </div>
+      <div className="icon-editor__actions">
+        <button className="ghost-button" type="button" onClick={() => setExpanded((current) => !current)}>
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Choose Icon
+        </button>
+        <button className="ghost-button" type="button" disabled={!iconRef} onClick={() => applyIconRef(null)}>
+          <X size={16} /> Use Default
+        </button>
+      </div>
+      {expanded ? (
+        <div className="icon-library">
+          <div className="icon-library__section-head">
+            <button className="ghost-button icon-library__edit" type="button" onClick={() => setEditingUploadedIcons((current) => !current)}>
+              {editingUploadedIcons ? "Done" : "Edit"}
+            </button>
+            <label className={uploadingIcon ? "ghost-button icon-library__upload icon-library__upload--busy" : "ghost-button icon-library__upload"}>
+              <Upload size={16} />
+              <span>{uploadingIcon ? "Uploading" : "Upload New Icon"}</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = "";
+                  if (file) handleUpload(file);
+                }}
+              />
+            </label>
+          </div>
+          <div className="icon-library__pool" role="listbox" aria-label="Icon library">
+            {loadingUploadedIcons ? <div className="icon-library__empty">Loading uploaded icons...</div> : null}
+            {loadError ? <div className="icon-library__empty icon-library__empty--error">{loadError}</div> : null}
+            {!loadingUploadedIcons && !loadError && uploadedIcons.length === 0 ? <div className="icon-library__empty">No uploaded icons yet.</div> : null}
+            {uploadedIcons.length ? (
+              <div className="icon-library__grid">
+                {uploadedIcons.map((asset) => {
+                  const assetRef = uploadedAssetToIconRef(asset);
+                  const selected = selectedIconId === assetRef.id;
+                  const deleting = deletingIconIds.has(asset.id);
+                  return (
+                    <div key={assetRef.id} className={editingUploadedIcons ? "icon-library__option-shell icon-library__option-shell--editing" : "icon-library__option-shell"}>
+                      <button
+                        aria-pressed={selected}
+                        className={selected ? "icon-library__option icon-library__option--selected" : "icon-library__option"}
+                        disabled={deleting}
+                        title={asset.filename}
+                        type="button"
+                        onClick={() => applyIconRef(assetRef)}
+                      >
+                        <TileIconGlyph alt={asset.filename} fallback={defaultIcon} iconRef={assetRef} size={22} />
+                        <span>{asset.filename}</span>
+                      </button>
+                      {editingUploadedIcons ? (
+                        <button
+                          aria-label={`Remove ${asset.filename} from icon library`}
+                          className="icon-library__delete"
+                          disabled={deleting}
+                          title={`Remove ${asset.filename}`}
+                          type="button"
+                          onClick={() => handleDeleteUploadedIcon(asset)}
+                        >
+                          <X size={12} strokeWidth={3} />
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="icon-library__divider" />
+            <div className="icon-library__grid">
+              {LUCIDE_ICON_OPTIONS.map((option) => {
+                const selected = selectedIconId === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    aria-pressed={selected}
+                    className={selected ? "icon-library__option icon-library__option--selected" : "icon-library__option"}
+                    title={option.label}
+                    type="button"
+                    onClick={() => {
+                      const nextIconRef = lucideNameToIconRef(option.name);
+                      if (nextIconRef) applyIconRef(nextIconRef);
+                    }}
+                  >
+                    <option.Icon size={22} strokeWidth={2.2} />
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function FlowStepEditor({ atlas, tile, onUpdateTile }: FlowStepEditorProps) {
   const steps = normalizeFlowSteps(tile.fields.steps);
   const relatedLinks = atlas.links.filter((link) => link.from === tile.id || link.to === tile.id);
@@ -692,19 +836,6 @@ function coerceFieldValue(original: unknown, next: string): unknown {
     return next === "true" || next === "1" || next.toLowerCase() === "yes";
   }
   return next;
-}
-
-function getTileIconRef(tile: Tile): TileIconRef | null {
-  const iconRef = tile.fields?.icon_ref;
-  if (!iconRef || typeof iconRef !== "object") return null;
-  const candidate = iconRef as Partial<TileIconRef>;
-  if (candidate.kind !== "uploaded" || typeof candidate.filename !== "string" || typeof candidate.url !== "string") return null;
-  return {
-    kind: "uploaded",
-    filename: candidate.filename,
-    url: candidate.url,
-    media_type: typeof candidate.media_type === "string" ? candidate.media_type : undefined
-  };
 }
 
 function defaultStackName(stack: TileStack): string {

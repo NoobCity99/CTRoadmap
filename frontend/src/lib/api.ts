@@ -1,4 +1,4 @@
-import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult, IconUploadResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
+import type { AppVersion, Atlas, AtlasImportPreview, AuthStatus, DebugEvent, ExportFormat, ExportResult, HealthResult, IconAssetListResult, IconUploadResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
 
 interface ApiRequestOptions {
   method?: string;
@@ -37,6 +37,37 @@ export async function saveAtlas(atlas: Atlas): Promise<Atlas> {
 
 export async function loadHealth(): Promise<HealthResult> {
   return requestJson<HealthResult>("/api/health");
+}
+
+export async function loadAuthStatus(): Promise<AuthStatus> {
+  return requestJson<AuthStatus>("/api/auth/status");
+}
+
+export async function setupLocalAccessPasscode(passcode: string): Promise<AuthStatus> {
+  return requestJson<AuthStatus>("/api/auth/setup", { method: "POST", json: { passcode } });
+}
+
+export async function loginLocalAccessPasscode(passcode: string): Promise<AuthStatus> {
+  return requestJson<AuthStatus>("/api/auth/login", { method: "POST", json: { passcode } });
+}
+
+export async function logoutLocalAccessPasscode(): Promise<void> {
+  await requestVoid("/api/auth/logout", { method: "POST" });
+}
+
+export async function changeLocalAccessPasscode(currentPasscode: string, newPasscode: string): Promise<AuthStatus> {
+  return requestJson<AuthStatus>("/api/auth/change-passcode", {
+    method: "POST",
+    json: { current_passcode: currentPasscode, new_passcode: newPasscode }
+  });
+}
+
+export async function removeLocalAccessPasscode(currentPasscode: string): Promise<AuthStatus> {
+  return requestJson<AuthStatus>("/api/auth/remove-passcode", { method: "POST", json: { current_passcode: currentPasscode } });
+}
+
+export async function logoutAllLocalAccessPasscode(): Promise<void> {
+  await requestVoid("/api/auth/logout-all", { method: "POST" });
 }
 
 export async function loadAppVersion(): Promise<AppVersion> {
@@ -83,6 +114,14 @@ export async function uploadTileIcon(file: File): Promise<IconUploadResult> {
   return requestJson<IconUploadResult>("/api/assets/icons", { method: "POST", formData });
 }
 
+export async function listTileIcons(): Promise<IconAssetListResult> {
+  return requestJson<IconAssetListResult>("/api/assets/icons");
+}
+
+export async function deleteTileIcon(filename: string): Promise<void> {
+  await requestVoid(`/api/assets/icons/${encodeURIComponent(filename)}`, { method: "DELETE" });
+}
+
 export function downloadAtlasJson(atlas: Atlas): void {
   const blob = new Blob([JSON.stringify(atlas, null, 2), "\n"], {
     type: "application/json"
@@ -120,6 +159,9 @@ async function request(url: string, options: ApiRequestOptions): Promise<Respons
   }
 
   if (!response.ok) {
+    if (response.status === 401 && !url.startsWith("/api/auth/")) {
+      window.dispatchEvent(new CustomEvent("ctroadmap:auth-required"));
+    }
     throw await createApiError(response, url);
   }
 
@@ -134,6 +176,7 @@ function toRequestInit({ method = "GET", json, formData }: ApiRequestOptions): R
   if (json !== undefined) {
     return {
       method,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json"
       },
@@ -144,11 +187,12 @@ function toRequestInit({ method = "GET", json, formData }: ApiRequestOptions): R
   if (formData !== undefined) {
     return {
       method,
+      credentials: "include",
       body: formData
     };
   }
 
-  return { method };
+  return { method, credentials: "include" };
 }
 
 async function createApiError(response: Response, url: string): Promise<ApiError> {

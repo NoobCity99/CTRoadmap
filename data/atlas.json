@@ -3,17 +3,17 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-09T07:24:54.939854+00:00"
+    "updated_at": "2026-07-11T05:44:23.397433+00:00"
   },
   "tiles": [
     {
       "id": "node_server1",
       "type": "node",
-      "title": "server1",
+      "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
-        "x": 202.99122516766514,
-        "y": -421.1141824114866
+        "x": 15.868552978175998,
+        "y": -533.5634822191516
       },
       "size": {
         "width": 240.0,
@@ -23,21 +23,30 @@
       "fields": {
         "role": "",
         "hostname": "",
-        "ip": "",
+        "ip": "666.66.6.6",
         "os": "",
-        "purpose": ""
+        "purpose": "",
+        "primary_node": true,
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "5f274c4ce5ee40ad93ec27a885a8edf3.png",
+          "url": "/api/assets/icons/5f274c4ce5ee40ad93ec27a885a8edf3.png",
+          "media_type": "image/png"
+        }
       },
-      "notes": "",
-      "tags": []
+      "notes": "Built this server out of paperclips and chewing gum. Held together with tears and toe-jam. Screwdriver taped to the back of it can be used to jump start it if necessary.  Good luck. \n\nValid users: \nTinkerbell4\nRabbleWilson9\nMom",
+      "tags": [
+        "DELL"
+      ]
     },
     {
       "id": "mount_samba",
       "type": "mount",
       "title": "/samba",
-      "parent": null,
+      "parent": "node_server1",
       "position": {
-        "x": 374.8951157957937,
-        "y": -171.93977712599155
+        "x": 380.5231655010474,
+        "y": -131.78288193174882
       },
       "size": {
         "width": 240.0,
@@ -45,9 +54,15 @@
       },
       "lifecycle": "live",
       "fields": {
-        "path": "",
+        "path": "/srv/smbd/",
         "source": "",
-        "options": ""
+        "options": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "fff9610f787e4944ae996e906a85db91.png",
+          "url": "/api/assets/icons/fff9610f787e4944ae996e906a85db91.png",
+          "media_type": "image/png"
+        }
       },
       "notes": "",
       "tags": []
@@ -55,11 +70,11 @@
     {
       "id": "node_micro_server",
       "type": "node",
-      "title": "mini server",
+      "title": "micro server",
       "parent": null,
       "position": {
-        "x": -263.21351765281594,
-        "y": -429.58857689950713
+        "x": -463.4414914549805,
+        "y": -563.0382848592498
       },
       "size": {
         "width": 240.0,
@@ -67,11 +82,10 @@
       },
       "lifecycle": "live",
       "fields": {
-        "role": "",
-        "hostname": "",
-        "ip": "",
-        "os": "",
-        "purpose": ""
+        "role": "TEST",
+        "hostname": "SPLIT",
+        "ip": "55.55..5..354",
+        "primary_node": true
       },
       "notes": "",
       "tags": []
@@ -82,8 +96,8 @@
       "title": "WAKE/SLEEP",
       "parent": null,
       "position": {
-        "x": -687.9072400778009,
-        "y": 188.42137017125603
+        "x": -639.2502258310317,
+        "y": -116.78254011840961
       },
       "size": {
         "width": 240.0,
@@ -103,8 +117,8 @@
       "title": "STATUS PAGE",
       "parent": "node_micro_server",
       "position": {
-        "x": -687.7214584706297,
-        "y": -73.58760489299743
+        "x": -644.4212542196258,
+        "y": -340.07596909152585
       },
       "size": {
         "width": 240.0,
@@ -114,7 +128,8 @@
       "fields": {
         "url": "10.0.0.252",
         "protocol": "",
-        "purpose": ""
+        "purpose": "",
+        "Port": "8080"
       },
       "notes": "",
       "tags": [
@@ -124,11 +139,11 @@
     {
       "id": "node_server_2",
       "type": "node",
-      "title": "server 2",
+      "title": "HOME SERV",
       "parent": null,
       "position": {
-        "x": -762.0398475134772,
-        "y": -430.2820628022017
+        "x": -1378.041056930155,
+        "y": -696.8440691335602
       },
       "size": {
         "width": 240.0,
@@ -140,19 +155,22 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": ""
+        "purpose": "",
+        "primary_node": true
       },
       "notes": "",
-      "tags": []
+      "tags": [
+        "BackUps"
+      ]
     },
     {
       "id": "secret_ref_ssh_key",
       "type": "secret_ref",
       "title": "SSH KEY",
-      "parent": null,
+      "parent": "node_micro_server",
       "position": {
-        "x": -265.6553688869465,
-        "y": 237.59231665458992
+        "x": -271.157727669818,
+        "y": -129.57611803029582
       },
       "size": {
         "width": 240.0,
@@ -161,7 +179,7 @@
       "lifecycle": "live",
       "fields": {
         "host": "",
-        "path": "",
+        "path": "/mnt/location/snoot",
         "purpose": "",
         "allowed_command": "",
         "stores_secret_value": false
@@ -175,8 +193,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 201.3545749261495,
-        "y": 237.00876026846203
+        "x": 58.5661928218683,
+        "y": -124.5058623526678
       },
       "size": {
         "width": 240.0,
@@ -197,10 +215,10 @@
       "id": "drive_back_ups",
       "type": "drive",
       "title": "back ups",
-      "parent": null,
+      "parent": "mount_samba",
       "position": {
-        "x": 375.55959676819924,
-        "y": 20.21280783321329
+        "x": 382.5595967681993,
+        "y": 70.21280783321328
       },
       "size": {
         "width": 240.0,
@@ -214,7 +232,9 @@
         "purpose": ""
       },
       "notes": "",
-      "tags": []
+      "tags": [
+        "TAG"
+      ]
     },
     {
       "id": "script_diagnostic",
@@ -222,8 +242,8 @@
       "title": "diagnostic",
       "parent": null,
       "position": {
-        "x": 682.0945567741911,
-        "y": -167.0275646059971
+        "x": 672.4184842383557,
+        "y": -136.9051454724903
       },
       "size": {
         "width": 240.0,
@@ -241,19 +261,19 @@
     {
       "id": "mount_backups",
       "type": "mount",
-      "title": "backups",
+      "title": "storage",
       "parent": "node_server_2",
       "position": {
-        "x": -980.7747891362906,
-        "y": -248.50373099017474
+        "x": -1022.0686806594085,
+        "y": -414.90583507554317
       },
       "size": {
         "width": 240.0,
         "height": 132.0
       },
-      "lifecycle": "planned",
+      "lifecycle": "live",
       "fields": {
-        "path": "",
+        "path": "usr/mnt/video",
         "source": "",
         "options": ""
       },
@@ -263,57 +283,11 @@
     {
       "id": "drive_bk1",
       "type": "drive",
-      "title": "BK1",
+      "title": "VID",
       "parent": "mount_backups",
       "position": {
-        "x": -978.0007271980279,
-        "y": -80.67298372527723
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "planned",
-      "fields": {
-        "capacity": "",
-        "filesystem": "",
-        "device": "",
-        "purpose": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "drive_bk2",
-      "type": "drive",
-      "title": "BK2",
-      "parent": "mount_backups",
-      "position": {
-        "x": -978.0007271980279,
-        "y": 84.38370160135749
-      },
-      "size": {
-        "width": 240.0,
-        "height": 132.0
-      },
-      "lifecycle": "planned",
-      "fields": {
-        "capacity": "",
-        "filesystem": "",
-        "device": "",
-        "purpose": ""
-      },
-      "notes": "",
-      "tags": []
-    },
-    {
-      "id": "url_vlan",
-      "type": "url",
-      "title": "VLAN",
-      "parent": null,
-      "position": {
-        "x": -263.2135176528159,
-        "y": -666.0885768995072
+        "x": -1026.3309637380262,
+        "y": -218.81932518280155
       },
       "size": {
         "width": 240.0,
@@ -321,9 +295,323 @@
       },
       "lifecycle": "live",
       "fields": {
-        "url": "666.6.6.666",
+        "capacity": "",
+        "filesystem": "",
+        "device": "HDD",
+        "purpose": "Storing security footage"
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_primary",
+      "type": "drive",
+      "title": "primary",
+      "parent": "mount_samba",
+      "position": {
+        "x": 384.3908406487318,
+        "y": 296.7128078332133
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "script_auto_backup_function",
+      "type": "script",
+      "title": "auto backup function",
+      "parent": "mount_samba",
+      "position": {
+        "x": 382.4021482493476,
+        "y": 483.5078645481967
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "path": "",
+        "language": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "drive_redundant",
+      "type": "drive",
+      "title": "redundant",
+      "parent": null,
+      "position": {
+        "x": 670.8219852655118,
+        "y": 78.83060317369194
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "capacity": "",
+        "filesystem": "",
+        "device": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "note_note",
+      "type": "note",
+      "title": "note",
+      "parent": "node_server1",
+      "position": {
+        "x": 673.8945594300216,
+        "y": -352.7114987259178
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "text": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "a2471c5361fd4eb289bb28bed8391411.jpg",
+          "url": "/api/assets/icons/a2471c5361fd4eb289bb28bed8391411.jpg",
+          "media_type": "image/jpeg"
+        }
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "note_notes",
+      "type": "note",
+      "title": "notes",
+      "parent": "node_server1",
+      "position": {
+        "x": 959.0065667103332,
+        "y": -352.83240409375446
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "text": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "note_ntoes_3",
+      "type": "note",
+      "title": "ntoes 3",
+      "parent": "node_server1",
+      "position": {
+        "x": 1239.7679677333806,
+        "y": -352.83809042255854
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "text": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "url_webapp_x",
+      "type": "url",
+      "title": "WEBAPP X",
+      "parent": "node_server1",
+      "position": {
+        "x": 677.6938272411535,
+        "y": -529.5022815027332
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "url": "",
         "protocol": "",
         "purpose": ""
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "service_docker",
+      "type": "service",
+      "title": "DOCKER",
+      "parent": "node_server1",
+      "position": {
+        "x": 371.18889205863877,
+        "y": -528.3013461627718
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "status": "",
+        "port": "",
+        "purpose": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "id": "uploaded:1c6366d5aa8f4d7a942af3c74cf826aa.png",
+          "filename": "1c6366d5aa8f4d7a942af3c74cf826aa.png",
+          "url": "/api/assets/icons/1c6366d5aa8f4d7a942af3c74cf826aa.png",
+          "media_type": "image/png"
+        }
+      },
+      "notes": "",
+      "tags": [
+        "Nextcloud"
+      ]
+    },
+    {
+      "id": "container_new_container_1",
+      "type": "container",
+      "title": "Home Assistant",
+      "parent": "node_server_2",
+      "position": {
+        "x": -1359.3089926350883,
+        "y": -413.2689802944959
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "image": "",
+        "compose_service": "",
+        "port": "",
+        "purpose": "",
+        "icon_ref": {
+          "kind": "uploaded",
+          "filename": "48f029a2aefc4cbe85efbbfffd95744c.png",
+          "url": "/api/assets/icons/48f029a2aefc4cbe85efbbfffd95744c.png",
+          "media_type": "image/png"
+        }
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "iot_device_new_iot_device_1",
+      "type": "iot_device",
+      "title": "Secret Camera",
+      "parent": "container_new_container_1",
+      "position": {
+        "x": -1636.9783419508383,
+        "y": -37.30731080465409
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "ip": "",
+        "protocol": "",
+        "model": "iD-10-T",
+        "purpose": "Catch Wife with Mailman"
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "iot_device_new_iot_device_2",
+      "type": "iot_device",
+      "title": "Air Fryer",
+      "parent": "container_new_container_1",
+      "position": {
+        "x": -1353.8851135861894,
+        "y": -225.7175499539799
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "ip": "",
+        "protocol": "",
+        "model": "NINJA",
+        "purpose": "Make Bacon"
+      },
+      "notes": "",
+      "tags": [
+        "HOT"
+      ]
+    },
+    {
+      "id": "iot_device_new_iot_device_3",
+      "type": "iot_device",
+      "title": "Garage Camera",
+      "parent": "container_new_container_1",
+      "position": {
+        "x": -1631.2998546368442,
+        "y": -229.2314352290417
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "ip": "321.235.23.3",
+        "protocol": "",
+        "model": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": [
+        "RING"
+      ]
+    },
+    {
+      "id": "iot_device_new_iot_device_4",
+      "type": "iot_device",
+      "title": "Smart Toilet",
+      "parent": "container_new_container_1",
+      "position": {
+        "x": -1353.1628165324528,
+        "y": -46.06758736451113
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "ip": "",
+        "protocol": "",
+        "model": "Phanny 3000",
+        "purpose": "Private Time"
       },
       "notes": "",
       "tags": []
@@ -343,30 +631,6 @@
       "directional": true
     },
     {
-      "id": "link_node_micro_server_url_url_hosts",
-      "from": "node_micro_server",
-      "to": "url_url",
-      "type": "hosts",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "hosts",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_contains_node_micro_server_url_url",
-      "from": "node_micro_server",
-      "to": "url_url",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
       "id": "link_url_url_flow_wake_sleep_runs",
       "from": "url_url",
       "to": "flow_wake_sleep",
@@ -379,30 +643,6 @@
       "directional": true
     },
     {
-      "id": "link_node_server1_mount_samba_contains",
-      "from": "node_server1",
-      "to": "mount_samba",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_node_micro_server_secret_ref_ssh_key_contains",
-      "from": "node_micro_server",
-      "to": "secret_ref_ssh_key",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "holds",
-      "notes": "",
-      "directional": true
-    },
-    {
       "id": "link_node_server1_secret_ref_ssh_key_micro_hosts",
       "from": "node_server1",
       "to": "secret_ref_ssh_key_micro",
@@ -411,18 +651,6 @@
       "to_port": "parent",
       "lifecycle": "live",
       "label": "hosts",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_mount_samba_drive_back_ups_contains",
-      "from": "mount_samba",
-      "to": "drive_back_ups",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "live",
-      "label": "contains",
       "notes": "",
       "directional": true
     },
@@ -457,19 +685,7 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
-      "lifecycle": "planned",
-      "label": "contains",
-      "notes": "",
-      "directional": true
-    },
-    {
-      "id": "link_contains_mount_backups_drive_bk2",
-      "from": "mount_backups",
-      "to": "drive_bk2",
-      "type": "contains",
-      "from_port": "child",
-      "to_port": "parent",
-      "lifecycle": "planned",
+      "lifecycle": "live",
       "label": "contains",
       "notes": "",
       "directional": true
@@ -481,59 +697,209 @@
       "type": "contains",
       "from_port": "child",
       "to_port": "parent",
-      "lifecycle": "planned",
+      "lifecycle": "live",
       "label": "contains",
       "notes": "",
       "directional": true
     },
     {
-      "id": "link_url_vlan_node_micro_server_calls",
-      "from": "url_vlan",
-      "to": "node_micro_server",
-      "type": "calls",
+      "id": "link_contains_mount_samba_drive_back_ups",
+      "from": "mount_samba",
+      "to": "drive_back_ups",
+      "type": "mounted_at",
       "from_port": "child",
       "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_samba_drive_primary",
+      "from": "mount_samba",
+      "to": "drive_primary",
+      "type": "mounted_at",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_mount_samba_script_auto_backup_function",
+      "from": "mount_samba",
+      "to": "script_auto_backup_function",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_script_auto_backup_function_drive_redundant_uses_storage",
+      "from": "script_auto_backup_function",
+      "to": "drive_redundant",
+      "type": "uses_storage",
+      "from_port": "out",
+      "to_port": "in",
+      "lifecycle": "live",
+      "label": "sends to",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_server1_note_note_depends_on",
+      "from": "node_server1",
+      "to": "note_note",
+      "type": "depends_on",
+      "from_port": "child",
+      "to_port": "in",
       "lifecycle": "live",
       "label": ".",
       "notes": "",
       "directional": true
     },
     {
-      "id": "link_url_vlan_node_server_2_calls",
-      "from": "url_vlan",
-      "to": "node_server_2",
-      "type": "calls",
+      "id": "link_contains_node_server1_url_webapp_x",
+      "from": "node_server1",
+      "to": "url_webapp_x",
+      "type": "contains",
       "from_port": "child",
       "to_port": "parent",
       "lifecycle": "live",
-      "label": ",",
+      "label": "contains",
       "notes": "",
       "directional": true
     },
     {
-      "id": "link_url_vlan_node_server1_calls",
-      "from": "url_vlan",
-      "to": "node_server1",
-      "type": "calls",
+      "id": "link_contains_node_server1_mount_samba",
+      "from": "node_server1",
+      "to": "mount_samba",
+      "type": "contains",
       "from_port": "child",
       "to_port": "parent",
       "lifecycle": "live",
-      "label": ",",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_node_micro_server_url_url_hosts",
+      "from": "node_micro_server",
+      "to": "url_url",
+      "type": "hosts",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "hosts",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_micro_server_secret_ref_ssh_key",
+      "from": "node_micro_server",
+      "to": "secret_ref_ssh_key",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server1_service_docker",
+      "from": "node_server1",
+      "to": "service_docker",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_node_server_2_container_new_container_1",
+      "from": "node_server_2",
+      "to": "container_new_container_1",
+      "type": "runs",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "runs",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_container_new_container_1_iot_device_new_iot_device_2",
+      "from": "container_new_container_1",
+      "to": "iot_device_new_iot_device_2",
+      "type": "contains",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_container_new_container_1_iot_device_new_iot_device_3",
+      "from": "container_new_container_1",
+      "to": "iot_device_new_iot_device_3",
+      "type": "controls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_container_new_container_1_iot_device_new_iot_device_1",
+      "from": "container_new_container_1",
+      "to": "iot_device_new_iot_device_1",
+      "type": "controls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
+      "notes": "",
+      "directional": true
+    },
+    {
+      "id": "link_contains_container_new_container_1_iot_device_new_iot_device_4",
+      "from": "container_new_container_1",
+      "to": "iot_device_new_iot_device_4",
+      "type": "controls",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "contains",
       "notes": "",
       "directional": true
     }
   ],
   "views": [
     {
-      "id": "hardware",
-      "title": "Hardware",
-      "description": "Physical nodes, drives, and IoT devices",
+      "id": "physical",
+      "title": "Physical",
+      "description": "Hardware, cabling, drives, and mounts",
       "visible_types": [
         "node",
         "drive",
-        "iot_device"
+        "mount"
       ],
-      "visible_links": [],
+      "visible_links": [
+        "contains",
+        "mounted_at",
+        "runs",
+        "hosts",
+        "related_to"
+      ],
       "camera": {
         "x": 0.0,
         "y": 0.0,
@@ -542,15 +908,23 @@
       "layout_template": "canvas_topology"
     },
     {
-      "id": "software",
-      "title": "Software",
-      "description": "Services, containers, and URLs",
+      "id": "services",
+      "title": "Services",
+      "description": "Applications, daemons, and containers",
       "visible_types": [
+        "node",
         "service",
         "container",
-        "url"
+        "url",
+        "check"
       ],
-      "visible_links": [],
+      "visible_links": [
+        "runs",
+        "hosts",
+        "depends_on",
+        "exposes_url",
+        "validates_with"
+      ],
       "camera": {
         "x": 0.0,
         "y": 0.0,
@@ -559,25 +933,80 @@
       "layout_template": "canvas_topology"
     },
     {
-      "id": "infrastructure",
-      "title": "Infrastructure",
-      "description": "Scripts, secrets, configs, notes, mounts, flows, and checks",
+      "id": "storage",
+      "title": "Storage",
+      "description": "Storage devices and paths",
       "visible_types": [
-        "script",
-        "secret_ref",
-        "config",
-        "note",
+        "node",
+        "drive",
         "mount",
+        "service",
+        "container"
+      ],
+      "visible_links": [
+        "uses_storage",
+        "mounted_at",
+        "backs_up_to",
+        "contains"
+      ],
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "layout_template": "canvas_topology"
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Secret references, configs, and access dependencies",
+      "visible_types": [
+        "node",
+        "script",
+        "config",
+        "secret_ref",
         "flow",
         "check"
       ],
-      "visible_links": [],
+      "visible_links": [
+        "requires_key",
+        "requires_config",
+        "validates_with",
+        "fails_if"
+      ],
       "camera": {
         "x": 0.0,
         "y": 0.0,
         "zoom": 1.0
       },
       "layout_template": "canvas_topology"
+    },
+    {
+      "id": "flows",
+      "title": "Flows",
+      "description": "Operational functions and process flows",
+      "visible_types": [
+        "flow",
+        "script",
+        "service",
+        "url",
+        "check",
+        "secret_ref",
+        "config"
+      ],
+      "visible_links": [
+        "calls",
+        "controls",
+        "requires_key",
+        "requires_config",
+        "fails_if"
+      ],
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "layout_template": "layered_hierarchy"
     },
     {
       "id": "everything",
@@ -591,8 +1020,135 @@
         "zoom": 1.0
       },
       "layout_template": "canvas_topology"
+    },
+    {
+      "id": "view_hardware",
+      "title": "Stuff",
+      "description": "Files",
+      "visible_types": [
+        "node",
+        "service",
+        "container",
+        "script",
+        "config",
+        "note"
+      ],
+      "visible_links": [],
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "layout_template": "canvas_topology"
     }
   ],
-  "stacks": [],
-  "families": []
+  "stacks": [
+    {
+      "id": "stack_node_server1_note",
+      "stack_kind": "sibling_type",
+      "parent_id": "node_server1",
+      "tile_type": "note",
+      "member_ids": [
+        "note_note",
+        "note_notes",
+        "note_ntoes_3"
+      ],
+      "representative_id": "note_note",
+      "name": "3 Notes",
+      "name_is_custom": false
+    },
+    {
+      "id": "stack_mount_samba",
+      "stack_kind": "mount_children",
+      "parent_id": "mount_samba",
+      "tile_type": "mount",
+      "member_ids": [
+        "drive_back_ups",
+        "drive_primary",
+        "script_auto_backup_function"
+      ],
+      "representative_id": "mount_samba",
+      "name": "3 Mounted Items",
+      "name_is_custom": false
+    }
+  ],
+  "families": [
+    {
+      "id": "family_handcock",
+      "title": "Primary System",
+      "description": "",
+      "member_tile_ids": [
+        "secret_ref_ssh_key_micro",
+        "script_diagnostic",
+        "node_server1",
+        "mount_samba",
+        "drive_back_ups",
+        "drive_primary",
+        "script_auto_backup_function",
+        "note_note",
+        "note_notes",
+        "note_ntoes_3",
+        "url_webapp_x",
+        "service_docker"
+      ],
+      "position": {
+        "x": 6.3245261580147485,
+        "y": -592.52672842613
+      },
+      "size": {
+        "width": 943.0,
+        "height": 42.0
+      },
+      "order": 0,
+      "color": "#f406c8",
+      "tag": null
+    },
+    {
+      "id": "family_gp8_micro",
+      "title": "GP8 Micro",
+      "description": "",
+      "member_tile_ids": [
+        "node_micro_server",
+        "url_url",
+        "secret_ref_ssh_key"
+      ],
+      "position": {
+        "x": -525.1148720969425,
+        "y": -621.412230138408
+      },
+      "size": {
+        "width": 399.0,
+        "height": 250.0
+      },
+      "order": 1,
+      "color": "#10e53b",
+      "tag": null
+    },
+    {
+      "id": "family_bulk_storage",
+      "title": "SMART LIFE",
+      "description": "",
+      "member_tile_ids": [
+        "node_server_2",
+        "mount_backups",
+        "drive_bk1",
+        "container_new_container_1",
+        "iot_device_new_iot_device_1",
+        "iot_device_new_iot_device_2",
+        "iot_device_new_iot_device_3",
+        "iot_device_new_iot_device_4"
+      ],
+      "position": {
+        "x": -1677.9643441164558,
+        "y": -470.0864956308954
+      },
+      "size": {
+        "width": 947.0,
+        "height": 586.0
+      },
+      "order": 2,
+      "color": "#9c07c5",
+      "tag": null
+    }
+  ]
 }

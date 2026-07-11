@@ -1,10 +1,10 @@
 import { Copy, ExternalLink } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TILE_TYPE_CONFIG } from "../lib/constants";
+import { normalizeTileIconRef, TILE_TYPE_CONFIG, TileIconGlyph } from "../lib/constants";
 import { buildHandbookDocument, buildHandbookVolumeOutline, findHandbookVolumeForTile, tileAnchor, type HandbookChapter, type HandbookTileSection, type HandbookVolume } from "../lib/handbook";
 import { resolveLifecycle } from "../lib/atlasSelectors";
-import type { Atlas, LinkType, Selection, Tile, TileIconRef } from "../types/atlas";
+import type { Atlas, LinkType, Selection, Tile } from "../types/atlas";
 
 export type HandbookThemeMode = "dark" | "light";
 
@@ -297,7 +297,7 @@ function TileArticle({
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const lifecycle = resolveLifecycle(tile);
-  const iconRef = getTileIconRef(tile);
+  const iconRef = normalizeTileIconRef(tile);
   const parent = tile.parent ? atlas.tiles.find((candidate) => candidate.id === tile.parent) : null;
   const tags = tile.tags ?? [];
   const selected = selection?.kind === "tile" && selection.id === tile.id;
@@ -305,7 +305,9 @@ function TileArticle({
   return (
     <article id={anchorId} data-handbook-anchor="true" className={selected ? `${className} handbook-tile handbook-tile--selected` : `${className} handbook-tile`}>
       <button className="handbook-tile__heading" type="button" onClick={() => onSelectTile(tile.id)}>
-        <span className="handbook-tile__icon">{iconRef ? <img src={iconRef.url} alt="" /> : <Icon size={22} />}</span>
+        <span className="handbook-tile__icon">
+          <TileIconGlyph fallback={Icon} iconRef={iconRef} size={22} />
+        </span>
         <span>
           <strong>{tile.title}</strong>
           <small>
@@ -448,15 +450,3 @@ function normalizeHref(value: string): string {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `http://${value}`;
 }
 
-function getTileIconRef(tile: Tile): TileIconRef | null {
-  const iconRef = tile.fields?.icon_ref;
-  if (!iconRef || typeof iconRef !== "object") return null;
-  const candidate = iconRef as Partial<TileIconRef>;
-  if (candidate.kind !== "uploaded" || typeof candidate.url !== "string" || typeof candidate.filename !== "string") return null;
-  return {
-    kind: "uploaded",
-    filename: candidate.filename,
-    url: candidate.url,
-    media_type: typeof candidate.media_type === "string" ? candidate.media_type : undefined
-  };
-}

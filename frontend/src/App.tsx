@@ -8,9 +8,10 @@ import {
   type Node,
   type NodeChange
 } from "@xyflow/react";
-import { Loader2 } from "lucide-react";
+import { Loader2, LockKeyhole, X } from "lucide-react";
 import {
   type DragEvent,
+  type FormEvent,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
   type WheelEvent as ReactWheelEvent,
@@ -29,20 +30,26 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { TopBar, type UpdateNoticeView } from "./components/TopBar";
 import {
   clearBackendDebugLog,
+  changeLocalAccessPasscode,
   downloadAtlasJson,
   downloadExport,
   generateExport,
+  loadAuthStatus,
   loadAppVersion,
   loadAtlas,
   loadBackendDebugLog,
   loadHealth,
   loadUpdateAdvisory,
+  loginLocalAccessPasscode,
+  logoutAllLocalAccessPasscode,
   previewAtlasImport,
   readAtlasFile,
+  removeLocalAccessPasscode,
   saveAtlas,
-  saveUpdateSettings
+  saveUpdateSettings,
+  setupLocalAccessPasscode
 } from "./lib/api";
-import { DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
+import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
 import {
   activeTemplateForUi,
@@ -87,6 +94,7 @@ import { buildHandbookDocument, findHandbookVolumeForTile } from "./lib/handbook
 import type {
   Atlas,
   AppVersion,
+  AuthStatus,
   DebugEvent,
   Family,
   ExportFormat,
@@ -118,6 +126,8 @@ const UPDATE_NOTICE_SNOOZE_HOURS = 24;
 const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
 const HANDBOOK_THEME_STORAGE_KEY = "ctroadmap.handbookThemeMode";
+const LOCAL_ACCESS_PROMPT_PREFIX = "ctroadmap:local-access-prompt:";
+const LOCAL_ACCESS_PROMPT_DELAY_MS = 14 * 24 * 60 * 60 * 1000;
 const AUTOSAVE_DEBOUNCE_MS = 1000;
 const DISCORD_INVITE_REMINDER_MS = 24 * 60 * 60 * 1000;
 
@@ -155,10 +165,13 @@ function AtlasEditor() {
   const saveCurrentAtlasRef = useRef<(reason: SaveReason) => Promise<Atlas | null>>(() => Promise.resolve(null));
   const discordInvitePreviewMode = useMemo(() => isDiscordInvitePreviewMode(), []);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
+  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
+  const [firstRunPromptVisible, setFirstRunPromptVisible] = useState(false);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
   const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
   const [appVersion, setAppVersion] = useState<AppVersion | null>(null);
+  const [appVersionChecked, setAppVersionChecked] = useState(false);
   const [updateAdvisory, setUpdateAdvisory] = useState<UpdateAdvisory | null>(null);
   const [updateNoticeRevision, setUpdateNoticeRevision] = useState(0);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
@@ -316,6 +329,24 @@ function AtlasEditor() {
   }, [clearAutosaveTimer]);
 
   useEffect(() => {
+    function handleAuthRequired() {
+      clearAutosaveTimer();
+      latestAtlasRef.current = null;
+      queuedSaveRef.current = false;
+      currentSavePromiseRef.current = null;
+      setAtlas(null);
+      setSelection(null);
+      setSettingsOpen(false);
+      setAuthStatus({ passcode_configured: true, authenticated: false, session_expires_at: null });
+      setFirstRunPromptVisible(false);
+      setStatus("Local Access Passcode required");
+    }
+
+    window.addEventListener("ctroadmap:auth-required", handleAuthRequired);
+    return () => window.removeEventListener("ctroadmap:auth-required", handleAuthRequired);
+  }, [clearAutosaveTimer]);
+
+  useEffect(() => {
     function handleWindowError(event: ErrorEvent) {
       appendDebugEvent("runtime.error", "Unhandled frontend error", "error", {
         error: event.message,
@@ -340,6 +371,36 @@ function AtlasEditor() {
   }, [appendDebugEvent]);
 
   useEffect(() => {
+    let canceled = false;
+    setStatus("Checking Local Access Passcode...");
+    loadAuthStatus()
+      .then((nextStatus) => {
+        if (canceled) return;
+        setAuthStatus(nextStatus);
+        if (nextStatus.passcode_configured) setFirstRunPromptVisible(false);
+        if (nextStatus.passcode_configured && !nextStatus.authenticated) {
+          setStatus("Local Access Passcode required");
+        }
+        appendDebugEvent("auth.status", "Local Access Passcode status loaded", "info", {
+          passcode_configured: nextStatus.passcode_configured,
+          authenticated: nextStatus.authenticated
+        });
+      })
+      .catch((error) => {
+        if (canceled) return;
+        console.error(error);
+        setStatus("Unable to check Local Access Passcode");
+        appendDebugEvent("auth.status", "Local Access Passcode status failed", "error", { error: error instanceof Error ? error.message : String(error) });
+      });
+    return () => {
+      canceled = true;
+    };
+  }, [appendDebugEvent]);
+
+  const canAccessProtectedApi = Boolean(authStatus && (!authStatus.passcode_configured || authStatus.authenticated));
+
+  useEffect(() => {
+    if (!canAccessProtectedApi) return;
     loadAtlas()
       .then((nextAtlas) => {
         setCleanAtlas(nextAtlas);
@@ -356,7 +417,77 @@ function AtlasEditor() {
         setStatus("Unable to load atlas");
         appendDebugEvent("atlas.load", "Atlas load failed", "error", { error: error instanceof Error ? error.message : String(error) });
       });
-  }, [appendDebugEvent, setCleanAtlas]);
+  }, [appendDebugEvent, canAccessProtectedApi, setCleanAtlas]);
+
+  const applyAuthStatus = useCallback((nextStatus: AuthStatus) => {
+    setAuthStatus(nextStatus);
+    if (nextStatus.passcode_configured) setFirstRunPromptVisible(false);
+    return nextStatus;
+  }, []);
+
+  const refreshAuthStatus = useCallback(async () => {
+    const nextStatus = await loadAuthStatus();
+    return applyAuthStatus(nextStatus);
+  }, [applyAuthStatus]);
+
+  const clearProtectedAppState = useCallback(() => {
+    clearAutosaveTimer();
+    latestAtlasRef.current = null;
+    queuedSaveRef.current = false;
+    currentSavePromiseRef.current = null;
+    setAtlas(null);
+    setSelection(null);
+    setExportResults({});
+    setUpdateAdvisory(null);
+  }, [clearAutosaveTimer]);
+
+  const handleLoginPasscode = useCallback(
+    async (passcode: string) => {
+      const nextStatus = await loginLocalAccessPasscode(passcode);
+      applyAuthStatus(nextStatus);
+      setStatus("Local Access Passcode accepted");
+      appendDebugEvent("auth.login", "Local Access Passcode login succeeded");
+    },
+    [appendDebugEvent, applyAuthStatus]
+  );
+
+  const handleSetupPasscode = useCallback(
+    async (passcode: string) => {
+      const nextStatus = await setupLocalAccessPasscode(passcode);
+      applyAuthStatus(nextStatus);
+      setStatus("Local Access Passcode set");
+      appendDebugEvent("auth.setup", "Local Access Passcode configured");
+    },
+    [appendDebugEvent, applyAuthStatus]
+  );
+
+  const handleChangePasscode = useCallback(
+    async (currentPasscode: string, newPasscode: string) => {
+      const nextStatus = await changeLocalAccessPasscode(currentPasscode, newPasscode);
+      applyAuthStatus(nextStatus);
+      setStatus("Local Access Passcode changed");
+      appendDebugEvent("auth.change_passcode", "Local Access Passcode changed");
+    },
+    [appendDebugEvent, applyAuthStatus]
+  );
+
+  const handleRemovePasscode = useCallback(
+    async (currentPasscode: string) => {
+      const nextStatus = await removeLocalAccessPasscode(currentPasscode);
+      applyAuthStatus(nextStatus);
+      setStatus("Local Access Passcode removed");
+      appendDebugEvent("auth.remove_passcode", "Local Access Passcode removed");
+    },
+    [appendDebugEvent, applyAuthStatus]
+  );
+
+  const handleLogoutAllPasscode = useCallback(async () => {
+    await logoutAllLocalAccessPasscode();
+    clearProtectedAppState();
+    const nextStatus = await refreshAuthStatus();
+    setStatus(nextStatus.passcode_configured ? "All sessions logged out" : "Local Access Passcode not configured");
+    appendDebugEvent("auth.logout_all", "All Local Access Passcode sessions logged out");
+  }, [appendDebugEvent, clearProtectedAppState, refreshAuthStatus]);
 
   useEffect(() => {
     storeThemePalette(themePaletteId);
@@ -394,8 +525,24 @@ function AtlasEditor() {
       })
       .catch((error) => {
         appendDebugEvent("app.version", "App version load failed", "error", { error: error instanceof Error ? error.message : String(error) });
-      });
+      })
+      .finally(() => setAppVersionChecked(true));
+  }, [appendDebugEvent]);
 
+  useEffect(() => {
+    if (!authStatus || authStatus.passcode_configured || !atlas || !appVersionChecked) {
+      if (authStatus?.passcode_configured) setFirstRunPromptVisible(false);
+      return;
+    }
+    const version = appVersion?.current_version ?? "unknown";
+    if (shouldShowLocalAccessPrompt(version)) {
+      recordLocalAccessPromptShown(version);
+      setFirstRunPromptVisible(true);
+    }
+  }, [appVersion?.current_version, appVersionChecked, atlas, authStatus]);
+
+  useEffect(() => {
+    if (!canAccessProtectedApi) return;
     loadUpdateAdvisory()
       .then((advisory) => {
         setUpdateAdvisory(advisory);
@@ -407,7 +554,7 @@ function AtlasEditor() {
       .catch((error) => {
         appendDebugEvent("app.update", "Update advisory load failed", "error", { error: error instanceof Error ? error.message : String(error) });
       });
-  }, [appendDebugEvent]);
+  }, [appendDebugEvent, canAccessProtectedApi]);
 
   const activeView = useMemo(() => getActiveView(atlas, activeViewId), [atlas, activeViewId]);
 
@@ -1861,6 +2008,19 @@ function AtlasEditor() {
 
   const saveStatusClass = lastSaveError ? "save-status save-status--error" : isDirty ? "save-status save-status--dirty" : "save-status";
 
+  if (!authStatus) {
+    return (
+      <div className="boot-screen">
+        <Loader2 className="spin" size={36} />
+        <span>{status}</span>
+      </div>
+    );
+  }
+
+  if (authStatus.passcode_configured && !authStatus.authenticated) {
+    return <LocalAccessLoginScreen status={status} onLogin={handleLoginPasscode} />;
+  }
+
   if (!atlas) {
     return (
       <div className="boot-screen">
@@ -1905,6 +2065,27 @@ function AtlasEditor() {
         onToolbarExport={(format) => void handleToolbarExport(format)}
         onViewReleaseNotes={handleViewReleaseNotes}
       />
+
+      {firstRunPromptVisible ? (
+        <div className="local-access-prompt" role="status">
+          <div>
+            <strong>Set a Local Access Passcode</strong>
+            <span>Protect this local CTRoadmap workspace with a passphrase of at least 8 characters. Longer passphrases are recommended.</span>
+          </div>
+          <button
+            className="local-access-prompt__action"
+            onClick={() => {
+              setSettingsOpen(true);
+              setFirstRunPromptVisible(false);
+            }}
+          >
+            <LockKeyhole size={18} /> Set Access Passcode
+          </button>
+          <button className="local-access-prompt__dismiss" onClick={() => setFirstRunPromptVisible(false)} aria-label="Dismiss Local Access Passcode prompt">
+            <X size={18} />
+          </button>
+        </div>
+      ) : null}
 
       <main className="workspace">
         <LeftSidebar
@@ -2040,6 +2221,7 @@ function AtlasEditor() {
           atlas={atlas}
           activeView={activeView}
           appVersion={appVersion}
+          authStatus={authStatus}
           backendHealth={backendHealth}
           debugEvents={debugEvents}
           layoutTemplate={layoutTemplate}
@@ -2051,13 +2233,78 @@ function AtlasEditor() {
           onCopyUpdateCommand={handleCopyUpdateCommand}
           onExportDebugLog={handleExportDebugLog}
           onCanvasBackgroundChange={handleCanvasBackgroundChange}
+          onChangePasscode={handleChangePasscode}
+          onLogoutAllPasscode={handleLogoutAllPasscode}
           onPaletteChange={handlePaletteChange}
+          onRemovePasscode={handleRemovePasscode}
+          onSetupPasscode={handleSetupPasscode}
           onUpdateSettings={handleUpdateSettings}
           onViewReleaseNotes={handleViewReleaseNotes}
         />
       ) : null}
 
       {discordInviteModalOpen ? <DiscordInviteModal onClose={handleDismissDiscordInvite} onInviteClick={handleJoinDiscordInvite} /> : null}
+    </div>
+  );
+}
+
+interface LocalAccessLoginScreenProps {
+  status: string;
+  onLogin: (passcode: string) => Promise<void>;
+}
+
+function LocalAccessLoginScreen({ status, onLogin }: LocalAccessLoginScreenProps) {
+  const BrandIcon = BRAND_ICON;
+  const [passcode, setPasscode] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    try {
+      await onLogin(passcode);
+      setPasscode("");
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : String(loginError));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="local-access-screen" data-theme="cyber">
+      <form className="local-access-card" onSubmit={handleSubmit}>
+        <div className="local-access-card__brand">
+          <div className="local-access-card__brand-mark">
+            <BrandIcon size={30} />
+          </div>
+          <div>
+            <strong>CTRoadmap</strong>
+            <span>Local Infrastructure Atlas</span>
+          </div>
+        </div>
+        <div>
+          <h1>Local Access Passcode</h1>
+          <p>{status}</p>
+        </div>
+        <label>
+          <span>Local Access Passcode</span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={passcode}
+            onChange={(event) => setPasscode(event.currentTarget.value)}
+            autoFocus
+          />
+        </label>
+        <button className="toolbar-button" type="submit" disabled={submitting}>
+          {submitting ? <Loader2 className="spin" size={17} /> : <LockKeyhole size={17} />}
+          Log in
+        </button>
+        {error ? <div className="local-access-error">{error}</div> : null}
+      </form>
     </div>
   );
 }
@@ -2162,6 +2409,52 @@ function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
   if (Date.now() < expiresAt) return true;
   window.localStorage.removeItem(key);
   return false;
+}
+
+interface LocalAccessPromptRecord {
+  shownCount: number;
+  lastShownAt: string | null;
+}
+
+function localAccessPromptKey(version: string): string {
+  return `${LOCAL_ACCESS_PROMPT_PREFIX}${version}`;
+}
+
+function shouldShowLocalAccessPrompt(version: string): boolean {
+  const record = readLocalAccessPromptRecord(version);
+  if (record.shownCount <= 0) return true;
+  if (record.shownCount >= 2) return false;
+  if (!record.lastShownAt) return true;
+  const lastShown = new Date(record.lastShownAt);
+  if (Number.isNaN(lastShown.getTime())) return true;
+  return Date.now() >= lastShown.getTime() + LOCAL_ACCESS_PROMPT_DELAY_MS;
+}
+
+function recordLocalAccessPromptShown(version: string): void {
+  const record = readLocalAccessPromptRecord(version);
+  const nextRecord: LocalAccessPromptRecord = {
+    shownCount: Math.min(2, record.shownCount + 1),
+    lastShownAt: new Date().toISOString()
+  };
+  try {
+    window.localStorage.setItem(localAccessPromptKey(version), JSON.stringify(nextRecord));
+  } catch {
+    // Local prompt state is optional; storage failures should not block atlas access.
+  }
+}
+
+function readLocalAccessPromptRecord(version: string): LocalAccessPromptRecord {
+  try {
+    const stored = window.localStorage.getItem(localAccessPromptKey(version));
+    if (!stored) return { shownCount: 0, lastShownAt: null };
+    const parsed = JSON.parse(stored) as Partial<LocalAccessPromptRecord>;
+    return {
+      shownCount: Number.isFinite(parsed.shownCount) ? Math.max(0, Number(parsed.shownCount)) : 0,
+      lastShownAt: typeof parsed.lastShownAt === "string" ? parsed.lastShownAt : null
+    };
+  } catch {
+    return { shownCount: 0, lastShownAt: null };
+  }
 }
 
 interface DiscordInviteStorageState {

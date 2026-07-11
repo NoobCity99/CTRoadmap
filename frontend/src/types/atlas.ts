@@ -63,12 +63,21 @@ export interface CheckFields extends Record<string, unknown> {
   execution_enabled: false;
 }
 
-export interface TileIconRef {
+export interface UploadedTileIconRef {
   kind: "uploaded";
+  id?: string;
   filename: string;
   url: string;
   media_type?: string;
 }
+
+export interface LucideTileIconRef {
+  kind: "lucide";
+  id: string;
+  name: string;
+}
+
+export type TileIconRef = UploadedTileIconRef | LucideTileIconRef;
 
 export interface Position {
   x: number;
@@ -174,13 +183,27 @@ export interface AtlasImportPreview {
   errors: string[];
 }
 
-export interface IconUploadResult extends TileIconRef {
+export interface IconUploadResult extends UploadedTileIconRef {
   id: string;
+}
+
+export interface UploadedIconAsset extends UploadedTileIconRef {
+  id: string;
+}
+
+export interface IconAssetListResult {
+  icons: UploadedIconAsset[];
 }
 
 export interface HealthResult {
   status: string;
   app: string;
+}
+
+export interface AuthStatus {
+  passcode_configured: boolean;
+  authenticated: boolean;
+  session_expires_at: string | null;
 }
 
 export interface AppVersion {

@@ -5,10 +5,12 @@ frontend/dist/
 .DS_Store
 *.pyc
 data/*.backup.json
+data/auth.json
 data/update_state.json
 exports/*
 !exports/.gitkeep
 ImportFeasability.md
+TheDavinciCode.py
 entanglement_audit.md
 Beta_Deploy.md
 README2.md
@@ -19,4 +21,6 @@ CTRoadmap_Future_Vision.md
 gui inspiration1.png
 gui inspiration2.png
 TECHNICAL_ARCHITECTURE.md
-frontend\src
+frontend/src
+dev/
+backend\app\auth.py

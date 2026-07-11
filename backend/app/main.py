@@ -5,13 +5,27 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from fastapi import Body, FastAPI, File, HTTPException, UploadFile
+from fastapi import Body, Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from pydantic import ValidationError
 
+from .auth import (
+    AuthStatus,
+    ChangePasscodeRequest,
+    PasscodeRequest,
+    RemovePasscodeRequest,
+    auth_status,
+    change_passcode,
+    login,
+    logout,
+    logout_all,
+    remove_passcode,
+    require_local_auth,
+    setup_passcode,
+)
 from .config import FRONTEND_DIST, ICONS_DIR
 from .debug import clear_debug_events, get_debug_events, record_debug_event
 from .exports import EXPORT_FILES, EXPORT_MEDIA_TYPES, ExportFormat, export_path, write_export
@@ -55,6 +69,17 @@ class IconUploadResult(BaseModel):
     media_type: str
 
 
+class IconAssetResult(BaseModel):
+    id: str
+    filename: str
+    url: str
+    media_type: str
+
+
+class IconAssetListResult(BaseModel):
+    icons: list[IconAssetResult]
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -76,22 +101,69 @@ def app_version() -> AppVersion:
     return get_app_version()
 
 
+@app.get("/api/auth/status", response_model=AuthStatus)
+def get_auth_status(request: Request) -> AuthStatus:
+    return auth_status(request)
+
+
+@app.post("/api/auth/setup", response_model=AuthStatus)
+def post_auth_setup(payload: PasscodeRequest, request: Request, response: Response) -> AuthStatus:
+    result = setup_passcode(payload, request, response)
+    record_debug_event("auth.setup", "Local Access Passcode configured")
+    return result
+
+
+@app.post("/api/auth/login", response_model=AuthStatus)
+def post_auth_login(payload: PasscodeRequest, request: Request, response: Response) -> AuthStatus:
+    result = login(payload, request, response)
+    record_debug_event("auth.login", "Local Access Passcode login succeeded")
+    return result
+
+
+@app.post("/api/auth/logout")
+def post_auth_logout(request: Request, response: Response, _: None = Depends(require_local_auth)) -> dict[str, str]:
+    result = logout(request, response)
+    record_debug_event("auth.logout", "Local Access Passcode session logged out")
+    return result
+
+
+@app.post("/api/auth/change-passcode", response_model=AuthStatus)
+def post_auth_change_passcode(payload: ChangePasscodeRequest, request: Request, response: Response, _: None = Depends(require_local_auth)) -> AuthStatus:
+    result = change_passcode(payload, request, response)
+    record_debug_event("auth.change_passcode", "Local Access Passcode changed")
+    return result
+
+
+@app.post("/api/auth/remove-passcode", response_model=AuthStatus)
+def post_auth_remove_passcode(payload: RemovePasscodeRequest, request: Request, response: Response, _: None = Depends(require_local_auth)) -> AuthStatus:
+    result = remove_passcode(payload, request, response)
+    record_debug_event("auth.remove_passcode", "Local Access Passcode removed")
+    return result
+
+
+@app.post("/api/auth/logout-all")
+def post_auth_logout_all(request: Request, response: Response, _: None = Depends(require_local_auth)) -> dict[str, str]:
+    result = logout_all(request, response)
+    record_debug_event("auth.logout_all", "All Local Access Passcode sessions logged out")
+    return result
+
+
 @app.get("/api/app/update", response_model=UpdateAdvisory)
-def app_update() -> UpdateAdvisory:
+def app_update(_: None = Depends(require_local_auth)) -> UpdateAdvisory:
     advisory = get_update_advisory()
     record_debug_event("app.update", "Update advisory checked", context={"status": advisory.status, "latest_version": advisory.latest_version})
     return advisory
 
 
 @app.put("/api/app/update/settings", response_model=UpdateState)
-def put_update_settings(settings: UpdateSettings) -> UpdateState:
+def put_update_settings(settings: UpdateSettings, _: None = Depends(require_local_auth)) -> UpdateState:
     state = update_settings(settings)
     record_debug_event("app.update.settings", "Update advisory settings changed", context={"enabled": state.update_checks_enabled, "interval": state.check_interval_hours})
     return state
 
 
 @app.get("/api/atlas", response_model=Atlas)
-def get_atlas() -> Atlas:
+def get_atlas(_: None = Depends(require_local_auth)) -> Atlas:
     try:
         atlas = read_atlas()
         record_debug_event(
@@ -106,7 +178,7 @@ def get_atlas() -> Atlas:
 
 
 @app.put("/api/atlas", response_model=Atlas)
-def put_atlas(atlas: Atlas) -> Atlas:
+def put_atlas(atlas: Atlas, _: None = Depends(require_local_auth)) -> Atlas:
     try:
         saved = write_atlas(atlas)
         record_debug_event(
@@ -121,7 +193,7 @@ def put_atlas(atlas: Atlas) -> Atlas:
 
 
 @app.post("/api/atlas/preview", response_model=AtlasImportPreview)
-def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
+def preview_atlas_import(payload: Any = Body(...), _: None = Depends(require_local_auth)) -> AtlasImportPreview:
     try:
         atlas = Atlas.model_validate(payload)
     except ValidationError as exc:
@@ -149,7 +221,7 @@ def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
 
 
 @app.post("/api/assets/icons", response_model=IconUploadResult)
-async def upload_icon(file: UploadFile = File(...)) -> IconUploadResult:
+async def upload_icon(file: UploadFile = File(...), _: None = Depends(require_local_auth)) -> IconUploadResult:
     media_type = file.content_type or ""
     extension = ICON_MEDIA_TYPES.get(media_type)
     if not extension:
@@ -170,8 +242,31 @@ async def upload_icon(file: UploadFile = File(...)) -> IconUploadResult:
     return IconUploadResult(id=icon_id, filename=filename, url=f"/api/assets/icons/{filename}", media_type=media_type)
 
 
+@app.get("/api/assets/icons", response_model=IconAssetListResult)
+def list_icons(_: None = Depends(require_local_auth)) -> IconAssetListResult:
+    if not ICONS_DIR.exists():
+        return IconAssetListResult(icons=[])
+
+    icon_paths = [
+        path
+        for path in ICONS_DIR.iterdir()
+        if path.is_file() and media_type_for_icon(path) in ICON_MEDIA_TYPES
+    ]
+    icon_paths.sort(key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
+    icons = [
+        IconAssetResult(
+            id=f"uploaded:{path.name}",
+            filename=path.name,
+            url=f"/api/assets/icons/{path.name}",
+            media_type=media_type_for_icon(path),
+        )
+        for path in icon_paths
+    ]
+    return IconAssetListResult(icons=icons)
+
+
 @app.get("/api/assets/icons/{filename}")
-def get_icon(filename: str) -> FileResponse:
+def get_icon(filename: str, _: None = Depends(require_local_auth)) -> FileResponse:
     if Path(filename).name != filename:
         raise HTTPException(status_code=404, detail="Icon not found")
     path = ICONS_DIR / filename
@@ -181,8 +276,20 @@ def get_icon(filename: str) -> FileResponse:
     return FileResponse(path, media_type=media_type)
 
 
+@app.delete("/api/assets/icons/{filename}")
+def delete_icon(filename: str, _: None = Depends(require_local_auth)) -> dict[str, str]:
+    if Path(filename).name != filename:
+        raise HTTPException(status_code=404, detail="Icon not found")
+    path = ICONS_DIR / filename
+    if not path.exists() or not path.is_file() or media_type_for_icon(path) not in ICON_MEDIA_TYPES:
+        raise HTTPException(status_code=404, detail="Icon not found")
+    path.unlink()
+    record_debug_event("assets.icon.delete", "Tile icon deleted", context={"filename": filename})
+    return {"status": "deleted"}
+
+
 @app.post("/api/export/{format_}", response_model=ExportResult)
-def generate_export(format_: ExportFormat) -> ExportResult:
+def generate_export(format_: ExportFormat, _: None = Depends(require_local_auth)) -> ExportResult:
     try:
         atlas = read_atlas()
         write_export(format_, atlas)
@@ -199,7 +306,7 @@ def generate_export(format_: ExportFormat) -> ExportResult:
 
 
 @app.get("/api/export/{format_}/download")
-def download_export(format_: ExportFormat) -> FileResponse:
+def download_export(format_: ExportFormat, _: None = Depends(require_local_auth)) -> FileResponse:
     path = export_path(format_)
     if not path.exists():
         try:
@@ -217,12 +324,12 @@ def download_export(format_: ExportFormat) -> FileResponse:
 
 
 @app.get("/api/debug/log")
-def get_debug_log() -> dict[str, object]:
+def get_debug_log(_: None = Depends(require_local_auth)) -> dict[str, object]:
     return {"events": get_debug_events()}
 
 
 @app.post("/api/debug/log/clear")
-def clear_debug_log() -> dict[str, str]:
+def clear_debug_log(_: None = Depends(require_local_auth)) -> dict[str, str]:
     clear_debug_events()
     record_debug_event("debug.clear", "Backend debug log cleared")
     return {"status": "ok"}

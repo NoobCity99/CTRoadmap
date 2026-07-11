@@ -1,12 +1,16 @@
-import { Download, ExternalLink, ServerCog, Trash2, X } from "lucide-react";
+import { Download, ExternalLink, KeyRound, LogOut, ServerCog, ShieldCheck, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { DiscordInviteSettingsBanner } from "./DiscordInvite";
 import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
-import type { AppVersion, Atlas, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
+import type { AppVersion, Atlas, AuthStatus, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
+
+type AuthDialogMode = "setup" | "change" | "remove" | "logout-all" | null;
 
 interface SettingsPanelProps {
   atlas: Atlas;
   activeView: View | null;
   appVersion: AppVersion | null;
+  authStatus: AuthStatus;
   backendHealth: string;
   debugEvents: DebugEvent[];
   layoutTemplate: LayoutTemplate;
@@ -14,11 +18,15 @@ interface SettingsPanelProps {
   paletteId: ThemePaletteId;
   updateAdvisory: UpdateAdvisory | null;
   onClearDebugLog: () => void;
+  onChangePasscode: (currentPasscode: string, newPasscode: string) => void | Promise<void>;
   onClose: () => void;
   onCopyUpdateCommand: () => void | Promise<void>;
   onExportDebugLog: () => void;
+  onLogoutAllPasscode: () => void | Promise<void>;
   onCanvasBackgroundChange: (backgroundId: CanvasBackgroundId) => void;
   onPaletteChange: (paletteId: ThemePaletteId) => void;
+  onRemovePasscode: (currentPasscode: string) => void | Promise<void>;
+  onSetupPasscode: (passcode: string) => void | Promise<void>;
   onUpdateSettings: (settings: UpdateSettings) => void | Promise<void>;
   onViewReleaseNotes: () => void;
 }
@@ -27,6 +35,7 @@ export function SettingsPanel({
   atlas,
   activeView,
   appVersion,
+  authStatus,
   backendHealth,
   debugEvents,
   layoutTemplate,
@@ -34,11 +43,15 @@ export function SettingsPanel({
   paletteId,
   updateAdvisory,
   onClearDebugLog,
+  onChangePasscode,
   onClose,
   onCopyUpdateCommand,
   onExportDebugLog,
+  onLogoutAllPasscode,
   onCanvasBackgroundChange,
   onPaletteChange,
+  onRemovePasscode,
+  onSetupPasscode,
   onUpdateSettings,
   onViewReleaseNotes
 }: SettingsPanelProps) {
@@ -47,6 +60,44 @@ export function SettingsPanel({
   const version = appVersion ?? updateAdvisory;
   const updateState = updateAdvisory?.state;
   const updateTarget = updateAdvisory?.target;
+  const [setupPasscode, setSetupPasscode] = useState("");
+  const [currentPasscode, setCurrentPasscode] = useState("");
+  const [newPasscode, setNewPasscode] = useState("");
+  const [removePasscode, setRemovePasscode] = useState("");
+  const [authDialogMode, setAuthDialogMode] = useState<AuthDialogMode>(null);
+  const [authBusyAction, setAuthBusyAction] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
+
+  async function runAuthAction(action: string, successMessage: string, callback: () => void | Promise<void>, clearFields: () => void) {
+    setAuthBusyAction(action);
+    setAuthError("");
+    setAuthMessage("");
+    try {
+      await callback();
+      clearFields();
+      setAuthMessage(successMessage);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setAuthBusyAction(null);
+    }
+  }
+
+  function openAuthDialog(mode: Exclude<AuthDialogMode, null>) {
+    setAuthError("");
+    setAuthMessage("");
+    setAuthDialogMode(mode);
+  }
+
+  function closeAuthDialog() {
+    if (authBusyAction !== null) return;
+    setSetupPasscode("");
+    setCurrentPasscode("");
+    setNewPasscode("");
+    setRemovePasscode("");
+    setAuthDialogMode(null);
+  }
 
   return (
     <div className="settings-backdrop" role="presentation" onMouseDown={onClose}>
@@ -64,7 +115,7 @@ export function SettingsPanel({
         <DiscordInviteSettingsBanner />
 
         <div className="settings-section">
-          <div className="settings-section__title">Palette</div>
+          <div className="settings-section__title">Theme</div>
           <div className="palette-options">
             {THEME_PALETTES.map((palette) => (
               <button
@@ -98,6 +149,37 @@ export function SettingsPanel({
             </select>
           </label>
           <div className="settings-note">{CANVAS_BACKGROUNDS.find((background) => background.id === canvasBackgroundId)?.description}</div>
+        </div>
+
+        <div className="settings-section local-access-settings-card">
+          <div className="settings-section__title">Local Access Passcode</div>
+          <p>
+            {authStatus.passcode_configured
+              ? "A Local Access Passcode is configured for this local instance."
+              : "No Local Access Passcode is configured. App access is currently open on this local instance."}
+          </p>
+          <div className="settings-actions local-access-settings-card__actions">
+            {!authStatus.passcode_configured ? (
+              <button className="toolbar-button" onClick={() => openAuthDialog("setup")} disabled={authBusyAction !== null}>
+                <ShieldCheck size={17} /> Set Access Passcode
+              </button>
+            ) : (
+              <>
+                <button className="toolbar-button" onClick={() => openAuthDialog("change")} disabled={authBusyAction !== null}>
+                  <KeyRound size={17} /> Change Local Access Passcode
+                </button>
+                <button className="toolbar-button" onClick={() => openAuthDialog("remove")} disabled={authBusyAction !== null}>
+                  <Trash2 size={17} /> Remove Local Access Passcode
+                </button>
+                <button className="toolbar-button" onClick={() => openAuthDialog("logout-all")} disabled={authBusyAction !== null}>
+                  <LogOut size={17} /> Log out all
+                </button>
+              </>
+            )}
+          </div>
+          <div className="settings-note">Minimum 8 characters for beta. Longer passphrases are recommended.</div>
+          {authMessage ? <div className="settings-note settings-note--success">{authMessage}</div> : null}
+          {authError ? <div className="settings-note settings-note--warning">{authError}</div> : null}
         </div>
 
         <div className="settings-section">
@@ -218,8 +300,156 @@ export function SettingsPanel({
           </div>
         </div>
       </section>
+      {authDialogMode ? (
+        <div
+          className="local-access-dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            event.stopPropagation();
+            closeAuthDialog();
+          }}
+        >
+          <div className="local-access-dialog" role="dialog" aria-modal="true" aria-label="Local Access Passcode" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="mini-icon-button local-access-dialog__close" onClick={closeAuthDialog} aria-label="Close Local Access Passcode dialog">
+              <X size={17} />
+            </button>
+            <div>
+              <h3>{authDialogTitle(authDialogMode)}</h3>
+              <p>{authDialogDescription(authDialogMode)}</p>
+            </div>
+            {authDialogMode === "setup" ? (
+              <form
+                className="local-access-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void runAuthAction(
+                    "setup",
+                    "Local Access Passcode set.",
+                    () => onSetupPasscode(setupPasscode),
+                    () => {
+                      setSetupPasscode("");
+                      setAuthDialogMode(null);
+                    }
+                  );
+                }}
+              >
+                <label>
+                  <span>New Local Access Passcode</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    value={setupPasscode}
+                    onChange={(event) => setSetupPasscode(event.currentTarget.value)}
+                    placeholder="At least 8 characters"
+                    autoFocus
+                  />
+                </label>
+                <button className="toolbar-button" type="submit" disabled={authBusyAction !== null}>
+                  <ShieldCheck size={17} /> Set Access Passcode
+                </button>
+              </form>
+            ) : null}
+            {authDialogMode === "change" ? (
+              <form
+                className="local-access-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void runAuthAction(
+                    "change",
+                    "Local Access Passcode changed.",
+                    () => onChangePasscode(currentPasscode, newPasscode),
+                    () => {
+                      setCurrentPasscode("");
+                      setNewPasscode("");
+                      setAuthDialogMode(null);
+                    }
+                  );
+                }}
+              >
+                <label>
+                  <span>Current Local Access Passcode</span>
+                  <input type="password" autoComplete="current-password" value={currentPasscode} onChange={(event) => setCurrentPasscode(event.currentTarget.value)} autoFocus />
+                </label>
+                <label>
+                  <span>New Local Access Passcode</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    value={newPasscode}
+                    onChange={(event) => setNewPasscode(event.currentTarget.value)}
+                    placeholder="At least 8 characters"
+                  />
+                </label>
+                <button className="toolbar-button" type="submit" disabled={authBusyAction !== null}>
+                  <KeyRound size={17} /> Change Local Access Passcode
+                </button>
+              </form>
+            ) : null}
+            {authDialogMode === "remove" ? (
+              <form
+                className="local-access-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void runAuthAction(
+                    "remove",
+                    "Local Access Passcode removed.",
+                    () => onRemovePasscode(removePasscode),
+                    () => {
+                      setRemovePasscode("");
+                      setAuthDialogMode(null);
+                    }
+                  );
+                }}
+              >
+                <label>
+                  <span>Confirm Current Local Access Passcode</span>
+                  <input type="password" autoComplete="current-password" value={removePasscode} onChange={(event) => setRemovePasscode(event.currentTarget.value)} autoFocus />
+                </label>
+                <button className="toolbar-button" type="submit" disabled={authBusyAction !== null}>
+                  <Trash2 size={17} /> Remove Local Access Passcode
+                </button>
+              </form>
+            ) : null}
+            {authDialogMode === "logout-all" ? (
+              <div className="local-access-form">
+                <button
+                  className="toolbar-button"
+                  onClick={() =>
+                    void runAuthAction(
+                      "logout-all",
+                      "All sessions logged out.",
+                      onLogoutAllPasscode,
+                      () => setAuthDialogMode(null)
+                    )
+                  }
+                  disabled={authBusyAction !== null}
+                >
+                  <LogOut size={17} /> Log out all sessions
+                </button>
+              </div>
+            ) : null}
+            {authError ? <div className="local-access-error">{authError}</div> : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function authDialogTitle(mode: Exclude<AuthDialogMode, null>): string {
+  if (mode === "setup") return "Set Access Passcode";
+  if (mode === "change") return "Change Local Access Passcode";
+  if (mode === "remove") return "Remove Local Access Passcode";
+  return "Log out all sessions";
+}
+
+function authDialogDescription(mode: Exclude<AuthDialogMode, null>): string {
+  if (mode === "setup") return "Create a passphrase of at least 8 characters. Spaces are allowed.";
+  if (mode === "change") return "Enter the current Local Access Passcode before setting a new one.";
+  if (mode === "remove") return "Enter the current Local Access Passcode to reopen local access.";
+  return "This revokes every active Local Access Passcode session.";
 }
 
 function shortBuildSha(value: string | undefined): string {

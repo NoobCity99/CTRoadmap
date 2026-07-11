@@ -1,6 +1,5 @@
 import { Download, ExternalLink, Loader2, Plus, Save, Settings, Upload, X } from "lucide-react";
 import type { RefObject } from "react";
-import { BRAND_ICON } from "../lib/constants";
 import type { AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
 import { SearchBox } from "./SearchBox";
@@ -66,19 +65,11 @@ export function TopBar({
   onToolbarExport,
   onViewReleaseNotes
 }: TopBarProps) {
-  const BrandIcon = BRAND_ICON;
-
   return (
     <header className="topbar">
       <div className="topbar__main">
-        <div className="brand">
-          <div className="brand__mark">
-            <BrandIcon size={28} />
-          </div>
-          <div>
-            <strong>CTRoadmap</strong>
-            <span>Local Infrastructure Atlas</span>
-          </div>
+        <div className="brand" aria-label="CTRoadmap Homelab Diagram and Documentation">
+          <img className="brand__logo" src="/brand/ctroadmap-topbar-logo.png" alt="CTRoadmap Homelab Diagram and Documentation" />
         </div>
         <div className="topbar__actions">
           <button className="toolbar-button toolbar-button--icon-only" onClick={onSave} disabled={isSaving} title="Save" aria-label="Save">

@@ -59,6 +59,8 @@ button:disabled {
 .app-shell {
   --panel-bg: rgba(5, 12, 24, 0.88);
   --panel-border: rgba(93, 166, 255, 0.18);
+  --topbar-bg: rgba(3, 7, 18, 0.92);
+  --topbar-fade-color: #030712;
   --button-bg: linear-gradient(180deg, rgba(18, 34, 54, 0.95), rgba(8, 16, 31, 0.95));
   --button-border: rgba(91, 142, 196, 0.35);
   --canvas-grid-line: #1f3a55;
@@ -86,6 +88,8 @@ button:disabled {
 .app-shell[data-theme="aurora"] {
   --panel-bg: rgba(4, 18, 23, 0.9);
   --panel-border: rgba(45, 212, 191, 0.2);
+  --topbar-bg: rgba(4, 18, 23, 0.92);
+  --topbar-fade-color: #041217;
   --button-bg: linear-gradient(180deg, rgba(15, 43, 52, 0.96), rgba(5, 18, 27, 0.96));
   --button-border: rgba(125, 211, 252, 0.32);
   --canvas-grid-line: #174a55;
@@ -98,6 +102,8 @@ button:disabled {
 .app-shell[data-theme="ember"] {
   --panel-bg: rgba(18, 12, 10, 0.9);
   --panel-border: rgba(251, 146, 60, 0.22);
+  --topbar-bg: rgba(18, 12, 10, 0.92);
+  --topbar-fade-color: #120c0a;
   --button-bg: linear-gradient(180deg, rgba(50, 31, 18, 0.96), rgba(18, 13, 15, 0.96));
   --button-border: rgba(251, 146, 60, 0.34);
   --canvas-grid-line: #5b3422;
@@ -110,6 +116,8 @@ button:disabled {
 .app-shell[data-theme="blueprint"] {
   --panel-bg: rgba(0, 34, 106, 0.78);
   --panel-border: rgba(232, 247, 255, 0.32);
+  --topbar-bg: rgba(0, 30, 92, 0.84);
+  --topbar-fade-color: #001e5c;
   --button-bg: linear-gradient(180deg, rgba(235, 248, 255, 0.2), rgba(0, 47, 139, 0.62));
   --button-border: rgba(235, 248, 255, 0.42);
   --canvas-grid-line: rgba(255, 255, 255, 0.28);
@@ -122,6 +130,8 @@ button:disabled {
 .app-shell[data-theme="nes"] {
   --panel-bg: rgba(15, 15, 15, 0.9);
   --panel-border: rgba(202, 203, 209, 0.32);
+  --topbar-bg: rgba(15, 15, 15, 0.92);
+  --topbar-fade-color: #0f0f0f;
   --button-bg: #262626;
   --button-border: rgba(202, 203, 209, 0.42);
   --canvas-grid-line: rgba(214, 17, 30, 0.07);
@@ -156,9 +166,9 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 14px 18px;
+  padding: 0 18px 0 0;
   border-bottom: 1px solid var(--panel-border);
-  background: rgba(3, 7, 18, 0.92);
+  background: var(--topbar-bg);
   backdrop-filter: blur(18px);
 }
 
@@ -171,6 +181,7 @@ button:disabled {
 }
 
 .topbar__main {
+  height: 100%;
   gap: 12px;
 }
 
@@ -186,34 +197,33 @@ button:disabled {
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 0 0 234px;
+  position: relative;
+  align-self: center;
+  flex: 0 0 335px;
+  height: 84px;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #0041ba;
 }
 
-.brand__mark {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(56, 163, 255, 0.58);
-  color: #55d7ff;
-  background: linear-gradient(145deg, rgba(14, 48, 80, 0.9), rgba(5, 12, 30, 0.95));
-  box-shadow: 0 0 22px rgba(56, 163, 255, 0.36);
-  clip-path: polygon(14% 0, 86% 0, 100% 30%, 100% 70%, 86% 100%, 14% 100%, 0 70%, 0 30%);
+.brand::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 64px;
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(3, 7, 18, 0), var(--topbar-fade-color) 94%);
+  pointer-events: none;
 }
 
-.brand strong {
+.brand__logo {
   display: block;
-  font-size: 1.45rem;
-  letter-spacing: 0;
-}
-
-.brand span {
-  display: block;
-  color: #93a8c7;
-  font-size: 0.86rem;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  filter: drop-shadow(0 0 9px rgba(255, 255, 255, 0.32));
 }
 
 .save-status {
@@ -274,7 +284,7 @@ button:disabled {
   z-index: 40;
 }
 
-.toolbar-menu > .toolbar-button {
+.toolbar-menu>.toolbar-button {
   width: 100%;
 }
 
@@ -1265,7 +1275,7 @@ button:disabled {
   line-height: 1.35;
 }
 
-.family-node__tag + p {
+.family-node__tag+p {
   top: 80px;
 }
 
@@ -1516,12 +1526,12 @@ button:disabled {
   right: -44px;
 }
 
-.tile-node__handle--in:hover ~ .tile-node__port-label--in,
-.tile-node__handle--in:focus ~ .tile-node__port-label--in,
-.tile-node__handle--in:focus-visible ~ .tile-node__port-label--in,
-.tile-node__handle--out:hover ~ .tile-node__port-label--out,
-.tile-node__handle--out:focus ~ .tile-node__port-label--out,
-.tile-node__handle--out:focus-visible ~ .tile-node__port-label--out {
+.tile-node__handle--in:hover~.tile-node__port-label--in,
+.tile-node__handle--in:focus~.tile-node__port-label--in,
+.tile-node__handle--in:focus-visible~.tile-node__port-label--in,
+.tile-node__handle--out:hover~.tile-node__port-label--out,
+.tile-node__handle--out:focus~.tile-node__port-label--out,
+.tile-node__handle--out:focus-visible~.tile-node__port-label--out {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
@@ -2067,7 +2077,7 @@ button:disabled {
 .handbook-document__masthead span,
 .handbook-volume__header span,
 .handbook-notes span,
-.handbook-relationships > span,
+.handbook-relationships>span,
 .handbook-field span {
   color: #8fa5c4;
   font-size: 0.78rem;
@@ -2472,7 +2482,7 @@ button:disabled {
 .handbook-shell--light .handbook-document__masthead span,
 .handbook-shell--light .handbook-volume__header span,
 .handbook-shell--light .handbook-notes span,
-.handbook-shell--light .handbook-relationships > span,
+.handbook-shell--light .handbook-relationships>span,
 .handbook-shell--light .handbook-field span {
   color: #667085;
 }
@@ -2866,7 +2876,7 @@ button:disabled {
   gap: 9px;
 }
 
-.stack-inspector > div {
+.stack-inspector>div {
   display: grid;
   gap: 4px;
   border: 1px solid rgba(91, 142, 196, 0.2);
@@ -3704,11 +3714,8 @@ button:disabled {
   }
 
   .brand {
-    flex-basis: 188px;
-  }
-
-  .brand span {
-    display: none;
+    flex-basis: 286px;
+    height: 72px;
   }
 
   .topbar__actions {
@@ -3753,12 +3760,31 @@ button:disabled {
 
   .topbar {
     grid-template-columns: 1fr;
+    padding: 0 12px 12px 0;
   }
 
   .topbar__main,
   .topbar__actions,
   .topbar__right {
     flex-wrap: wrap;
+  }
+
+  .topbar__main {
+    height: auto;
+  }
+
+  .brand {
+    flex: 0 1 min(286px, 100%);
+    height: 72px;
+  }
+
+  .brand::after {
+    width: 54px;
+  }
+
+  .topbar__actions,
+  .topbar__right {
+    padding-left: 12px;
   }
 
   .topbar__right {

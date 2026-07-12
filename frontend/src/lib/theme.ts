@@ -31,9 +31,14 @@ export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
     description: "Subtle hex lattice for dense infrastructure maps."
   },
   {
-    id: "circuit",
-    label: "Circuit",
-    description: "High-contrast cyan circuitry with a compact technical grid."
+    id: "tron_dark",
+    label: "Tron Dark",
+    description: "Dark horizon grid with glowing perspective floor and ceiling planes."
+  },
+  {
+    id: "tron_lite",
+    label: "Tron Lite",
+    description: "Light horizon grid with soft blue perspective floor and ceiling planes."
   },
   {
     id: "blueprint",

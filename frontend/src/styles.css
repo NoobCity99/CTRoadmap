@@ -782,63 +782,112 @@ button:disabled {
   background-size: auto, auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
 }
 
-.canvas-frame[data-background="circuit"] {
-  background-color: #050829;
+.canvas-frame[data-background="tron_dark"],
+.canvas-frame[data-background="tron_lite"] {
+  --tron-bg: #070718;
+  --tron-horizon: rgba(124, 142, 255, 0.22);
+  --tron-line: rgba(214, 221, 255, 0.46);
+  --tron-line-bright: rgba(244, 247, 255, 0.78);
+  --tron-plane-shadow: rgba(9, 8, 31, 0.72);
+  --tron-plane-fade: rgba(7, 7, 24, 0.94);
+  --canvas-grid-line: rgba(188, 203, 255, 0.26);
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--tron-bg);
   background-image:
-    linear-gradient(0deg, #00000000 96%, #bebfc11f 100%),
-    linear-gradient(90deg, #00000000 96%, #bebfc11c 100%),
-    radial-gradient(75% 75% at 50% 50%, #000000 67%, #081420 100%),
-    radial-gradient(75% 75% at 50% 50%, #000000 0%, #050829 100%),
-    linear-gradient(132deg, #fdfdfd00 66%, #25e8e8 86%, #11d4d4 88%, #066e6e 89%, #05716a00 91%),
-    linear-gradient(132deg, #05716a00 9%, #066e6e 11%, #11d4d4 12%, #25e8e8 14%, #fdfdfd00 34%),
-    repeating-linear-gradient(0deg, #00000000 57%, #000000 59%, #073aff 60%, #073aff00 61%);
-  background-position:
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0;
-  background-size:
-    50px 50px,
-    50px 50px,
-    220px 220px,
-    110px 110px,
-    110px 110px,
-    110px 110px,
-    110px 110px;
+    radial-gradient(ellipse at 50% 50%, var(--tron-horizon) 0 4%, transparent 30%),
+    radial-gradient(ellipse at 50% 74%, rgba(124, 142, 255, 0.14) 0 8%, transparent 42%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent 12%, transparent 43%, var(--tron-horizon) 50%, rgba(124, 142, 255, 0.08) 66%, transparent 90%),
+    linear-gradient(to bottom, #10102c 0%, #09091d 43%, #040413 50%, #09091d 57%, #10102c 100%);
 }
 
-.canvas-frame.canvas-frame--layered_hierarchy[data-background="circuit"] {
-  background-color: #050829;
+.canvas-frame[data-background="tron_lite"] {
+  --tron-bg: #f7fbff;
+  --tron-horizon: rgba(120, 196, 255, 0.28);
+  --tron-line: rgba(91, 183, 249, 0.42);
+  --tron-line-bright: rgba(69, 168, 240, 0.66);
+  --tron-plane-shadow: rgba(195, 228, 251, 0.34);
+  --tron-plane-fade: rgba(250, 253, 255, 0.9);
+  --canvas-grid-line: rgba(91, 183, 249, 0.24);
   background-image:
-    linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 10%, transparent), transparent 40%),
-    linear-gradient(0deg, #00000000 96%, #bebfc11f 100%),
-    linear-gradient(90deg, #00000000 96%, #bebfc11c 100%),
-    radial-gradient(75% 75% at 50% 50%, #000000 67%, #081420 100%),
-    radial-gradient(75% 75% at 50% 50%, #000000 0%, #050829 100%),
-    linear-gradient(132deg, #fdfdfd00 66%, #25e8e8 86%, #11d4d4 88%, #066e6e 89%, #05716a00 91%),
-    linear-gradient(132deg, #05716a00 9%, #066e6e 11%, #11d4d4 12%, #25e8e8 14%, #fdfdfd00 34%),
-    repeating-linear-gradient(0deg, #00000000 57%, #000000 59%, #073aff 60%, #073aff00 61%);
-  background-position:
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0,
-    0 0;
-  background-size:
-    auto,
-    50px 50px,
-    50px 50px,
-    220px 220px,
-    110px 110px,
-    110px 110px,
-    110px 110px,
-    110px 110px;
+    radial-gradient(ellipse at 50% 50%, var(--tron-horizon) 0 5%, transparent 32%),
+    radial-gradient(ellipse at 50% 74%, rgba(120, 196, 255, 0.18) 0 10%, transparent 44%),
+    linear-gradient(to bottom, #ffffff 0%, #f8fcff 38%, #e8f6ff 50%, #f8fcff 62%, #ffffff 100%);
+}
+
+.canvas-frame[data-background="tron_dark"]::before,
+.canvas-frame[data-background="tron_lite"]::before {
+  content: "";
+  position: absolute;
+  left: -28%;
+  z-index: 0;
+  width: 156%;
+  height: 56%;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, transparent calc(50% - 1px), var(--tron-line-bright) 50%, transparent calc(50% + 1px)),
+    repeating-linear-gradient(to right, var(--tron-line) 0 2px, transparent 2px 104px),
+    repeating-linear-gradient(to bottom, var(--tron-line) 0 2px, transparent 2px 50px),
+    radial-gradient(ellipse at 50% 0%, transparent 0 42%, var(--tron-plane-shadow) 70%, var(--tron-plane-fade) 100%);
+  background-size: auto, 104px 100%, 100% 50px, auto;
+  filter: drop-shadow(0 0 6px var(--tron-line)) drop-shadow(0 0 18px var(--tron-horizon));
+  opacity: 0.82;
+}
+
+.canvas-frame[data-background="tron_dark"]::after,
+.canvas-frame[data-background="tron_lite"]::after {
+  content: "";
+  position: absolute;
+  left: -28%;
+  z-index: 0;
+  width: 156%;
+  height: 56%;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, transparent calc(50% - 1px), color-mix(in srgb, var(--tron-line-bright) 34%, transparent) 50%, transparent calc(50% + 1px)),
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--tron-line) 28%, transparent) 0 1px, transparent 1px 104px),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--tron-line) 22%, transparent) 0 1px, transparent 1px 50px),
+    radial-gradient(ellipse at 50% 0%, transparent 0 34%, color-mix(in srgb, var(--tron-plane-shadow) 52%, transparent) 70%, var(--tron-plane-fade) 100%);
+  background-size: auto, 104px 100%, 100% 50px, auto;
+  filter: blur(0.3px) drop-shadow(0 0 8px var(--tron-horizon));
+  opacity: 0.52;
+}
+
+.canvas-frame[data-background="tron_dark"]::before,
+.canvas-frame[data-background="tron_lite"]::before {
+  bottom: 50%;
+  transform: perspective(520px) rotateX(-68deg) scaleY(1.34);
+  transform-origin: 50% 100%;
+}
+
+.canvas-frame[data-background="tron_dark"]::after,
+.canvas-frame[data-background="tron_lite"]::after {
+  top: 50%;
+  transform: perspective(520px) rotateX(68deg) scaleY(1.34);
+  transform-origin: 50% 0;
+}
+
+.canvas-frame[data-background="tron_lite"]::before,
+.canvas-frame[data-background="tron_lite"]::after {
+  filter: drop-shadow(0 0 5px var(--tron-line)) drop-shadow(0 0 15px rgba(120, 196, 255, 0.26));
+  opacity: 0.74;
+}
+
+.canvas-frame[data-background="tron_lite"]::after {
+  filter: blur(0.3px) drop-shadow(0 0 8px rgba(120, 196, 255, 0.24));
+  opacity: 0.42;
+}
+
+.canvas-frame[data-background="tron_dark"] > *,
+.canvas-frame[data-background="tron_lite"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-frame[data-background="tron_dark"] .react-flow,
+.canvas-frame[data-background="tron_lite"] .react-flow {
+  position: relative;
+  z-index: 1;
 }
 
 .canvas-frame[data-background="blueprint"] {

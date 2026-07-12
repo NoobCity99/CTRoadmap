@@ -1,9 +1,9 @@
 {
   "version": "0.1",
   "metadata": {
-    "name": "CTRoadmap",
+    "name": "",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-12T01:19:39.181402+00:00"
+    "updated_at": "2026-07-12T04:39:40.777867+00:00"
   },
   "tiles": [
     {
@@ -12,8 +12,8 @@
       "title": "P-EDGE [ 44 X7 ]",
       "parent": null,
       "position": {
-        "x": 5.1918344718085905,
-        "y": -513.4171197268995
+        "x": 15.416141700973881,
+        "y": -531.8208727393971
       },
       "size": {
         "width": 240.0,
@@ -23,7 +23,6 @@
       "fields": {
         "role": "",
         "hostname": "",
-        "ip": "666.66.6.6",
         "os": "",
         "purpose": "",
         "primary_node": true,
@@ -144,8 +143,8 @@
       "title": "HOME SERV",
       "parent": null,
       "position": {
-        "x": -1378.041056930155,
-        "y": -696.8440691335602
+        "x": -1370.039906186536,
+        "y": -668.9252279323778
       },
       "size": {
         "width": 240.0,
@@ -195,8 +194,8 @@
       "title": "SSH KEY MICRO",
       "parent": null,
       "position": {
-        "x": 43.54467314091289,
-        "y": -119.45995503037767
+        "x": 26.074915970472063,
+        "y": -134.9886280707695
       },
       "size": {
         "width": 240.0,
@@ -244,8 +243,8 @@
       "title": "diagnostic",
       "parent": null,
       "position": {
-        "x": 30.537862464356408,
-        "y": -300.2016674932819
+        "x": 24.714610074209475,
+        "y": -307.9660040134778
       },
       "size": {
         "width": 240.0,
@@ -472,8 +471,8 @@
       "title": "DOCKER",
       "parent": "node_server1",
       "position": {
-        "x": 368.16305712911156,
-        "y": -521.1169350841201
+        "x": 364.07333423744547,
+        "y": -529.2963808674524
       },
       "size": {
         "width": 240.0,
@@ -1026,7 +1025,7 @@
         "y": 0.0,
         "zoom": 1.0
       },
-      "layout_template": "handbook"
+      "layout_template": "canvas_topology"
     },
     {
       "id": "view_hardware",
@@ -1099,15 +1098,15 @@
         "service_docker"
       ],
       "position": {
-        "x": 6.3245261580147485,
-        "y": -592.52672842613
+        "x": 6.152060730580047,
+        "y": -584.4622595944211
       },
       "size": {
         "width": 943.0,
         "height": 42.0
       },
       "order": 0,
-      "color": "#dee090",
+      "color": "#c8cb06",
       "tag": null
     },
     {
@@ -1128,7 +1127,7 @@
         "height": 250.0
       },
       "order": 1,
-      "color": "#ee7c7c",
+      "color": "#e17a05",
       "tag": null
     },
     {
@@ -1154,7 +1153,7 @@
         "height": 586.0
       },
       "order": 2,
-      "color": "#ac9bb0",
+      "color": "#9b05bd",
       "tag": null
     }
   ]

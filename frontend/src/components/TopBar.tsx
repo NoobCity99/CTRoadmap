@@ -1,4 +1,4 @@
-import { Download, ExternalLink, Loader2, Plus, Save, Settings, Upload, X } from "lucide-react";
+import { AlertTriangle, Check, Clock3, Download, ExternalLink, Loader2, Plus, Save, Settings, Upload, X } from "lucide-react";
 import type { RefObject } from "react";
 import type { AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
@@ -65,6 +65,8 @@ export function TopBar({
   onToolbarExport,
   onViewReleaseNotes
 }: TopBarProps) {
+  const saveStatusTone = saveStatusClass.includes("save-status--error") ? "error" : isSaving || saveStatusClass.includes("save-status--dirty") ? "pending" : "saved";
+
   return (
     <header className="topbar">
       <div className="topbar__main">
@@ -75,9 +77,11 @@ export function TopBar({
           <button className="toolbar-button toolbar-button--icon-only" onClick={onSave} disabled={isSaving} title="Save" aria-label="Save">
             {isSaving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
           </button>
-          <span className={saveStatusClass}>{saveStatusText}</span>
-          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import atlas.json">
-            <Upload size={18} /> Import atlas.json
+          <span className={`${saveStatusClass} save-status--icon save-status--${saveStatusTone}`} title={saveStatusText} aria-label={saveStatusText}>
+            {saveStatusTone === "error" ? <AlertTriangle size={14} /> : saveStatusTone === "pending" ? <Clock3 size={14} /> : <Check size={14} />}
+          </span>
+          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import Atlas">
+            <Upload size={18} /> Import Atlas
           </button>
           <input
             ref={fileInputRef}
@@ -89,8 +93,8 @@ export function TopBar({
               if (file) onFileSelected(file);
             }}
           />
-          <button className="toolbar-button" onClick={onDownloadAtlasJson} title="Download your Atlas">
-            <Download size={18} /> Download your Atlas
+          <button className="toolbar-button" onClick={onDownloadAtlasJson} title="Download Atlas">
+            <Download size={18} /> Download Atlas
           </button>
           <button className="toolbar-button" onClick={onLoadSeed} title="Load Demo">
             <Upload size={18} /> Load Demo

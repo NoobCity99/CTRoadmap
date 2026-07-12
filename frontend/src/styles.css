@@ -237,7 +237,19 @@ button:disabled {
   white-space: nowrap;
 }
 
+.save-status--icon {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  color: #22c55e;
+}
+
 .save-status--dirty {
+  color: #facc15;
+}
+
+.save-status--pending {
   color: #facc15;
 }
 
@@ -319,6 +331,18 @@ button:disabled {
 .toolbar-popover button:hover,
 .toolbar-popover button:focus-visible {
   background: rgba(56, 163, 255, 0.14);
+}
+
+.toolbar-popover button:disabled,
+.toolbar-popover__disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.toolbar-popover button:disabled:hover,
+.toolbar-popover button:disabled:focus-visible {
+  background: transparent;
 }
 
 .toolbar-button--planning {
@@ -876,12 +900,6 @@ button:disabled {
 .canvas-frame[data-background="tron_lite"]::after {
   filter: blur(0.3px) drop-shadow(0 0 8px rgba(120, 196, 255, 0.24));
   opacity: 0.42;
-}
-
-.canvas-frame[data-background="tron_dark"] > *,
-.canvas-frame[data-background="tron_lite"] > * {
-  position: relative;
-  z-index: 1;
 }
 
 .canvas-frame[data-background="tron_dark"] .react-flow,
@@ -2134,6 +2152,36 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.handbook-title-input {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  border: 0;
+  color: #f8fafc;
+  background: transparent;
+  margin: 6px 0 8px;
+  padding: 0;
+  outline: 0;
+  font: inherit;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.handbook-title-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.handbook-title-input:focus {
+  color: #ffffff;
+}
+
+.handbook-document__masthead > span {
+  display: block;
+}
+
 .handbook-document__masthead h1 {
   margin: 6px 0 8px;
   color: #f8fafc;
@@ -2537,11 +2585,16 @@ button:disabled {
 }
 
 .handbook-shell--light .handbook-document__masthead h1,
+.handbook-shell--light .handbook-title-input,
 .handbook-shell--light .handbook-volume__header h2,
 .handbook-shell--light .handbook-epilogue h3,
 .handbook-shell--light .handbook-tile__heading,
 .handbook-shell--light .handbook-tile__heading strong {
   color: #182230;
+}
+
+.handbook-shell--light .handbook-title-input::placeholder {
+  color: #98a2b3;
 }
 
 .handbook-shell--light .handbook-document__masthead p,

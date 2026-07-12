@@ -138,7 +138,7 @@ function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
 
 function TileFieldValue({ fieldKey, onCopyPath, value }: { fieldKey: string; onCopyPath: (path: string) => void; value: string }) {
   const normalizedKey = fieldKey.toLowerCase();
-  if (normalizedKey === "url") {
+  if (normalizedKey === "url" || normalizedKey === "ip") {
     return (
       <a
         className="tile-node__field-action nodrag nopan"

@@ -1,4 +1,4 @@
-import { Download, FileCode2, FileText, Loader2 } from "lucide-react";
+import { Download, FileCode2, FileImage, FileText, Loader2 } from "lucide-react";
 import type { RefObject } from "react";
 import type { ExportFormat } from "../types/atlas";
 
@@ -20,12 +20,12 @@ export function ExportMenu({ exportMenuOpen, exportMenuRef, isExporting, onExpor
         aria-expanded={exportMenuOpen}
         onClick={onToggle}
         disabled={Boolean(isExporting)}
-        title="3rd Party Export"
+        title="Export"
       >
-        {isExporting ? <Loader2 className="spin" size={18} /> : <Download size={18} />} 3rd Party Export
+        {isExporting ? <Loader2 className="spin" size={18} /> : <Download size={18} />} Export
       </button>
       {exportMenuOpen ? (
-        <div className="toolbar-popover" role="menu" aria-label="3rd Party Export">
+        <div className="toolbar-popover" role="menu" aria-label="Export">
           <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => onExport("markdown")}>
             <FileText size={16} /> Markdown
           </button>
@@ -34,6 +34,12 @@ export function ExportMenu({ exportMenuOpen, exportMenuRef, isExporting, onExpor
           </button>
           <button type="button" role="menuitem" disabled={Boolean(isExporting)} onClick={() => onExport("mermaid")}>
             <FileCode2 size={16} /> Mermaid
+          </button>
+          <button type="button" role="menuitem" disabled className="toolbar-popover__disabled" title="PDF export is not available yet">
+            <FileText size={16} /> PDF-TBD
+          </button>
+          <button type="button" role="menuitem" disabled className="toolbar-popover__disabled" title="PNG export is not available yet">
+            <FileImage size={16} /> PNG-TBD
           </button>
         </div>
       ) : null}

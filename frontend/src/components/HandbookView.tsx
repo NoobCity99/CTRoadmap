@@ -8,18 +8,20 @@ import { resolveLifecycle } from "../lib/atlasSelectors";
 import type { Atlas, Selection, Tile } from "../types/atlas";
 
 export type HandbookThemeMode = "dark" | "light";
+const DEFAULT_HANDBOOK_TITLE = "CTRoadmap";
 
 interface HandbookViewProps {
   atlas: Atlas;
   selectedVolumeId: string | null;
   themeMode: HandbookThemeMode;
   selection: Selection;
+  onMetadataNameChange: (name: string) => void;
   onNotesFocus: () => void;
   onSelectTile: (tileId: string) => void;
   onUpdateTile: (tile: Tile) => void;
 }
 
-export function HandbookView({ atlas, selectedVolumeId, themeMode, selection, onNotesFocus, onSelectTile, onUpdateTile }: HandbookViewProps) {
+export function HandbookView({ atlas, selectedVolumeId, themeMode, selection, onMetadataNameChange, onNotesFocus, onSelectTile, onUpdateTile }: HandbookViewProps) {
   const document = useMemo(() => buildHandbookDocument(atlas), [atlas]);
   const selectedVolumeIndex = document.volumes.findIndex((volume) => volume.id === selectedVolumeId);
   const selectedVolume = selectedVolumeIndex >= 0 ? document.volumes[selectedVolumeIndex] : null;
@@ -27,6 +29,7 @@ export function HandbookView({ atlas, selectedVolumeId, themeMode, selection, on
   const outlineItems = useMemo(() => buildHandbookVolumeOutline(selectedVolume), [selectedVolume]);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [activeAnchorId, setActiveAnchorId] = useState(selectedVolume?.anchorId ?? "");
+  const mastheadTitle = atlas.metadata.name === DEFAULT_HANDBOOK_TITLE ? "" : atlas.metadata.name;
 
   useEffect(() => {
     setActiveAnchorId(selectedVolume?.anchorId ?? "");
@@ -99,9 +102,14 @@ export function HandbookView({ atlas, selectedVolumeId, themeMode, selection, on
     <section className={themeMode === "light" ? "handbook-shell handbook-shell--light" : "handbook-shell"}>
       <div ref={scrollerRef} className="handbook-document">
         <div className="handbook-document__masthead">
+          <input
+            aria-label="System name"
+            className="handbook-title-input"
+            placeholder="Your System's Name?"
+            value={mastheadTitle}
+            onChange={(event) => onMetadataNameChange(event.target.value)}
+          />
           <span>Handbook</span>
-          <h1>{atlas.metadata.name || "CTRoadmap Atlas"}</h1>
-          <p>{atlas.metadata.description || "Local infrastructure atlas"}</p>
         </div>
         {selectedVolume ? (
           <HandbookVolumeSection
@@ -406,7 +414,7 @@ function FieldValue({ fieldKey, value }: { fieldKey: string; value: string }) {
   const [copied, setCopied] = useState(false);
   const normalizedKey = fieldKey.toLowerCase();
 
-  if (normalizedKey === "url") {
+  if (normalizedKey === "url" || normalizedKey === "ip") {
     return (
       <a href={normalizeHref(value)} target="_blank" rel="noopener noreferrer">
         {value} <ExternalLink size={13} />

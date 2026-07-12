@@ -1395,6 +1395,19 @@ function AtlasEditor() {
     [atlas, stackState.stackByRepresentative]
   );
 
+  const handleUpdateMetadataName = useCallback(
+    (name: string) => {
+      updateAtlas((current) => ({
+        ...current,
+        metadata: {
+          ...current.metadata,
+          name
+        }
+      }));
+    },
+    [updateAtlas]
+  );
+
   const handleUpdateTile = useCallback(
     (tile: Tile) => {
       if (!isLifecycleEditable(resolveLifecycle(tile), appMode)) {
@@ -2169,6 +2182,7 @@ function AtlasEditor() {
             selectedVolumeId={selectedHandbookVolumeId}
             themeMode={handbookThemeMode}
             selection={selection}
+            onMetadataNameChange={handleUpdateMetadataName}
             onNotesFocus={() => setSelection(null)}
             onSelectTile={(tileId) => setSelection({ kind: "tile", id: tileId })}
             onUpdateTile={handleUpdateTile}

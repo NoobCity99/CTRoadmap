@@ -528,6 +528,13 @@ function TileIconEditor({
   const selectedIconId = iconRef?.id ?? "default";
 
   useEffect(() => {
+    setExpanded(false);
+    setEditingUploadedIcons(false);
+    setLoadError("");
+    setDeletingIconIds(new Set());
+  }, [tile.id]);
+
+  useEffect(() => {
     if (!expanded) return;
     let active = true;
     setLoadingUploadedIcons(true);

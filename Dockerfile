@@ -8,7 +8,7 @@ RUN npm run build
 
 FROM python:3.12-slim
 
-ARG CTR_VERSION=0.2.0-beta
+ARG CTR_VERSION=0.3.0-beta
 ARG CTR_BUILD_SHA=unknown
 ARG CTR_BUILD_DATE=unknown
 

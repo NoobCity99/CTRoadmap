@@ -1,6 +1,6 @@
 import { Download, ExternalLink, KeyRound, LogOut, ServerCog, ShieldCheck, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { DiscordInviteSettingsBanner } from "./DiscordInvite";
+import { DiscordInviteSettingsBanner } from "./UpdatePopup";
 import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
 import type { AppVersion, Atlas, AuthStatus, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
 

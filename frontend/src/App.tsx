@@ -22,12 +22,12 @@ import {
   useState
 } from "react";
 import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
-import { DiscordInviteModal, DISCORD_INVITE_STORAGE_KEY, DISCORD_INVITE_VERSION } from "./components/DiscordInvite";
 import { HandbookView, type HandbookThemeMode } from "./components/HandbookView";
 import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TopBar, type UpdateNoticeView } from "./components/TopBar";
+import { UpdatePopupModal, UPDATE_POPUP_STORAGE_PREFIX } from "./components/UpdatePopup";
 import {
   clearBackendDebugLog,
   changeLocalAccessPasscode,
@@ -131,7 +131,7 @@ const CONNECTOR_ROUTING_STORAGE_KEY = "ctroadmap.connectorRoutingMode";
 const LOCAL_ACCESS_PROMPT_PREFIX = "ctroadmap:local-access-prompt:";
 const LOCAL_ACCESS_PROMPT_DELAY_MS = 14 * 24 * 60 * 60 * 1000;
 const AUTOSAVE_DEBOUNCE_MS = 1000;
-const DISCORD_INVITE_REMINDER_MS = 24 * 60 * 60 * 1000;
+const UPDATE_POPUP_REMINDER_MS = 72 * 60 * 60 * 1000;
 
 type SaveReason = "autosave" | "manual" | "export";
 
@@ -165,7 +165,7 @@ function AtlasEditor() {
   const queuedSaveRef = useRef(false);
   const currentSavePromiseRef = useRef<Promise<Atlas | null> | null>(null);
   const saveCurrentAtlasRef = useRef<(reason: SaveReason) => Promise<Atlas | null>>(() => Promise.resolve(null));
-  const discordInvitePreviewMode = useMemo(() => isDiscordInvitePreviewMode(), []);
+  const updatePopupPreviewMode = useMemo(() => isUpdatePopupPreviewMode(), []);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [firstRunPromptVisible, setFirstRunPromptVisible] = useState(false);
@@ -200,7 +200,7 @@ function AtlasEditor() {
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [isInteractive, setIsInteractive] = useState(true);
   const [nodeDragInProgress, setNodeDragInProgress] = useState(false);
-  const [discordInviteModalOpen, setDiscordInviteModalOpen] = useState(discordInvitePreviewMode);
+  const [updatePopupOpen, setUpdatePopupOpen] = useState(updatePopupPreviewMode);
 
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
     setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
@@ -518,12 +518,12 @@ function AtlasEditor() {
   }, [sidebarState]);
 
   useEffect(() => {
-    if (discordInvitePreviewMode) return;
-    if (appVersion?.current_version !== DISCORD_INVITE_VERSION) return;
-    if (shouldShowDiscordInviteModal()) {
-      setDiscordInviteModalOpen(true);
+    if (updatePopupPreviewMode) return;
+    if (!appVersion?.current_version) return;
+    if (shouldShowUpdatePopup(appVersion.current_version)) {
+      setUpdatePopupOpen(true);
     }
-  }, [appVersion, discordInvitePreviewMode]);
+  }, [appVersion, updatePopupPreviewMode]);
 
   useEffect(() => {
     loadAppVersion()
@@ -900,21 +900,24 @@ function AtlasEditor() {
     appendDebugEvent("app.update.release_notes", "Release notes opened", "info", { url });
   }, [appendDebugEvent, updateAdvisory]);
 
-  const handleDismissDiscordInvite = useCallback(() => {
-    if (!discordInvitePreviewMode) {
-      recordDiscordInviteDismissal();
+  const handleDismissUpdatePopup = useCallback(() => {
+    if (!updatePopupPreviewMode && appVersion?.current_version) {
+      recordUpdatePopupDismissal(appVersion.current_version);
     }
-    setDiscordInviteModalOpen(false);
-    appendDebugEvent("discord.invite.dismiss", "Discord invite dismissed", "info", { preview: discordInvitePreviewMode });
-  }, [appendDebugEvent, discordInvitePreviewMode]);
+    setUpdatePopupOpen(false);
+    appendDebugEvent("update.popup.dismiss", "Update pop-up dismissed", "info", { preview: updatePopupPreviewMode, version: appVersion?.current_version ?? "unknown" });
+  }, [appVersion?.current_version, appendDebugEvent, updatePopupPreviewMode]);
 
-  const handleJoinDiscordInvite = useCallback(() => {
-    if (!discordInvitePreviewMode) {
-      recordDiscordInviteCompleted();
+  const handleJoinUpdatePopupDiscord = useCallback(() => {
+    if (!updatePopupPreviewMode && appVersion?.current_version) {
+      recordUpdatePopupCompleted(appVersion.current_version);
     }
-    setDiscordInviteModalOpen(false);
-    appendDebugEvent("discord.invite.join", "Discord invite opened", "info", { preview: discordInvitePreviewMode });
-  }, [appendDebugEvent, discordInvitePreviewMode]);
+    setUpdatePopupOpen(false);
+    appendDebugEvent("update.popup.discord_join", "Update pop-up Discord invite opened", "info", {
+      preview: updatePopupPreviewMode,
+      version: appVersion?.current_version ?? "unknown"
+    });
+  }, [appVersion?.current_version, appendDebugEvent, updatePopupPreviewMode]);
 
   const handleRemindUpdateLater = useCallback(() => {
     const key = updateNoticeKey(updateAdvisory);
@@ -2292,7 +2295,13 @@ function AtlasEditor() {
         />
       ) : null}
 
-      {discordInviteModalOpen ? <DiscordInviteModal onClose={handleDismissDiscordInvite} onInviteClick={handleJoinDiscordInvite} /> : null}
+      {updatePopupOpen ? (
+        <UpdatePopupModal
+          currentVersion={appVersion?.current_version ?? "Preview"}
+          onClose={handleDismissUpdatePopup}
+          onInviteClick={handleJoinUpdatePopupDiscord}
+        />
+      ) : null}
     </div>
   );
 }
@@ -2523,33 +2532,38 @@ function readLocalAccessPromptRecord(version: string): LocalAccessPromptRecord {
   }
 }
 
-interface DiscordInviteStorageState {
+interface UpdatePopupStorageState {
   dismissCount?: number;
   lastDismissedAt?: string;
   completed?: boolean;
 }
 
-function isDiscordInvitePreviewMode(): boolean {
+function isUpdatePopupPreviewMode(): boolean {
   try {
-    return new URLSearchParams(window.location.search).get("previewDiscordInvite") === "1";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("previewUpdatePopup") === "1" || params.get("previewDiscordInvite") === "1";
   } catch {
     return false;
   }
 }
 
-function readDiscordInviteState(): DiscordInviteStorageState | null {
+function updatePopupStorageKey(version: string): string {
+  return `${UPDATE_POPUP_STORAGE_PREFIX}${version}`;
+}
+
+function readUpdatePopupState(version: string): UpdatePopupStorageState | null {
   try {
-    const stored = window.localStorage.getItem(DISCORD_INVITE_STORAGE_KEY);
+    const stored = window.localStorage.getItem(updatePopupStorageKey(version));
     if (!stored) return null;
-    const parsed = JSON.parse(stored) as DiscordInviteStorageState;
+    const parsed = JSON.parse(stored) as UpdatePopupStorageState;
     return parsed && typeof parsed === "object" ? parsed : null;
   } catch {
     return null;
   }
 }
 
-function shouldShowDiscordInviteModal(): boolean {
-  const state = readDiscordInviteState();
+function shouldShowUpdatePopup(version: string): boolean {
+  const state = readUpdatePopupState(version);
   if (!state) return true;
   if (state.completed) return false;
   const dismissCount = Number(state.dismissCount ?? 0);
@@ -2557,15 +2571,15 @@ function shouldShowDiscordInviteModal(): boolean {
   if (dismissCount <= 0) return true;
   const lastDismissedAt = state.lastDismissedAt ? new Date(state.lastDismissedAt) : null;
   if (!lastDismissedAt || Number.isNaN(lastDismissedAt.getTime())) return true;
-  return Date.now() - lastDismissedAt.getTime() >= DISCORD_INVITE_REMINDER_MS;
+  return Date.now() - lastDismissedAt.getTime() >= UPDATE_POPUP_REMINDER_MS;
 }
 
-function recordDiscordInviteDismissal(): void {
+function recordUpdatePopupDismissal(version: string): void {
   try {
-    const state = readDiscordInviteState();
+    const state = readUpdatePopupState(version);
     const dismissCount = Math.min(2, Number(state?.dismissCount ?? 0) + 1);
     window.localStorage.setItem(
-      DISCORD_INVITE_STORAGE_KEY,
+      updatePopupStorageKey(version),
       JSON.stringify({
         dismissCount,
         lastDismissedAt: new Date().toISOString(),
@@ -2573,14 +2587,14 @@ function recordDiscordInviteDismissal(): void {
       })
     );
   } catch {
-    // The invite is UI-only; storage failures should not affect atlas editing.
+    // The update pop-up is UI-only; storage failures should not affect atlas editing.
   }
 }
 
-function recordDiscordInviteCompleted(): void {
+function recordUpdatePopupCompleted(version: string): void {
   try {
     window.localStorage.setItem(
-      DISCORD_INVITE_STORAGE_KEY,
+      updatePopupStorageKey(version),
       JSON.stringify({
         dismissCount: 2,
         lastDismissedAt: new Date().toISOString(),
@@ -2588,7 +2602,7 @@ function recordDiscordInviteCompleted(): void {
       })
     );
   } catch {
-    // The invite is UI-only; storage failures should not affect atlas editing.
+    // The update pop-up is UI-only; storage failures should not affect atlas editing.
   }
 }
 

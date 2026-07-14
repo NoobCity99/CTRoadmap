@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-13T05:15:54.008824+00:00"
+    "updated_at": "2026-07-14T03:59:33.568882+00:00"
   },
   "tiles": [
     {
@@ -94,7 +94,12 @@
       "lifecycle": "live",
       "fields": {
         "trigger": "wake button",
-        "purpose": ""
+        "purpose": "",
+        "icon_ref": {
+          "kind": "lucide",
+          "id": "lucide:Activity",
+          "name": "Activity"
+        }
       },
       "notes": "",
       "tags": []
@@ -116,7 +121,12 @@
       "fields": {
         "url": "10.0.0.252",
         "protocol": "",
-        "purpose": ""
+        "purpose": "",
+        "icon_ref": {
+          "kind": "lucide",
+          "id": "lucide:RadioTower",
+          "name": "RadioTower"
+        }
       },
       "notes": "",
       "tags": [
@@ -244,7 +254,12 @@
       "fields": {
         "path": "",
         "language": "",
-        "purpose": ""
+        "purpose": "",
+        "icon_ref": {
+          "kind": "lucide",
+          "id": "lucide:Pizza",
+          "name": "Pizza"
+        }
       },
       "notes": "",
       "tags": []

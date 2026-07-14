@@ -16,7 +16,7 @@ DeploymentType = Literal["docker", "linux_desktop", "windows_desktop"]
 Channel = Literal["beta", "stable"]
 UpdateStatus = Literal["available", "current", "disabled", "failed", "unknown"]
 
-DEFAULT_VERSION = "0.2.0-beta"
+DEFAULT_VERSION = "0.3.0-beta"
 DEFAULT_CHANNEL: Channel = "beta"
 DEFAULT_DEPLOYMENT_TYPE: DeploymentType = "docker"
 DEFAULT_MANIFEST_URL = "https://raw.githubusercontent.com/NoobCity99/CTRoadmap/main/latest.json"

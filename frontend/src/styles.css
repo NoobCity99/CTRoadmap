@@ -3330,7 +3330,7 @@ button:disabled {
   font-size: 1rem;
 }
 
-.discord-invite-modal-backdrop {
+.update-popup-backdrop {
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -3343,7 +3343,7 @@ button:disabled {
   padding: 20px;
 }
 
-.discord-invite-modal {
+.update-popup {
   position: relative;
   display: grid;
   gap: 18px;
@@ -3364,7 +3364,7 @@ button:disabled {
   padding: clamp(24px, 4vw, 42px);
 }
 
-.discord-invite-modal__close {
+.update-popup__close {
   position: absolute;
   top: 14px;
   right: 14px;
@@ -3376,10 +3376,9 @@ button:disabled {
   background: rgba(8, 12, 30, 0.74);
 }
 
-.discord-invite-modal__brand {
+.update-popup__brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   width: fit-content;
   border: 1px solid rgba(135, 146, 255, 0.34);
   border-radius: 999px;
@@ -3391,12 +3390,7 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.discord-invite-modal__brand img {
-  width: 24px;
-  height: 24px;
-}
-
-.discord-invite-modal h2 {
+.update-popup h2 {
   max-width: 660px;
   margin: 0 auto;
   color: #ffffff;
@@ -3407,14 +3401,14 @@ button:disabled {
   text-shadow: 0 0 26px rgba(88, 101, 242, 0.5);
 }
 
-.discord-invite-modal__body {
+.update-popup__body {
   display: grid;
   gap: 14px;
   justify-self: center;
   max-width: 680px;
 }
 
-.discord-invite-modal__body p {
+.update-popup__body p {
   margin: 0;
   color: #dce2ff;
   font-size: 1rem;
@@ -3422,14 +3416,36 @@ button:disabled {
   text-indent: 2em;
 }
 
-.discord-invite-modal__body .discord-invite-modal__footnote {
+.update-popup__body ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #dce2ff;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.update-popup__body a {
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration-color: rgba(135, 146, 255, 0.78);
+  text-underline-offset: 3px;
+}
+
+.update-popup__body a:hover,
+.update-popup__body a:focus-visible {
+  color: #cfd5ff;
+}
+
+.update-popup__body p:last-child {
   color: #cfd5ff;
   font-style: italic;
   text-align: center;
   text-indent: 0;
 }
 
-.discord-invite-modal__actions {
+.update-popup__actions {
   display: flex;
   justify-content: center;
 }

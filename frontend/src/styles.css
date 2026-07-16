@@ -3826,6 +3826,445 @@ button:disabled {
   gap: 5px;
 }
 
+.app-appearance-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.app-appearance-settings .app-appearance-options {
+  margin-bottom: 0;
+}
+
+.app-appearance-option {
+  min-height: 42px;
+  border: 1px solid rgba(91, 142, 196, 0.24);
+  border-radius: 8px;
+  color: #dbeafe;
+  background: rgba(8, 17, 32, 0.72);
+  font-weight: 800;
+}
+
+.app-appearance-option--active {
+  border-color: var(--focus-accent);
+  background: color-mix(in srgb, var(--focus-accent) 14%, rgba(8, 17, 32, 0.72));
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--focus-accent) 12%, transparent);
+}
+
+/* App Appearance Mode is intentionally scoped to application chrome. Atlas nodes,
+   Families, connectors, uploaded icons, and Handbook document surfaces remain
+   controlled by their existing palette/document selectors. */
+.app-shell[data-app-appearance-mode="zima"] {
+  --app-shell-bg: #fafaff;
+  --app-panel-bg: #fafaff;
+  --app-text: #454547;
+  --app-muted-text: #6f7076;
+  --control-bg-rest: #fafaff;
+  --control-bg-hover: #ffffff;
+  --control-shadow-hover: 0 2px 8px rgba(30, 35, 50, 0.1), 0 1px 2px rgba(30, 35, 50, 0.08);
+  --control-shadow-pressed: 0 1px 2px rgba(30, 35, 50, 0.08);
+  --field-bg: #f2f2f5;
+  --focus-ring: #1687e8;
+  --canvas-recess-shadow:
+    inset 20px 0 28px -18px rgba(30, 35, 50, 0.38),
+    inset -20px 0 28px -18px rgba(30, 35, 50, 0.38),
+    inset 0 18px 24px -20px rgba(30, 35, 50, 0.3);
+  --zima-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230b2f5b' stroke='%23fafaff' stroke-width='1' d='M8 11.5V6.7a1.4 1.4 0 0 1 2.8 0v4.2h.4V4.8a1.4 1.4 0 1 1 2.8 0v6.1h.4V6.1a1.4 1.4 0 0 1 2.8 0v5h.4V8.3a1.4 1.4 0 0 1 2.8 0v6.1c0 3.3-2.7 6-6 6h-2.6c-1.7 0-3.2-.8-4.2-2.1l-3.2-4.2a1.35 1.35 0 0 1 2.1-1.7l1.5 1.7z'/%3E%3C/svg%3E") 8 8, grab;
+  --zima-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230b2f5b' stroke='%23fafaff' stroke-width='1' d='M7.8 12V7a1.35 1.35 0 0 1 2.7 0v4.5h.4V5.1a1.35 1.35 0 0 1 2.7 0v6.4h.4V6.2a1.35 1.35 0 0 1 2.7 0v5.3h.4V8.8a1.35 1.35 0 0 1 2.7 0v5.1c0 3.5-2.8 6.3-6.3 6.3h-2.2c-1.8 0-3.4-.8-4.5-2.2l-2.1-2.7a1.4 1.4 0 0 1 2.2-1.7l.4.5z'/%3E%3C/svg%3E") 8 8, grabbing;
+  --scrollbar-track: #fafaff;
+  --scrollbar-thumb: rgba(69, 69, 71, 0.12);
+  --panel-bg: var(--app-panel-bg);
+  --panel-border: transparent;
+  --topbar-bg: var(--app-shell-bg);
+  --topbar-fade-color: var(--app-shell-bg);
+  --button-bg: var(--control-bg-rest);
+  --button-border: transparent;
+  --focus-accent: var(--focus-ring);
+  color: var(--app-text);
+  background: var(--app-shell-bg);
+  color-scheme: light;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .topbar,
+.app-shell[data-app-appearance-mode="zima"] .sidebar,
+.app-shell[data-app-appearance-mode="zima"] .inspector,
+.app-shell[data-app-appearance-mode="zima"] .settings-panel {
+  border-color: transparent;
+  color: var(--app-text);
+  background: var(--app-panel-bg);
+  box-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .topbar {
+  backdrop-filter: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .brand {
+  background: #050505;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .brand::after {
+  background: linear-gradient(90deg, rgba(250, 250, 255, 0), var(--app-shell-bg) 94%);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .brand__logo {
+  filter: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(
+  .panel-title,
+  .settings-panel__header h2,
+  .settings-panel__header span,
+  .settings-section__title,
+  .settings-note,
+  .metadata-grid,
+  .metadata-grid strong,
+  .debug-item,
+  .debug-item div,
+  .debug-item div span,
+  .debug-item p,
+  .debug-item small,
+  .inspector label,
+  .field-editor__title,
+  .icon-editor__meta strong,
+  .icon-editor__meta span,
+  .icon-library__section-head,
+  .stack-inspector span,
+  .stack-inspector strong,
+  .stack-inspector ul,
+  .family-inspector__readout span,
+  .family-inspector__readout strong,
+  .family-inspector__members span,
+  .family-inspector__members strong,
+  .family-inspector__members ul,
+  .family-color-picker strong,
+  .filter-check,
+  .checkbox-label,
+  .checkbox-label small,
+  .empty-state,
+  .empty-state strong,
+  .flow-empty,
+  .flow-related__title,
+  .flow-related__item,
+  .flow-related__item span,
+  .canvas-context-menu span,
+  .toolbar-popover__disabled,
+  .search-result,
+  .search-result strong,
+  .search-result small,
+  .warning-empty
+) {
+  color: var(--app-text);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.settings-note, .metadata-grid, .debug-item div span, .debug-item small, .icon-editor__meta span, .icon-library__section-head, .stack-inspector span, .family-inspector__readout span, .family-inspector__members span, .search-result small, .warning-empty) {
+  color: var(--app-muted-text);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(
+  .toolbar-button,
+  .icon-button,
+  .ghost-button,
+  .small-button,
+  .mini-icon-button,
+  .sidebar-section__header,
+  .view-button,
+  .palette-cycle-button,
+  .palette-item,
+  .segmented button,
+  .search-result,
+  .view-tabs button,
+  .toolbar-popover button,
+  .canvas-context-menu button,
+  .react-flow__controls-button,
+  .connector-routing-toggle,
+  .palette-option,
+  .app-appearance-option,
+  .icon-library__option
+) {
+  border-color: transparent;
+  background: var(--control-bg-rest);
+  box-shadow: none;
+  text-shadow: none;
+  filter: none;
+  transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(
+  .toolbar-button,
+  .icon-button,
+  .ghost-button,
+  .small-button,
+  .mini-icon-button,
+  .sidebar-section__header,
+  .view-button,
+  .palette-cycle-button,
+  .palette-item,
+  .segmented button,
+  .search-result,
+  .view-tabs button,
+  .toolbar-popover button,
+  .canvas-context-menu button,
+  .react-flow__controls-button,
+  .connector-routing-toggle,
+  .palette-option,
+  .app-appearance-option,
+  .icon-library__option
+):not(:disabled):hover {
+  background: var(--control-bg-hover);
+  box-shadow: var(--control-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(
+  .toolbar-button,
+  .icon-button,
+  .ghost-button,
+  .small-button,
+  .mini-icon-button,
+  .sidebar-section__header,
+  .view-button,
+  .palette-cycle-button,
+  .palette-item,
+  .segmented button,
+  .search-result,
+  .view-tabs button,
+  .toolbar-popover button,
+  .canvas-context-menu button,
+  .react-flow__controls-button,
+  .connector-routing-toggle,
+  .palette-option,
+  .app-appearance-option,
+  .icon-library__option
+):not(:disabled):active {
+  box-shadow: var(--control-shadow-pressed);
+  transform: translateY(0);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(
+  .toolbar-button,
+  .icon-button,
+  .ghost-button,
+  .small-button,
+  .mini-icon-button,
+  .sidebar-section__header,
+  .view-button,
+  .palette-cycle-button,
+  .palette-item,
+  .segmented button,
+  .search-result,
+  .view-tabs button,
+  .toolbar-popover button,
+  .canvas-context-menu button,
+  .react-flow__controls-button,
+  .connector-routing-toggle,
+  .palette-option,
+  .app-appearance-option,
+  .icon-library__option,
+  .search-box__clear
+):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button, .icon-button, .ghost-button, .small-button, .mini-icon-button, .sidebar-section__header, .view-button, .segmented button, .search-result, .view-tabs button, .toolbar-popover button, .canvas-context-menu button, .react-flow__controls-button, .connector-routing-toggle, .app-appearance-option, .palette-item) {
+  color: var(--app-text);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .palette-item svg {
+  color: var(--tile-accent);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.palette-item, .palette-option__swatches, .family-color-picker__swatch, .save-status, .toolbar-button--planning, .danger-button, .small-button--danger, .mini-icon-button--danger, .field-editor__remove) {
+  filter: none;
+  text-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button--active, .view-button--active, .palette-item--active, .palette-item--active-slot, .segmented .active, .search-result--active, .view-tabs .active, .palette-option--active, .app-appearance-option--active, .icon-library__option--selected, .connector-routing-toggle[aria-pressed="true"], .icon-button[aria-expanded="true"]) {
+  background: #ececf1;
+  box-shadow: inset 0 0 0 1px rgba(69, 69, 71, 0.08);
+  font-weight: 850;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .toolbar-button--planning,
+.app-shell[data-app-appearance-mode="zima"] .toolbar-button--planning svg {
+  color: #a66b00;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.danger-button, .small-button--danger, .mini-icon-button--danger, .field-editor__remove) {
+  color: #b42318;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.settings-section, .field-editor, .icon-editor, .icon-library__pool, .stack-inspector > div, .family-inspector__readout, .family-inspector__members, .family-color-picker, .flow-related__item, .debug-item, .warning-empty) {
+  border-color: transparent;
+  background: var(--app-panel-bg);
+  box-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-section {
+  padding-inline: 8px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .local-access-settings-card {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(1, 84, 39, 0.92), rgba(0, 50, 29, 0.94));
+  box-shadow: inset 0 0 22px rgba(34, 197, 94, 0.12);
+  padding: 12px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .local-access-settings-card :is(.settings-section__title, p, .settings-note) {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .local-access-settings-card__actions .toolbar-button,
+.app-shell[data-app-appearance-mode="zima"] .local-access-dialog .toolbar-button {
+  color: #ffffff;
+  background: rgba(5, 91, 42, 0.8);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-note--warning {
+  color: #a15c00;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-note--success {
+  color: #087f5b;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .debug-item--warning {
+  border-left: 3px solid #d97706;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .debug-item--error {
+  border-left: 3px solid #dc2626;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.search-box, .inspector input, .inspector select, .inspector textarea, .settings-inline-field input, .settings-select-field select, .local-access-form input) {
+  border-color: transparent;
+  color: var(--app-text);
+  background: var(--field-bg);
+  box-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.search-box input, .title-input) {
+  color: var(--app-text);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.search-box input, .inspector input, .inspector textarea, .settings-inline-field input, .local-access-form input)::placeholder {
+  color: #898a90;
+  opacity: 1;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.search-box, .inspector input, .inspector select, .inspector textarea, .settings-inline-field input, .settings-select-field select, .local-access-form input):focus-within,
+.app-shell[data-app-appearance-mode="zima"] :is(.inspector input, .inspector select, .inspector textarea, .settings-inline-field input, .settings-select-field select, .local-access-form input):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .search-box__clear {
+  border-color: transparent;
+  color: var(--app-muted-text);
+  background: transparent;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-popover, .canvas-context-menu, .view-tabs, .react-flow__controls, .react-flow__minimap) {
+  border-color: transparent;
+  color: var(--app-text);
+  background: rgba(250, 250, 255, 0.96);
+  box-shadow: 0 10px 28px rgba(30, 35, 50, 0.14);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .react-flow__attribution {
+  color: var(--app-muted-text);
+  background: rgba(250, 250, 255, 0.82);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .canvas-frame {
+  border: 0;
+  box-shadow: var(--canvas-recess-shadow);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.react-flow__pane.draggable, .react-flow__node.draggable, .react-flow__node.draggable .tile-node, .palette-item:not(.palette-item--reference)) {
+  cursor: var(--zima-cursor-grab);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.react-flow__pane.dragging, .react-flow__node.dragging, .palette-item:not(.palette-item--reference):active) {
+  cursor: var(--zima-cursor-grabbing);
+}
+
+.canvas-frame[data-background="zima_carbon"],
+.canvas-frame.canvas-frame--layered_hierarchy[data-background="zima_carbon"] {
+  background-color: #fafaff;
+  background-image: url("/assets/backgrounds/zima-carbon.svg");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-backdrop {
+  background: rgba(30, 35, 50, 0.2);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-panel {
+  box-shadow: -12px 0 30px rgba(30, 35, 50, 0.12);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .update-popup {
+  border-color: transparent;
+  color: var(--app-text);
+  background: #fafaff;
+  box-shadow: 0 24px 70px rgba(30, 35, 50, 0.22);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .update-popup :is(h2, .update-popup__body p, .update-popup__body ul) {
+  color: var(--app-text);
+  text-shadow: none;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .update-popup__body a {
+  color: #075985;
+  text-decoration-color: #1687e8;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .update-popup__close {
+  border-color: transparent;
+  color: var(--app-text);
+  background: #fafaff;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.sidebar, .inspector, .settings-panel, .update-popup, .icon-library__pool) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.sidebar, .inspector, .settings-panel, .update-popup, .icon-library__pool)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.sidebar, .inspector, .settings-panel, .update-popup, .icon-library__pool)::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.sidebar, .inspector, .settings-panel, .update-popup, .icon-library__pool)::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.sidebar, .inspector, .settings-panel, .update-popup, .icon-library__pool):hover::-webkit-scrollbar-thumb {
+  background: rgba(69, 69, 71, 0.22);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.handbook-shell, .handbook-document, .handbook-outline) {
+  color-scheme: dark;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .handbook-shell--light,
+.app-shell[data-app-appearance-mode="zima"] .handbook-shell--light :is(.handbook-document, .handbook-outline) {
+  color-scheme: light;
+}
+
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: 216px minmax(0, 1fr) 286px;

@@ -2,7 +2,19 @@ import { Download, ExternalLink, KeyRound, LogOut, ServerCog, ShieldCheck, Trash
 import { useState } from "react";
 import { DiscordInviteSettingsBanner } from "./UpdatePopup";
 import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
-import type { AppVersion, Atlas, AuthStatus, CanvasBackgroundId, DebugEvent, LayoutTemplate, ThemePaletteId, UpdateAdvisory, UpdateSettings, View } from "../types/atlas";
+import type {
+  AppAppearanceMode,
+  AppVersion,
+  Atlas,
+  AuthStatus,
+  CanvasBackgroundId,
+  DebugEvent,
+  LayoutTemplate,
+  ThemePaletteId,
+  UpdateAdvisory,
+  UpdateSettings,
+  View
+} from "../types/atlas";
 
 type AuthDialogMode = "setup" | "change" | "remove" | "logout-all" | null;
 
@@ -14,9 +26,11 @@ interface SettingsPanelProps {
   backendHealth: string;
   debugEvents: DebugEvent[];
   layoutTemplate: LayoutTemplate;
+  appAppearanceMode: AppAppearanceMode;
   canvasBackgroundId: CanvasBackgroundId;
   paletteId: ThemePaletteId;
   updateAdvisory: UpdateAdvisory | null;
+  onAppAppearanceModeChange: (mode: AppAppearanceMode) => void;
   onClearDebugLog: () => void;
   onChangePasscode: (currentPasscode: string, newPasscode: string) => void | Promise<void>;
   onClose: () => void;
@@ -39,9 +53,11 @@ export function SettingsPanel({
   backendHealth,
   debugEvents,
   layoutTemplate,
+  appAppearanceMode,
   canvasBackgroundId,
   paletteId,
   updateAdvisory,
+  onAppAppearanceModeChange,
   onClearDebugLog,
   onChangePasscode,
   onClose,
@@ -114,8 +130,29 @@ export function SettingsPanel({
 
         <DiscordInviteSettingsBanner />
 
+        <div className="settings-section app-appearance-settings">
+          <div className="app-appearance-options" role="group" aria-label="App Appearance Mode">
+            <button
+              type="button"
+              className={appAppearanceMode === "classic" ? "app-appearance-option app-appearance-option--active" : "app-appearance-option"}
+              aria-pressed={appAppearanceMode === "classic"}
+              onClick={() => onAppAppearanceModeChange("classic")}
+            >
+              Classic Mode
+            </button>
+            <button
+              type="button"
+              className={appAppearanceMode === "zima" ? "app-appearance-option app-appearance-option--active" : "app-appearance-option"}
+              aria-pressed={appAppearanceMode === "zima"}
+              onClick={() => onAppAppearanceModeChange("zima")}
+            >
+              ZIMA Mode
+            </button>
+          </div>
+        </div>
+
         <div className="settings-section">
-          <div className="settings-section__title">Theme</div>
+          <div className="settings-section__title">Theme Palette</div>
           <div className="palette-options">
             {THEME_PALETTES.map((palette) => (
               <button

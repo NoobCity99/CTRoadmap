@@ -84,16 +84,17 @@ import { buildConnectorObstacles, type ConnectorRoutingMode } from "./lib/edgeRo
 import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes } from "./lib/graphMapping";
 import { createSeedAtlas } from "./lib/seed";
 import {
+  DEFAULT_ZIMA_APPEARANCE,
+  getActiveAppearanceSelection,
   getAssociatedCanvasBackground,
-  getStoredCanvasBackground,
-  getStoredThemePalette,
-  storeCanvasBackground,
-  storeThemePalette
+  getStoredAppearancePreferences,
+  storeAppearancePreferences
 } from "./lib/theme";
 import { validateAtlasWarnings } from "./lib/validation";
 import { buildHandbookDocument, findHandbookVolumeForTile } from "./lib/handbook";
 import type {
   Atlas,
+  AppAppearanceMode,
   AppVersion,
   AuthStatus,
   DebugEvent,
@@ -188,8 +189,11 @@ function AtlasEditor() {
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
   const [stackContextMenu, setStackContextMenu] = useState<StackContextMenuView | null>(null);
   const [status, setStatus] = useState("Loading atlas...");
-  const [themePaletteId, setThemePaletteId] = useState<ThemePaletteId>(() => getStoredThemePalette());
-  const [canvasBackgroundId, setCanvasBackgroundId] = useState<CanvasBackgroundId>(() => getStoredCanvasBackground());
+  const [appearancePreferences, setAppearancePreferences] = useState(() => getStoredAppearancePreferences());
+  const activeAppearance = getActiveAppearanceSelection(appearancePreferences);
+  const appAppearanceMode = appearancePreferences.appAppearanceMode;
+  const themePaletteId = activeAppearance.themePalette;
+  const canvasBackgroundId = activeAppearance.canvasBackground;
   const [connectorRoutingMode, setConnectorRoutingMode] = useState<ConnectorRoutingMode>(() => getStoredConnectorRoutingMode());
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -494,8 +498,8 @@ function AtlasEditor() {
   }, [appendDebugEvent, clearProtectedAppState, refreshAuthStatus]);
 
   useEffect(() => {
-    storeThemePalette(themePaletteId);
-  }, [themePaletteId]);
+    storeAppearancePreferences(appearancePreferences);
+  }, [appearancePreferences]);
 
   useEffect(() => {
     try {
@@ -504,10 +508,6 @@ function AtlasEditor() {
       // Local UI state is optional; storage failures should not block atlas editing.
     }
   }, [handbookThemeMode]);
-
-  useEffect(() => {
-    storeCanvasBackground(canvasBackgroundId);
-  }, [canvasBackgroundId]);
 
   useEffect(() => {
     storeConnectorRoutingMode(connectorRoutingMode);
@@ -728,20 +728,56 @@ function AtlasEditor() {
 
   const handlePaletteChange = useCallback(
     (paletteId: ThemePaletteId) => {
-      setThemePaletteId(paletteId);
       const associatedBackground = getAssociatedCanvasBackground(paletteId);
-      if (associatedBackground) {
-        setCanvasBackgroundId(associatedBackground);
-      }
-      appendDebugEvent("settings.palette", "Theme palette changed", "info", { palette: paletteId });
+      setAppearancePreferences((current) => {
+        const mode = current.appAppearanceMode;
+        const currentSelection = getActiveAppearanceSelection(current);
+        const nextSelection = {
+          themePalette: paletteId,
+          canvasBackground: associatedBackground ?? currentSelection.canvasBackground
+        };
+        return {
+          ...current,
+          perMode: { ...current.perMode, [mode]: nextSelection }
+        };
+      });
+      appendDebugEvent("settings.palette", "Theme palette changed", "info", { palette: paletteId, appAppearanceMode });
     },
-    [appendDebugEvent]
+    [appAppearanceMode, appendDebugEvent]
   );
 
   const handleCanvasBackgroundChange = useCallback(
     (backgroundId: CanvasBackgroundId) => {
-      setCanvasBackgroundId(backgroundId);
-      appendDebugEvent("settings.canvas_background", "Canvas background changed", "info", { background: backgroundId });
+      setAppearancePreferences((current) => {
+        const mode = current.appAppearanceMode;
+        const currentSelection = getActiveAppearanceSelection(current);
+        return {
+          ...current,
+          perMode: {
+            ...current.perMode,
+            [mode]: { ...currentSelection, canvasBackground: backgroundId }
+          }
+        };
+      });
+      appendDebugEvent("settings.canvas_background", "Canvas background changed", "info", { background: backgroundId, appAppearanceMode });
+    },
+    [appAppearanceMode, appendDebugEvent]
+  );
+
+  const handleAppAppearanceModeChange = useCallback(
+    (nextMode: AppAppearanceMode) => {
+      setAppearancePreferences((current) => {
+        if (current.appAppearanceMode === nextMode) return current;
+        return {
+          ...current,
+          appAppearanceMode: nextMode,
+          perMode: {
+            ...current.perMode,
+            ...(nextMode === "zima" && !current.perMode.zima ? { zima: { ...DEFAULT_ZIMA_APPEARANCE } } : {})
+          }
+        };
+      });
+      appendDebugEvent("settings.app_appearance", "App Appearance Mode changed", "info", { appAppearanceMode: nextMode });
     },
     [appendDebugEvent]
   );
@@ -2080,8 +2116,13 @@ function AtlasEditor() {
   }
 
   return (
-    <div className={firstRunPromptVisible ? "app-shell app-shell--with-local-access-prompt" : "app-shell"} data-theme={themePaletteId}>
+    <div
+      className={firstRunPromptVisible ? "app-shell app-shell--with-local-access-prompt" : "app-shell"}
+      data-theme={themePaletteId}
+      data-app-appearance-mode={appAppearanceMode}
+    >
       <TopBar
+        appAppearanceMode={appAppearanceMode}
         appMode={appMode}
         exportMenuOpen={exportMenuOpen}
         exportMenuRef={exportMenuRef}
@@ -2277,10 +2318,12 @@ function AtlasEditor() {
           backendHealth={backendHealth}
           debugEvents={debugEvents}
           layoutTemplate={layoutTemplate}
+          appAppearanceMode={appAppearanceMode}
           canvasBackgroundId={canvasBackgroundId}
           paletteId={themePaletteId}
           updateAdvisory={updateAdvisory}
           onClearDebugLog={handleClearDebugLog}
+          onAppAppearanceModeChange={handleAppAppearanceModeChange}
           onClose={() => setSettingsOpen(false)}
           onCopyUpdateCommand={handleCopyUpdateCommand}
           onExportDebugLog={handleExportDebugLog}

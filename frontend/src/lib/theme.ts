@@ -1,5 +1,13 @@
 import { LINK_COLOR, TILE_TYPE_CONFIG } from "./constants";
-import type { CanvasBackgroundId, LinkType, ThemePaletteId, TileType } from "../types/atlas";
+import type {
+  AppearancePreferencesV1,
+  AppearanceSelection,
+  AppAppearanceMode,
+  CanvasBackgroundId,
+  LinkType,
+  ThemePaletteId,
+  TileType
+} from "../types/atlas";
 
 export interface ThemePalette {
   id: ThemePaletteId;
@@ -12,6 +20,17 @@ export interface ThemePalette {
 
 const STORAGE_KEY = "ctroadmap.themePalette";
 const CANVAS_BACKGROUND_STORAGE_KEY = "ctroadmap.canvasBackground";
+export const APPEARANCE_PREFERENCES_STORAGE_KEY = "ctroadmap.appearancePreferences.v1";
+
+export const DEFAULT_CLASSIC_APPEARANCE: AppearanceSelection = {
+  themePalette: "cyber",
+  canvasBackground: "grid"
+};
+
+export const DEFAULT_ZIMA_APPEARANCE: AppearanceSelection = {
+  themePalette: "blueprint",
+  canvasBackground: "zima_carbon"
+};
 
 export interface CanvasBackgroundOption {
   id: CanvasBackgroundId;
@@ -59,6 +78,11 @@ export const CANVAS_BACKGROUNDS: CanvasBackgroundOption[] = [
     id: "lt_draft_grid",
     label: "LT Draft Grid",
     description: "Pale lavender canvas with a wide soft blue grid."
+  },
+  {
+    id: "zima_carbon",
+    label: "Zima Carbon",
+    description: "Pearl-white seamless carbon weave designed for the ZIMA shell."
   }
 ];
 
@@ -190,21 +214,72 @@ export const THEME_PALETTES: ThemePalette[] = [
 ];
 
 export function getStoredThemePalette(): ThemePaletteId {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = safeStorageGet(STORAGE_KEY);
   return THEME_PALETTES.some((palette) => palette.id === stored) ? (stored as ThemePaletteId) : "cyber";
 }
 
 export function storeThemePalette(paletteId: ThemePaletteId): void {
-  window.localStorage.setItem(STORAGE_KEY, paletteId);
+  safeStorageSet(STORAGE_KEY, paletteId);
 }
 
 export function getStoredCanvasBackground(): CanvasBackgroundId {
-  const stored = window.localStorage.getItem(CANVAS_BACKGROUND_STORAGE_KEY);
+  const stored = safeStorageGet(CANVAS_BACKGROUND_STORAGE_KEY);
   return CANVAS_BACKGROUNDS.some((background) => background.id === stored) ? (stored as CanvasBackgroundId) : "grid";
 }
 
 export function storeCanvasBackground(backgroundId: CanvasBackgroundId): void {
-  window.localStorage.setItem(CANVAS_BACKGROUND_STORAGE_KEY, backgroundId);
+  safeStorageSet(CANVAS_BACKGROUND_STORAGE_KEY, backgroundId);
+}
+
+export function getStoredAppearancePreferences(): AppearancePreferencesV1 {
+  const migratedClassic: AppearanceSelection = {
+    themePalette: getStoredThemePalette(),
+    canvasBackground: getStoredCanvasBackground()
+  };
+  const stored = safeStorageGet(APPEARANCE_PREFERENCES_STORAGE_KEY);
+  if (!stored) {
+    return {
+      version: 1,
+      appAppearanceMode: "classic",
+      perMode: { classic: migratedClassic }
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as Partial<AppearancePreferencesV1>;
+    const appAppearanceMode: AppAppearanceMode = parsed.appAppearanceMode === "zima" ? "zima" : "classic";
+    const classic = normalizeAppearanceSelection(parsed.perMode?.classic, migratedClassic);
+    const storedZima = parsed.perMode?.zima;
+    const zima = storedZima ? normalizeAppearanceSelection(storedZima, DEFAULT_ZIMA_APPEARANCE) : undefined;
+    return {
+      version: 1,
+      appAppearanceMode,
+      perMode: {
+        classic,
+        ...(zima || appAppearanceMode === "zima" ? { zima: zima ?? { ...DEFAULT_ZIMA_APPEARANCE } } : {})
+      }
+    };
+  } catch {
+    return {
+      version: 1,
+      appAppearanceMode: "classic",
+      perMode: { classic: migratedClassic }
+    };
+  }
+}
+
+export function storeAppearancePreferences(preferences: AppearancePreferencesV1): void {
+  safeStorageSet(APPEARANCE_PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
+  const activeSelection = getActiveAppearanceSelection(preferences);
+  storeThemePalette(activeSelection.themePalette);
+  storeCanvasBackground(activeSelection.canvasBackground);
+}
+
+export function getActiveAppearanceSelection(preferences: AppearancePreferencesV1): AppearanceSelection {
+  if (preferences.appAppearanceMode === "zima") {
+    return preferences.perMode.zima ?? DEFAULT_ZIMA_APPEARANCE;
+  }
+  return preferences.perMode.classic;
 }
 
 export function getAssociatedCanvasBackground(paletteId: ThemePaletteId): CanvasBackgroundId | null {
@@ -225,4 +300,31 @@ export function getTileColor(type: TileType, paletteId: ThemePaletteId): string 
 export function getLinkColor(type: LinkType, paletteId: ThemePaletteId): string {
   const palette = getThemePalette(paletteId);
   return palette.linkColors[type] ?? LINK_COLOR[type];
+}
+
+function normalizeAppearanceSelection(value: unknown, fallback: AppearanceSelection): AppearanceSelection {
+  if (!value || typeof value !== "object") return { ...fallback };
+  const candidate = value as Partial<AppearanceSelection>;
+  return {
+    themePalette: THEME_PALETTES.some((palette) => palette.id === candidate.themePalette) ? (candidate.themePalette as ThemePaletteId) : fallback.themePalette,
+    canvasBackground: CANVAS_BACKGROUNDS.some((background) => background.id === candidate.canvasBackground)
+      ? (candidate.canvasBackground as CanvasBackgroundId)
+      : fallback.canvasBackground
+  };
+}
+
+function safeStorageGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Browser-local appearance preferences are optional and must not block atlas editing.
+  }
 }

@@ -1,6 +1,6 @@
 import { AlertTriangle, Check, Clock3, Download, ExternalLink, Loader2, Plus, Save, Settings, Upload, X } from "lucide-react";
 import type { RefObject } from "react";
-import type { AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
+import type { AppAppearanceMode, AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
 import { SearchBox } from "./SearchBox";
 
@@ -11,6 +11,7 @@ export interface UpdateNoticeView {
 }
 
 interface TopBarProps {
+  appAppearanceMode: AppAppearanceMode;
   appMode: AppMode;
   exportMenuOpen: boolean;
   exportMenuRef: RefObject<HTMLDivElement>;
@@ -39,6 +40,7 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  appAppearanceMode,
   appMode,
   exportMenuOpen,
   exportMenuRef,
@@ -71,7 +73,11 @@ export function TopBar({
     <header className="topbar">
       <div className="topbar__main">
         <div className="brand" aria-label="CTRoadmap Homelab Diagram and Documentation">
-          <img className="brand__logo" src="/brand/ctroadmap-topbar-logo.png" alt="CTRoadmap Homelab Diagram and Documentation" />
+          <img
+            className="brand__logo"
+            src={appAppearanceMode === "zima" ? "/assets/branding/ctroadmap-zima.png" : "/brand/ctroadmap-topbar-logo.png"}
+            alt="CTRoadmap Homelab Diagram and Documentation"
+          />
         </div>
         <div className="topbar__actions">
           <button className="toolbar-button toolbar-button--icon-only" onClick={onSave} disabled={isSaving} title="Save" aria-label="Save">

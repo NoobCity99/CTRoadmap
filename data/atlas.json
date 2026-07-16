@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-14T03:59:33.568882+00:00"
+    "updated_at": "2026-07-16T04:33:04.412160+00:00"
   },
   "tiles": [
     {
@@ -25,7 +25,8 @@
         "hostname": "",
         "ip": "",
         "os": "",
-        "purpose": "TESTING"
+        "purpose": "TESTING",
+        "primary_node": true
       },
       "notes": "",
       "tags": [
@@ -353,6 +354,28 @@
       },
       "notes": "",
       "tags": []
+    },
+    {
+      "id": "script_new_script_1",
+      "type": "script",
+      "title": "NEW SCRIPT 1",
+      "parent": null,
+      "position": {
+        "x": -265.11860332354354,
+        "y": 123.09577056160512
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "path": "",
+        "language": "",
+        "purpose": ""
+      },
+      "notes": "",
+      "tags": []
     }
   ],
   "links": [
@@ -620,5 +643,23 @@
     }
   ],
   "stacks": [],
-  "families": []
+  "families": [
+    {
+      "id": "family_test",
+      "title": "VLAN ALPHA",
+      "description": "",
+      "member_tile_ids": [],
+      "position": {
+        "x": -649.574399352748,
+        "y": -721.9037155448974
+      },
+      "size": {
+        "width": 1029.0,
+        "height": 471.0
+      },
+      "order": 0,
+      "color": "#38a3ff",
+      "tag": null
+    }
+  ]
 }

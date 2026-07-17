@@ -345,6 +345,15 @@ button:disabled {
   background: transparent;
 }
 
+.toolbar-popover__danger {
+  color: #a20c0c !important;
+}
+
+.toolbar-popover__danger:hover,
+.toolbar-popover__danger:focus-visible {
+  background: rgba(239, 68, 68, 0.16) !important;
+}
+
 .toolbar-button--planning {
   border-color: rgba(251, 191, 36, 0.46);
   color: #fde68a;
@@ -2178,7 +2187,7 @@ button:disabled {
   color: #ffffff;
 }
 
-.handbook-document__masthead > span {
+.handbook-document__masthead>span {
   display: block;
 }
 
@@ -3862,7 +3871,7 @@ button:disabled {
   --app-muted-text: #6f7076;
   --control-bg-rest: #fafaff;
   --control-bg-hover: #ffffff;
-  --control-shadow-hover: 0 2px 8px rgba(30, 35, 50, 0.1), 0 1px 2px rgba(30, 35, 50, 0.08);
+  --control-shadow-hover: 0 9px 16px -10px rgba(30, 35, 50, 0.34), 0 3px 6px -4px rgba(30, 35, 50, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.82);
   --control-shadow-pressed: 0 1px 2px rgba(30, 35, 50, 0.08);
   --field-bg: #f2f2f5;
   --focus-ring: #1687e8;
@@ -3912,8 +3921,7 @@ button:disabled {
   filter: none;
 }
 
-.app-shell[data-app-appearance-mode="zima"] :is(
-  .panel-title,
+.app-shell[data-app-appearance-mode="zima"] :is(.panel-title,
   .settings-panel__header h2,
   .settings-panel__header span,
   .settings-section__title,
@@ -3953,8 +3961,7 @@ button:disabled {
   .search-result,
   .search-result strong,
   .search-result small,
-  .warning-empty
-) {
+  .warning-empty) {
   color: var(--app-text);
 }
 
@@ -3962,8 +3969,11 @@ button:disabled {
   color: var(--app-muted-text);
 }
 
-.app-shell[data-app-appearance-mode="zima"] :is(
-  .toolbar-button,
+.app-shell[data-app-appearance-mode="zima"] :is(.settings-toggle, .settings-toggle span, .settings-select-field, .settings-select-field span) {
+  color: var(--app-text);
+}
+
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button,
   .icon-button,
   .ghost-button,
   .small-button,
@@ -3981,8 +3991,7 @@ button:disabled {
   .connector-routing-toggle,
   .palette-option,
   .app-appearance-option,
-  .icon-library__option
-) {
+  .icon-library__option) {
   border-color: transparent;
   background: var(--control-bg-rest);
   box-shadow: none;
@@ -3991,8 +4000,7 @@ button:disabled {
   transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
-.app-shell[data-app-appearance-mode="zima"] :is(
-  .toolbar-button,
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button,
   .icon-button,
   .ghost-button,
   .small-button,
@@ -4010,15 +4018,13 @@ button:disabled {
   .connector-routing-toggle,
   .palette-option,
   .app-appearance-option,
-  .icon-library__option
-):not(:disabled):hover {
+  .icon-library__option):not(:disabled):hover {
   background: var(--control-bg-hover);
   box-shadow: var(--control-shadow-hover);
   transform: translateY(-1px);
 }
 
-.app-shell[data-app-appearance-mode="zima"] :is(
-  .toolbar-button,
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button,
   .icon-button,
   .ghost-button,
   .small-button,
@@ -4036,14 +4042,12 @@ button:disabled {
   .connector-routing-toggle,
   .palette-option,
   .app-appearance-option,
-  .icon-library__option
-):not(:disabled):active {
+  .icon-library__option):not(:disabled):active {
   box-shadow: var(--control-shadow-pressed);
   transform: translateY(0);
 }
 
-.app-shell[data-app-appearance-mode="zima"] :is(
-  .toolbar-button,
+.app-shell[data-app-appearance-mode="zima"] :is(.toolbar-button,
   .icon-button,
   .ghost-button,
   .small-button,
@@ -4062,8 +4066,7 @@ button:disabled {
   .palette-option,
   .app-appearance-option,
   .icon-library__option,
-  .search-box__clear
-):focus-visible {
+  .search-box__clear):focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -4106,22 +4109,35 @@ button:disabled {
   padding-inline: 8px;
 }
 
-.app-shell[data-app-appearance-mode="zima"] .local-access-settings-card {
+.app-shell[data-app-appearance-mode="zima"] .settings-section.local-access-settings-card {
+  border-color: rgba(74, 222, 128, 0.56);
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(1, 84, 39, 0.92), rgba(0, 50, 29, 0.94));
-  box-shadow: inset 0 0 22px rgba(34, 197, 94, 0.12);
+  background: linear-gradient(135deg, rgba(1, 54, 25, 0.88), rgba(0, 28, 17, 0.92));
+  box-shadow:
+    inset 0 0 22px rgba(34, 197, 94, 0.16),
+    0 0 18px rgba(34, 197, 94, 0.12);
   padding: 12px;
 }
 
-.app-shell[data-app-appearance-mode="zima"] .local-access-settings-card :is(.settings-section__title, p, .settings-note) {
+.app-shell[data-app-appearance-mode="zima"] .settings-section.local-access-settings-card .settings-section__title {
   color: #ffffff;
-  text-shadow: none;
+  margin-bottom: 7px;
+  text-shadow: 0 0 12px rgba(74, 222, 128, 0.48);
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-section.local-access-settings-card p {
+  color: #ffffff;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .settings-section.local-access-settings-card .settings-note {
+  color: rgba(255, 255, 255, 0.86);
 }
 
 .app-shell[data-app-appearance-mode="zima"] .local-access-settings-card__actions .toolbar-button,
 .app-shell[data-app-appearance-mode="zima"] .local-access-dialog .toolbar-button {
+  border-color: rgba(134, 239, 172, 0.58);
   color: #ffffff;
-  background: rgba(5, 91, 42, 0.8);
+  background: rgba(5, 91, 42, 0.74);
 }
 
 .app-shell[data-app-appearance-mode="zima"] .settings-note--warning {

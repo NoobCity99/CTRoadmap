@@ -53,6 +53,7 @@ import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } 
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
 import {
   activeTemplateForUi,
+  buildEffectiveStackState,
   buildStackState,
   canConnectTiles,
   canStackMountChildren,
@@ -64,6 +65,7 @@ import {
   getFamilyTreeClosure,
   getLifecycleCounts,
   getSearchResults,
+  getStackEligibleTileIds,
   getVisibleLinks,
   getVisibleTiles,
   isLifecycleEditable,
@@ -158,6 +160,7 @@ function AtlasEditor() {
   const lastWarningCount = useRef<number | null>(null);
   const latestAtlasRef = useRef<Atlas | null>(null);
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
+  const resetMenuRef = useRef<HTMLDivElement | null>(null);
   const autosaveTimerRef = useRef<number | null>(null);
   const dirtyVersionRef = useRef(0);
   const savedVersionRef = useRef(0);
@@ -184,6 +187,7 @@ function AtlasEditor() {
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [resetMenuOpen, setResetMenuOpen] = useState(false);
   const [viewBarOpen, setViewBarOpen] = useState(true);
   const [appMode, setAppMode] = useState<AppMode>("live");
   const [sidebarState, setSidebarState] = useState<SidebarState>(() => getStoredSidebarState());
@@ -579,7 +583,11 @@ function AtlasEditor() {
 
   const childrenByParent = useMemo(() => getChildrenByParent(atlas), [atlas]);
 
-  const stackState = useMemo(() => (atlas ? buildStackState(atlas) : emptyStackState()), [atlas]);
+  const fullStackState = useMemo(() => (atlas ? buildStackState(atlas) : emptyStackState()), [atlas]);
+
+  const stackEligibleTileIds = useMemo(() => getStackEligibleTileIds(atlas, activeView, searchTerm), [activeView, atlas, searchTerm]);
+
+  const stackState = useMemo(() => buildEffectiveStackState(fullStackState, stackEligibleTileIds), [fullStackState, stackEligibleTileIds]);
 
   const handleFocusFamily = useCallback(
     (family: Family) => {
@@ -624,11 +632,18 @@ function AtlasEditor() {
 
   const searchResults = useMemo<SearchResult[]>(() => getSearchResults(atlas, activeView, searchTerm), [activeView, atlas, searchTerm]);
 
-  const visibleTiles = useMemo(() => getVisibleTiles(atlas, activeView, searchTerm, stackState), [activeView, atlas, searchTerm, stackState]);
+  const visibleTiles = useMemo(() => getVisibleTiles(atlas, activeView, searchTerm, stackState, stackEligibleTileIds), [activeView, atlas, searchTerm, stackEligibleTileIds, stackState]);
 
   const visibleTileIds = useMemo(() => new Set(visibleTiles.map((tile) => tile.id)), [visibleTiles]);
 
   const visibleLinks = useMemo(() => getVisibleLinks(atlas, activeView, searchTerm, visibleTileIds, stackState), [activeView, atlas, searchTerm, stackState, visibleTileIds]);
+
+  useEffect(() => {
+    if (selection?.kind !== "stack") return;
+    if (!stackState.stacks.some((stack) => stack.id === selection.id)) {
+      setSelection(null);
+    }
+  }, [selection, stackState.stacks]);
 
   const derivedNodes: Node[] = useMemo(
     () =>
@@ -1982,11 +1997,39 @@ function AtlasEditor() {
     if (!window.confirm("This will overwrite your current ALTAS, Download your current ATLAS .json file first so you can revert to it later if you don't want to lose it.")) return;
     const seed = createSeedAtlas();
     commitDirtyAtlas(seed);
+    setResetMenuOpen(false);
     setActiveViewId("everything");
     setLayoutTemplate("canvas_topology");
     setSelection(null);
     setStatus("CTDC sample loaded");
     appendDebugEvent("seed.load", "CTDC sample loaded", "info", atlasSummary(seed));
+  }, [appendDebugEvent, commitDirtyAtlas]);
+
+  const handleWipeCanvas = useCallback(() => {
+    const snapshot = latestAtlasRef.current;
+    if (!snapshot) return;
+    const tileCount = snapshot.tiles.length;
+    const linkCount = snapshot.links.length;
+    const familyCount = snapshot.families?.length ?? 0;
+    const confirmed = window.confirm(
+      `Wipe the current canvas?\n\nThis will delete ${tileCount} tiles, ${linkCount} connections, and ${familyCount} Families. This cannot be undone unless you have downloaded a backup atlas JSON.`
+    );
+    if (!confirmed) return;
+
+    const nextAtlas: Atlas = {
+      ...snapshot,
+      tiles: [],
+      links: [],
+      families: [],
+      stacks: []
+    };
+    commitDirtyAtlas(nextAtlas);
+    setResetMenuOpen(false);
+    setSelection(null);
+    setStackContextMenu(null);
+    setSelectedHandbookVolumeId(null);
+    setStatus("Canvas wiped");
+    appendDebugEvent("canvas.wipe", "Canvas wiped", "warning", { tiles: tileCount, links: linkCount, families: familyCount });
   }, [appendDebugEvent, commitDirtyAtlas]);
 
   useEffect(() => {
@@ -1998,6 +2041,16 @@ function AtlasEditor() {
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [exportMenuOpen]);
+
+  useEffect(() => {
+    if (!resetMenuOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof globalThis.Node && resetMenuRef.current?.contains(event.target)) return;
+      setResetMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [resetMenuOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -2129,6 +2182,8 @@ function AtlasEditor() {
         fileInputRef={fileInputRef}
         isExporting={isExporting}
         isSaving={isSaving}
+        resetMenuOpen={resetMenuOpen}
+        resetMenuRef={resetMenuRef}
         saveStatusClass={saveStatusClass}
         saveStatusText={saveStatusText}
         searchInputRef={searchInputRef}
@@ -2142,6 +2197,7 @@ function AtlasEditor() {
         onLoadSeed={handleLoadSeed}
         onDownloadAtlasJson={handleDownloadAtlasJson}
         onRemindUpdateLater={handleRemindUpdateLater}
+        onResetMenuToggle={() => setResetMenuOpen((open) => !open)}
         onSave={() => void handleSave()}
         onSearchChange={setSearchTerm}
         onToggleAppMode={() => {
@@ -2154,6 +2210,7 @@ function AtlasEditor() {
         onToggleSettings={handleToggleSettings}
         onToolbarExport={(format) => void handleToolbarExport(format)}
         onViewReleaseNotes={handleViewReleaseNotes}
+        onWipeCanvas={handleWipeCanvas}
       />
 
       {firstRunPromptVisible ? (

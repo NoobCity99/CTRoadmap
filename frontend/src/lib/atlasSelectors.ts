@@ -44,7 +44,10 @@ export function emptyStackState(): StackState {
 }
 
 export function buildStackState(atlas: Atlas): StackState {
-  const stacks = sanitizeStacks(atlas);
+  return buildStackStateFromStacks(sanitizeStacks(atlas));
+}
+
+function buildStackStateFromStacks(stacks: TileStack[]): StackState {
   const hiddenMemberIds = new Set<string>();
   const memberToRepresentative = new Map<string, string>();
   const stackByRepresentative = new Map<string, StackRenderInfo>();
@@ -66,6 +69,14 @@ export function buildStackState(atlas: Atlas): StackState {
   }
 
   return { stacks, hiddenMemberIds, memberToRepresentative, stackByRepresentative };
+}
+
+export function buildEffectiveStackState(stackState: StackState, eligibleTileIds: Set<string>): StackState {
+  const activeStacks = stackState.stacks.filter((stack) => {
+    if (!eligibleTileIds.has(stack.representative_id)) return false;
+    return stack.member_ids.every((memberId) => eligibleTileIds.has(memberId));
+  });
+  return buildStackStateFromStacks(activeStacks);
 }
 
 export function sanitizeStacks(atlas: Atlas): TileStack[] {
@@ -336,14 +347,21 @@ export function getSearchResults(atlas: Atlas | null, activeView: View | null, s
   return [...tileMatches, ...linkMatches].slice(0, 30);
 }
 
-export function getVisibleTiles(atlas: Atlas | null, activeView: View | null, searchTerm: string, stackState: StackState): Tile[] {
+export function getVisibleTiles(atlas: Atlas | null, activeView: View | null, searchTerm: string, stackState: StackState, eligibleTileIds = getStackEligibleTileIds(atlas, activeView, searchTerm)): Tile[] {
   if (!atlas) return [];
+  return atlas.tiles.filter((tile) => eligibleTileIds.has(tile.id) && !stackState.hiddenMemberIds.has(tile.id));
+}
+
+export function getStackEligibleTileIds(atlas: Atlas | null, activeView: View | null, searchTerm: string): Set<string> {
+  const eligibleTileIds = new Set<string>();
+  if (!atlas) return eligibleTileIds;
   const query = searchTerm.trim().toLowerCase();
-  return atlas.tiles.filter((tile) => {
+  for (const tile of atlas.tiles) {
     const allowedByView = !activeView?.visible_types.length || activeView.visible_types.includes(tile.type);
     const allowedBySearch = !query || getTileSearchText(tile).includes(query);
-    return allowedByView && allowedBySearch && !stackState.hiddenMemberIds.has(tile.id);
-  });
+    if (allowedByView && allowedBySearch) eligibleTileIds.add(tile.id);
+  }
+  return eligibleTileIds;
 }
 
 export function getVisibleLinks(atlas: Atlas | null, activeView: View | null, searchTerm: string, visibleTileIds: Set<string>, stackState: StackState): Link[] {

@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Clock3, Download, ExternalLink, Loader2, Plus, Save, Settings, Upload, X } from "lucide-react";
+import { AlertTriangle, Check, Clock3, Download, ExternalLink, Flame, Loader2, MonitorX, Plus, Save, Settings, Upload, X } from "lucide-react";
 import type { RefObject } from "react";
 import type { AppAppearanceMode, AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
@@ -18,6 +18,8 @@ interface TopBarProps {
   fileInputRef: RefObject<HTMLInputElement>;
   isExporting: ExportFormat | null;
   isSaving: boolean;
+  resetMenuOpen: boolean;
+  resetMenuRef: RefObject<HTMLDivElement>;
   saveStatusClass: string;
   saveStatusText: string;
   searchInputRef: RefObject<HTMLInputElement>;
@@ -31,12 +33,14 @@ interface TopBarProps {
   onLoadSeed: () => void;
   onDownloadAtlasJson: () => void;
   onRemindUpdateLater: () => void;
+  onResetMenuToggle: () => void;
   onSave: () => void;
   onSearchChange: (value: string) => void;
   onToggleAppMode: () => void;
   onToggleSettings: () => void;
   onToolbarExport: (format: ExportFormat) => void;
   onViewReleaseNotes: () => void;
+  onWipeCanvas: () => void;
 }
 
 export function TopBar({
@@ -47,6 +51,8 @@ export function TopBar({
   fileInputRef,
   isExporting,
   isSaving,
+  resetMenuOpen,
+  resetMenuRef,
   saveStatusClass,
   saveStatusText,
   searchInputRef,
@@ -60,12 +66,14 @@ export function TopBar({
   onLoadSeed,
   onDownloadAtlasJson,
   onRemindUpdateLater,
+  onResetMenuToggle,
   onSave,
   onSearchChange,
   onToggleAppMode,
   onToggleSettings,
   onToolbarExport,
-  onViewReleaseNotes
+  onViewReleaseNotes,
+  onWipeCanvas
 }: TopBarProps) {
   const saveStatusTone = saveStatusClass.includes("save-status--error") ? "error" : isSaving || saveStatusClass.includes("save-status--dirty") ? "pending" : "saved";
 
@@ -102,9 +110,21 @@ export function TopBar({
           <button className="toolbar-button" onClick={onDownloadAtlasJson} title="Download Atlas">
             <Download size={18} /> Download Atlas
           </button>
-          <button className="toolbar-button" onClick={onLoadSeed} title="Load Demo">
-            <Upload size={18} /> Load Demo
-          </button>
+          <div className="toolbar-menu" ref={resetMenuRef}>
+            <button className="toolbar-button" type="button" aria-haspopup="menu" aria-expanded={resetMenuOpen} onClick={onResetMenuToggle} title="Reset">
+              <MonitorX size={18} /> Reset
+            </button>
+            {resetMenuOpen ? (
+              <div className="toolbar-popover" role="menu" aria-label="Reset">
+                <button type="button" role="menuitem" onClick={onLoadSeed}>
+                  <Upload size={16} /> Load Demo
+                </button>
+                <button type="button" role="menuitem" className="toolbar-popover__danger" onClick={onWipeCanvas}>
+                  <Flame size={16} /> Wipe Canvas
+                </button>
+              </div>
+            ) : null}
+          </div>
           <ExportMenu exportMenuOpen={exportMenuOpen} exportMenuRef={exportMenuRef} isExporting={isExporting} onExport={onToolbarExport} onToggle={onExportMenuToggle} />
           <button
             className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}

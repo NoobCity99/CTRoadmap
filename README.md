@@ -119,6 +119,19 @@ cp -a exports exports.backup
 
 Keep backups outside the installation directory before uninstalling or making destructive host changes.
 
+<table>
+  <tr>
+    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
+    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
+  </tr>
+  <tr>
+    <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
+    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
+  </tr>
+</table>
+
+# FEATURES
+
 ## Local Access Passcode
 
 Local Access Passcode provides optional authentication for the CTRoadmap web interface. It is disabled until a passcode is configured in Settings.
@@ -179,8 +192,10 @@ Layers are persisted in the atlas schema as `views` for compatibility.
 
 ### Appearance
 
-- Select from Cyber, Aurora, Ember, Blueprint, and NES color palettes.
-- Choose Grid, Hex, Tron Dark, Tron Lite, Blueprint, PCB Board, NES Grid, or LT Draft Grid canvas backgrounds.
+- TWO APP MODES to choose from, CLASSIC & ZIMA.
+  - ZIMA is Russian for "WINTER"
+  
+- USE CANVAS EDITOR in settings to chose the theme & background you want, previewing it before confirming. 
 - Assign built-in or uploaded icons to tiles through the Icon Library.
 - Adjust canvas and connector presentation without changing atlas content.
 
@@ -203,17 +218,6 @@ Delete/Backspace Delete selected tile or relationship
 /                Focus search
 Escape           Clear selection
 ```
-<table>
-  <tr>
-    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
-    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
-  </tr>
-  <tr>
-    <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
-    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
-  </tr>
-</table>
-
 
 
 ## API

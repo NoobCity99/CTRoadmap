@@ -1,16 +1,14 @@
-This update gives CTR a little facelift, tries to cut out some of the tedious fluff while adding useful features. 
+We hit our 100th ⭐ on GITHUB ! So happy people are enjoying CTRoadmap!!
 
 **CHANGE LOG:**
- - Optional Password Feature
- - New Icon Library
- - Anti-Collision Connection Lines
- - New Theme & Background Options
- - Various UI Improvements
+ - New ZIMA MODE
+ - Canvas Theme Editor with Preview
+ - Reset dropdown with options
+ - Minor Bug Fix
   
 *See Release Notes on GitHub for more*
 
-Thank you all very much, I really hope you're enjoying the App.
-
+This update includes our first two User Requested features, ENJOY!!
 *- NoobCity99*
 
-*(Click below if you have any feedback, questions or bugs that need squashing)*
+*(Click below if you have any feedback, questions or find bugs that need squashing)*

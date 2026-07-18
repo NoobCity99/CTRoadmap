@@ -1,5 +1,6 @@
 import {
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   Panel,
@@ -17,8 +18,8 @@ import { FamilyNode } from "./FamilyNode";
 import { TileNode } from "./TileNode";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import type { ConnectorRoutingMode } from "../lib/edgeRouting";
-import { getTileColor } from "../lib/theme";
-import type { AppMode, CanvasBackgroundId, ExportFormat, Family, LayoutTemplate, Link, ThemePaletteId, Tile, View } from "../types/atlas";
+import { getCanvasBackground, getTileVisualTokens, type CanvasBackgroundId, type CanvasThemeId } from "../appearance";
+import type { AppMode, ExportFormat, Family, LayoutTemplate, Link, Tile, View } from "../types/atlas";
 import { LayerBar } from "./LayerBar";
 
 const nodeTypes = { tileNode: TileNode, familyNode: FamilyNode };
@@ -52,7 +53,7 @@ interface CanvasFrameProps {
   searchTerm: string;
   stackContextMenu: StackContextMenuView | null;
   status: string;
-  themePaletteId: ThemePaletteId;
+  canvasThemeId: CanvasThemeId;
   viewBarOpen: boolean;
   views: View[];
   visibleLinks: Link[];
@@ -97,7 +98,7 @@ export function CanvasFrame({
   searchTerm,
   stackContextMenu,
   status,
-  themePaletteId,
+  canvasThemeId,
   viewBarOpen,
   views,
   visibleLinks,
@@ -123,6 +124,8 @@ export function CanvasFrame({
   onToggleViewBar,
   onUnstack
 }: CanvasFrameProps) {
+  const canvasBackground = getCanvasBackground(canvasBackgroundId);
+  const overlay = canvasBackground.reactFlowOverlay;
   return (
     <section
       ref={canvasRef}
@@ -156,14 +159,20 @@ export function CanvasFrame({
         minZoom={0.2}
         maxZoom={1.8}
       >
-        <Background color="var(--canvas-grid-line)" gap={20} size={1} />
+        <Background
+          color={overlay.color}
+          gap={overlay.gap}
+          size={overlay.size}
+          variant={overlay.variant as BackgroundVariant}
+          style={{ opacity: overlay.opacity }}
+        />
         <MiniMap
           pannable
           zoomable
           nodeColor={(node) => {
             const family = node.data.family as Family | undefined;
             if (family) return family.color || "#38a3ff";
-            return getTileColor((node.data.tile as Tile).type, themePaletteId);
+            return getTileVisualTokens((node.data.tile as Tile).type, canvasThemeId).accentColor;
           }}
         />
         <Controls fitViewOptions={fitViewOptions} onInteractiveChange={onInteractiveChange} />

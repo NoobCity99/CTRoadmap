@@ -1,6 +1,7 @@
 import { AlertTriangle, Check, Clock3, Download, ExternalLink, Flame, Loader2, MonitorX, Plus, Save, Settings, Upload, X } from "lucide-react";
 import type { RefObject } from "react";
-import type { AppAppearanceMode, AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
+import type { AppAppearanceMode } from "../appearance";
+import type { AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
 import { SearchBox } from "./SearchBox";
 
@@ -23,6 +24,7 @@ interface TopBarProps {
   saveStatusClass: string;
   saveStatusText: string;
   searchInputRef: RefObject<HTMLInputElement>;
+  settingsButtonRef: RefObject<HTMLButtonElement>;
   searchTerm: string;
   settingsOpen: boolean;
   updateAdvisory: UpdateAdvisory | null;
@@ -56,6 +58,7 @@ export function TopBar({
   saveStatusClass,
   saveStatusText,
   searchInputRef,
+  settingsButtonRef,
   searchTerm,
   settingsOpen,
   updateAdvisory,
@@ -156,7 +159,7 @@ export function TopBar({
       </div>
       <div className="topbar__right">
         <SearchBox inputRef={searchInputRef} searchTerm={searchTerm} onSearchChange={onSearchChange} />
-        <button className="icon-button" onClick={onToggleSettings} title={settingsOpen ? "Close settings" : "Settings"} aria-label={settingsOpen ? "Close settings" : "Settings"} aria-expanded={settingsOpen}>
+        <button ref={settingsButtonRef} className="icon-button" onClick={onToggleSettings} title={settingsOpen ? "Close settings" : "Settings"} aria-label={settingsOpen ? "Close settings" : "Settings"} aria-expanded={settingsOpen}>
           <Settings size={19} />
         </button>
       </div>

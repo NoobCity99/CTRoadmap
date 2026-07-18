@@ -1,8 +1,8 @@
 import { MarkerType, type Edge, type Node, type NodeChange } from "@xyflow/react";
-import { getLinkColor, getTileColor } from "./theme";
+import { getLinkVisualTokens, getTileVisualTokens, type CanvasThemeId } from "../appearance";
 import { isLifecycleEditable, resolveLifecycle, resolveSourcePort, resolveTargetPort, type StackState } from "./atlasSelectors";
 import type { ConnectorRoutingMode, RoutingRect } from "./edgeRouting";
-import type { AppMode, Atlas, Family, LayoutTemplate, Link, ThemePaletteId, Tile } from "../types/atlas";
+import type { AppMode, Atlas, Family, LayoutTemplate, Link, Tile } from "../types/atlas";
 
 export interface GraphMappingOptions {
   appMode: AppMode;
@@ -12,7 +12,7 @@ export interface GraphMappingOptions {
   layoutTemplate: LayoutTemplate;
   selection: { kind: string; id: string } | null;
   stackState: StackState;
-  themePaletteId: ThemePaletteId;
+  canvasThemeId: CanvasThemeId;
   visibleTiles: Tile[];
   visibleLinks: Link[];
   onFocusFamily: (family: Family) => void;
@@ -32,7 +32,7 @@ export function mapAtlasToNodes({
   layoutTemplate,
   selection,
   stackState,
-  themePaletteId,
+  canvasThemeId,
   visibleTiles,
   onFocusFamily,
   onResizeFamily
@@ -73,6 +73,7 @@ export function mapAtlasToNodes({
     const lifecycle = resolveLifecycle(tile);
     const editable = isLifecycleEditable(lifecycle, appMode);
     const stack = stackState.stackByRepresentative.get(tile.id);
+    const tileVisuals = getTileVisualTokens(tile.type, canvasThemeId);
     return {
       id: tile.id,
       type: "tileNode",
@@ -82,8 +83,9 @@ export function mapAtlasToNodes({
       data: {
         tile,
         parentTitle,
-        accentColor: getTileColor(tile.type, themePaletteId),
-        iconAccentColor: themePaletteId === "blueprint" ? getTileColor(tile.type, "cyber") : getTileColor(tile.type, themePaletteId),
+        accentColor: tileVisuals.accentColor,
+        iconAccentColor: tileVisuals.iconColor,
+        visualTokens: tileVisuals,
         hasChildren: Boolean(childrenByParent.get(tile.id)?.length),
         lifecycle,
         isMuted: !editable,
@@ -94,12 +96,12 @@ export function mapAtlasToNodes({
   return [...familyNodes, ...tileNodes];
 }
 
-export function mapAtlasToEdges(appMode: AppMode, themePaletteId: ThemePaletteId, visibleLinks: Link[], stackState: StackState, options: EdgeMappingOptions = {}): Edge[] {
+export function mapAtlasToEdges(appMode: AppMode, canvasThemeId: CanvasThemeId, visibleLinks: Link[], stackState: StackState, options: EdgeMappingOptions = {}): Edge[] {
   const useAvoidTiles = options.connectorRoutingMode === "avoid_tiles";
   return visibleLinks.map((link) => {
     const lifecycle = resolveLifecycle(link);
     const editable = isLifecycleEditable(lifecycle, appMode);
-    const isBlueprint = themePaletteId === "blueprint";
+    const linkVisuals = getLinkVisualTokens(link.type, canvasThemeId);
     const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
     return {
       id: link.id,
@@ -114,17 +116,17 @@ export function mapAtlasToEdges(appMode: AppMode, themePaletteId: ThemePaletteId
       animated: editable && ["calls", "controls", "fails_if"].includes(link.type),
       markerEnd: link.directional === false ? undefined : { type: MarkerType.ArrowClosed },
       style: {
-        stroke: editable ? getLinkColor(link.type, themePaletteId) : "rgba(148, 163, 184, 0.55)",
+        stroke: editable ? linkVisuals.strokeColor : "rgba(148, 163, 184, 0.55)",
         strokeWidth: editable ? 2 : 1.5,
         opacity: editable ? 1 : 0.55
       },
       labelStyle: {
-        fill: isBlueprint ? (editable ? "#06245a" : "rgba(6, 36, 90, 0.7)") : editable ? "#f8fafc" : "#94a3b8",
+        fill: editable ? linkVisuals.labelTextColor : "#94a3b8",
         fontSize: 12,
         fontWeight: 700
       },
       labelBgStyle: {
-        fill: isBlueprint ? "rgba(238, 247, 255, 0.86)" : "rgba(5, 10, 22, 0.88)",
+        fill: linkVisuals.labelSurfaceColor,
         fillOpacity: 0.9
       }
     };

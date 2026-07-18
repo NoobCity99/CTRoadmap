@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
+import type { TileVisualTokens } from "../appearance";
 import type { Tile } from "../types/atlas";
 
 export interface TileNodeData extends Record<string, unknown> {
@@ -19,12 +20,13 @@ export interface TileNodeData extends Record<string, unknown> {
     name: string;
     subtitle: string;
   };
+  visualTokens?: TileVisualTokens;
   tile: Tile;
   parentTitle?: string;
 }
 
 export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, hasChildren, iconAccentColor, isMuted, lifecycle = "live", stack, tile, parentTitle } = data as TileNodeData;
+  const { accentColor, hasChildren, iconAccentColor, isMuted, lifecycle = "live", stack, tile, parentTitle, visualTokens } = data as TileNodeData;
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
@@ -63,7 +65,17 @@ export function TileNode({ data, selected }: NodeProps) {
       } ${
         stack ? "tile-node--stacked" : ""
       }`}
-      style={{ "--tile-accent": accentColor ?? config.color, "--tile-icon-accent": iconAccentColor ?? accentColor ?? config.color } as CSSProperties}
+      style={{
+        "--tile-accent": accentColor ?? config.color,
+        "--tile-icon-accent": iconAccentColor ?? accentColor ?? config.color,
+        "--atlas-tile-accent": visualTokens?.accentColor,
+        "--atlas-tile-icon": visualTokens?.iconColor,
+        "--atlas-tile-surface": visualTokens?.surfaceColor,
+        "--atlas-tile-text": visualTokens?.textColor,
+        "--atlas-tile-muted-text": visualTokens?.mutedTextColor,
+        "--atlas-tile-border": visualTokens?.borderColor,
+        "--atlas-tile-glow": visualTokens?.glowColor
+      } as CSSProperties}
     >
       <Handle id="parent" type="target" position={Position.Top} className="tile-node__handle tile-node__handle--parent" />
       <Handle id="in" type="target" position={Position.Left} className="tile-node__handle tile-node__handle--in" />

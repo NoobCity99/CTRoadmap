@@ -57,17 +57,24 @@ button:disabled {
 }
 
 .app-shell {
-  --panel-bg: rgba(5, 12, 24, 0.88);
-  --panel-border: rgba(93, 166, 255, 0.18);
-  --topbar-bg: rgba(3, 7, 18, 0.92);
-  --topbar-fade-color: #030712;
-  --button-bg: linear-gradient(180deg, rgba(18, 34, 54, 0.95), rgba(8, 16, 31, 0.95));
-  --button-border: rgba(91, 142, 196, 0.35);
-  --canvas-grid-line: #1f3a55;
-  --canvas-grid: rgba(80, 180, 255, 0.035);
-  --canvas-glow: rgba(14, 165, 233, 0.12);
-  --canvas-bg: #050b15;
-  --focus-accent: #38a3ff;
+  --app-shell-bg: #030712;
+  --app-panel-bg: rgba(5, 12, 24, 0.88);
+  --app-panel-border: rgba(93, 166, 255, 0.18);
+  --app-topbar-bg: rgba(3, 7, 18, 0.92);
+  --app-control-bg: linear-gradient(180deg, rgba(18, 34, 54, 0.95), rgba(8, 16, 31, 0.95));
+  --app-control-border: rgba(91, 142, 196, 0.35);
+  --app-text: #e5eefb;
+  --app-muted-text: #91a4bf;
+  --app-focus: #38a3ff;
+  --panel-bg: var(--app-panel-bg);
+  --panel-border: var(--app-panel-border);
+  --topbar-bg: var(--app-topbar-bg);
+  --topbar-fade-color: var(--app-shell-bg);
+  --button-bg: var(--app-control-bg);
+  --button-border: var(--app-control-border);
+  --focus-accent: var(--app-focus);
+  color: var(--app-text);
+  background: var(--app-shell-bg);
   height: 100vh;
   display: grid;
   grid-template-areas:
@@ -83,79 +90,6 @@ button:disabled {
     "prompt"
     "workspace";
   grid-template-rows: 86px auto minmax(0, 1fr);
-}
-
-.app-shell[data-theme="aurora"] {
-  --panel-bg: rgba(4, 18, 23, 0.9);
-  --panel-border: rgba(45, 212, 191, 0.2);
-  --topbar-bg: rgba(4, 18, 23, 0.92);
-  --topbar-fade-color: #041217;
-  --button-bg: linear-gradient(180deg, rgba(15, 43, 52, 0.96), rgba(5, 18, 27, 0.96));
-  --button-border: rgba(125, 211, 252, 0.32);
-  --canvas-grid-line: #174a55;
-  --canvas-grid: rgba(45, 212, 191, 0.04);
-  --canvas-glow: rgba(45, 212, 191, 0.12);
-  --canvas-bg: #041014;
-  --focus-accent: #2dd4bf;
-}
-
-.app-shell[data-theme="ember"] {
-  --panel-bg: rgba(18, 12, 10, 0.9);
-  --panel-border: rgba(251, 146, 60, 0.22);
-  --topbar-bg: rgba(18, 12, 10, 0.92);
-  --topbar-fade-color: #120c0a;
-  --button-bg: linear-gradient(180deg, rgba(50, 31, 18, 0.96), rgba(18, 13, 15, 0.96));
-  --button-border: rgba(251, 146, 60, 0.34);
-  --canvas-grid-line: #5b3422;
-  --canvas-grid: rgba(251, 146, 60, 0.04);
-  --canvas-glow: rgba(251, 146, 60, 0.12);
-  --canvas-bg: #100b0b;
-  --focus-accent: #fb923c;
-}
-
-.app-shell[data-theme="blueprint"] {
-  --panel-bg: rgba(0, 34, 106, 0.78);
-  --panel-border: rgba(232, 247, 255, 0.32);
-  --topbar-bg: rgba(0, 30, 92, 0.84);
-  --topbar-fade-color: #001e5c;
-  --button-bg: linear-gradient(180deg, rgba(235, 248, 255, 0.2), rgba(0, 47, 139, 0.62));
-  --button-border: rgba(235, 248, 255, 0.42);
-  --canvas-grid-line: rgba(255, 255, 255, 0.28);
-  --canvas-grid: rgba(255, 255, 255, 0.09);
-  --canvas-glow: rgba(255, 255, 255, 0.08);
-  --canvas-bg: #0041ba;
-  --focus-accent: #eaf6ff;
-}
-
-.app-shell[data-theme="nes"] {
-  --panel-bg: rgba(15, 15, 15, 0.9);
-  --panel-border: rgba(202, 203, 209, 0.32);
-  --topbar-bg: rgba(15, 15, 15, 0.92);
-  --topbar-fade-color: #0f0f0f;
-  --button-bg: #262626;
-  --button-border: rgba(202, 203, 209, 0.42);
-  --canvas-grid-line: rgba(214, 17, 30, 0.07);
-  --canvas-grid: rgba(214, 17, 30, 0.07);
-  --canvas-glow: transparent;
-  --canvas-bg: #e7ebf0;
-  --focus-accent: #E60012;
-}
-
-.app-shell[data-theme="blueprint"] .topbar,
-.app-shell[data-theme="blueprint"] .left-panel,
-.app-shell[data-theme="blueprint"] .inspector,
-.app-shell[data-theme="blueprint"] .settings-panel {
-  background: rgba(0, 30, 92, 0.84);
-  border-color: rgba(232, 247, 255, 0.28);
-}
-
-.app-shell[data-theme="nes"] .topbar,
-.app-shell[data-theme="nes"] .left-panel,
-.app-shell[data-theme="nes"] .inspector,
-.app-shell[data-theme="nes"] .settings-panel {
-  background: rgba(15, 15, 15, 0.92);
-  border-color: rgba(202, 203, 209, 0.36);
-  box-shadow: 0 10px 24px rgba(15, 15, 15, 0.26);
 }
 
 .topbar {
@@ -755,62 +689,56 @@ button:disabled {
 }
 
 .canvas-frame {
+  --canvas-pattern-color: rgba(80, 180, 255, 0.035);
+  --canvas-glow-color: rgba(14, 165, 233, 0.12);
+  --canvas-surface: #050b15;
   position: relative;
   min-width: 0;
 }
 
 .canvas-frame[data-background="grid"] {
   background:
-    linear-gradient(var(--canvas-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
-    radial-gradient(circle at center, var(--canvas-glow), transparent 38rem),
-    var(--canvas-bg);
+    linear-gradient(var(--canvas-pattern-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-pattern-color) 1px, transparent 1px),
+    radial-gradient(circle at center, var(--canvas-glow-color), transparent 38rem),
+    var(--canvas-surface);
   background-size: 20px 20px, 20px 20px, auto, auto;
 }
 
 .canvas-frame.canvas-frame--layered_hierarchy[data-background="grid"] {
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 12%, transparent), transparent 40%),
-    linear-gradient(var(--canvas-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
-    var(--canvas-bg);
+    linear-gradient(90deg, rgba(56, 163, 255, 0.12), transparent 40%),
+    linear-gradient(var(--canvas-pattern-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-pattern-color) 1px, transparent 1px),
+    var(--canvas-surface);
   background-size: auto, 24px 24px, 24px 24px, auto;
-}
-
-.app-shell[data-theme="blueprint"] .canvas-frame[data-background="grid"],
-.app-shell[data-theme="blueprint"] .canvas-frame[data-background="hex"] {
-  --canvas-bg: #050b15;
-  --canvas-glow: rgba(14, 165, 233, 0.12);
-  --canvas-grid: rgba(80, 180, 255, 0.035);
-  --canvas-grid-line: #1f3a55;
-  --focus-accent: #38a3ff;
 }
 
 .canvas-frame[data-background="hex"] {
   background:
-    radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
-    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    var(--canvas-bg);
+    radial-gradient(circle at center, var(--canvas-glow-color), transparent 40rem),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    var(--canvas-surface);
   background-position: center, 0 0, 10px 17px, 0 0, 10px 17px, 10px 0, 0 17px, center;
   background-size: auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
 }
 
 .canvas-frame.canvas-frame--layered_hierarchy[data-background="hex"] {
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--focus-accent) 12%, transparent), transparent 40%),
-    radial-gradient(circle at center, var(--canvas-glow), transparent 40rem),
-    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-grid) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
-    var(--canvas-bg);
+    linear-gradient(90deg, rgba(56, 163, 255, 0.12), transparent 40%),
+    radial-gradient(circle at center, var(--canvas-glow-color), transparent 40rem),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    var(--canvas-surface);
   background-position: center, center, 0 0, 10px 17px, 0 0, 10px 17px, 10px 0, 0 17px, center;
   background-size: auto, auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
 }
@@ -823,7 +751,6 @@ button:disabled {
   --tron-line-bright: rgba(244, 247, 255, 0.78);
   --tron-plane-shadow: rgba(9, 8, 31, 0.72);
   --tron-plane-fade: rgba(7, 7, 24, 0.94);
-  --canvas-grid-line: rgba(188, 203, 255, 0.26);
   isolation: isolate;
   overflow: hidden;
   background-color: var(--tron-bg);
@@ -841,7 +768,6 @@ button:disabled {
   --tron-line-bright: rgba(69, 168, 240, 0.66);
   --tron-plane-shadow: rgba(195, 228, 251, 0.34);
   --tron-plane-fade: rgba(250, 253, 255, 0.9);
-  --canvas-grid-line: rgba(91, 183, 249, 0.24);
   background-image:
     radial-gradient(ellipse at 50% 50%, var(--tron-horizon) 0 5%, transparent 32%),
     radial-gradient(ellipse at 50% 74%, rgba(120, 196, 255, 0.18) 0 10%, transparent 44%),
@@ -1376,9 +1302,9 @@ button:disabled {
   border-radius: 8px;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--tile-accent) 18%, transparent), transparent 52%),
-    rgba(8, 16, 31, 0.95);
+    var(--atlas-tile-surface, rgba(8, 16, 31, 0.95));
   box-shadow: 0 0 24px color-mix(in srgb, var(--tile-accent) 32%, transparent);
-  color: #e5eefb;
+  color: var(--atlas-tile-text, #e5eefb);
   padding: 13px;
   position: relative;
 }
@@ -1474,7 +1400,7 @@ button:disabled {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--tile-icon-accent, var(--tile-accent));
+  color: var(--atlas-tile-icon, var(--tile-icon-accent, var(--tile-accent)));
   border: 1px solid color-mix(in srgb, var(--tile-accent) 62%, transparent);
   border-radius: 7px;
   background: rgba(2, 8, 18, 0.62);
@@ -1522,7 +1448,7 @@ button:disabled {
 
 .tile-node__type,
 .tile-node__parent {
-  color: #9fb5d1;
+  color: var(--atlas-tile-muted-text, #9fb5d1);
   font-size: 0.76rem;
 }
 
@@ -1542,7 +1468,7 @@ button:disabled {
 }
 
 .tile-node__stack-meta strong {
-  color: #f8fafc;
+  color: var(--atlas-tile-text, #f8fafc);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1693,7 +1619,7 @@ button:disabled {
   font-size: 0.68rem;
 }
 
-.app-shell[data-theme="blueprint"] .tile-node {
+.app-shell[data-canvas-theme="blueprint"] .tile-node {
   border-color: rgba(255, 255, 255, 0.86);
   color: #061d4d;
   background:
@@ -1702,11 +1628,11 @@ button:disabled {
   box-shadow: 0 14px 26px rgba(0, 19, 72, 0.43), 0 0 24px color-mix(in srgb, var(--tile-accent) 34%, rgba(0, 24, 94, 0.6));
 }
 
-.app-shell[data-theme="blueprint"] .tile-node--parent {
+.app-shell[data-canvas-theme="blueprint"] .tile-node--parent {
   outline-color: rgba(255, 255, 255, 0.42);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node--primary-node {
+.app-shell[data-canvas-theme="blueprint"] .tile-node--primary-node {
   border-color: #ffffff;
   box-shadow:
     0 0 0 1px rgba(0, 65, 186, 0.52),
@@ -1714,99 +1640,99 @@ button:disabled {
     0 0 34px rgba(255, 255, 255, 0.42);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node--stacked {
+.app-shell[data-canvas-theme="blueprint"] .tile-node--stacked {
   box-shadow: 0 16px 32px rgba(0, 19, 72, 0.53), 0 0 26px rgba(255, 255, 255, 0.22);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node--stacked::before,
-.app-shell[data-theme="blueprint"] .tile-node--stacked::after {
+.app-shell[data-canvas-theme="blueprint"] .tile-node--stacked::before,
+.app-shell[data-canvas-theme="blueprint"] .tile-node--stacked::after {
   border-color: rgba(255, 255, 255, 0.62);
   background: rgba(226, 241, 255, 0.72);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node--selected {
+.app-shell[data-canvas-theme="blueprint"] .tile-node--selected {
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.88),
     0 18px 34px rgba(0, 19, 72, 0.6),
     0 0 30px rgba(255, 255, 255, 0.3);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__icon {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__icon {
   color: var(--tile-icon-accent, #073071);
   border-color: color-mix(in srgb, var(--tile-icon-accent, #073071) 42%, rgba(0, 65, 186, 0.18));
   background: rgba(255, 255, 255, 0.56);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__title,
-.app-shell[data-theme="blueprint"] .tile-node__stack-meta strong,
-.app-shell[data-theme="blueprint"] .tile-node__field strong,
-.app-shell[data-theme="blueprint"] .tile-node__field-action {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__title,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__stack-meta strong,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field strong,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field-action {
   color: #061d4d;
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__type,
-.app-shell[data-theme="blueprint"] .tile-node__parent,
-.app-shell[data-theme="blueprint"] .tile-node__field {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__type,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__parent,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field {
   color: rgba(6, 29, 77, 0.72);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__parent,
-.app-shell[data-theme="blueprint"] .tile-node__stack-meta span {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__parent,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__stack-meta span {
   color: #00358f;
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__lifecycle {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__lifecycle {
   border-color: rgba(0, 65, 186, 0.24);
   color: #06245a;
   background: rgba(255, 255, 255, 0.48);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__lifecycle--planned {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__lifecycle--planned {
   border-color: rgba(137, 104, 0, 0.28);
   color: #4f3b00;
   background: rgba(255, 248, 214, 0.62);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__stack-meta {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__stack-meta {
   border-color: rgba(0, 65, 186, 0.24);
   background: rgba(255, 255, 255, 0.36);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__stack-count {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__stack-count {
   border-color: rgba(0, 26, 91, 0.58);
   color: #061d4d;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 8px 20px rgba(0, 19, 72, 0.35);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__handle {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__handle {
   border-color: rgba(255, 255, 255, 0.88);
   background: #00358f;
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__port-label {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__port-label {
   color: #061d4d;
   border-color: rgba(0, 65, 186, 0.28);
   background: rgba(238, 247, 255, 0.9);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__field-action {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field-action {
   text-decoration-color: rgba(0, 65, 186, 0.42);
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__field-action:hover,
-.app-shell[data-theme="blueprint"] .tile-node__field-action:focus-visible {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field-action:hover,
+.app-shell[data-canvas-theme="blueprint"] .tile-node__field-action:focus-visible {
   color: #00184f;
   text-decoration-color: #0041ba;
 }
 
-.app-shell[data-theme="blueprint"] .tile-node__tags span {
+.app-shell[data-canvas-theme="blueprint"] .tile-node__tags span {
   color: #061d4d;
   background: rgba(255, 255, 255, 0.42);
   border-color: rgba(0, 65, 186, 0.26);
 }
 
-.app-shell[data-theme="nes"] .tile-node {
+.app-shell[data-canvas-theme="nes"] .tile-node {
   border: 3px solid var(--tile-accent);
   border-radius: 4px;
   color: #0f0f0f;
@@ -1814,16 +1740,16 @@ button:disabled {
   box-shadow: 4px 4px 0 rgba(15, 15, 15, 0.24);
 }
 
-.app-shell[data-theme="nes"] .tile-node--parent {
+.app-shell[data-canvas-theme="nes"] .tile-node--parent {
   outline: 2px solid color-mix(in srgb, var(--tile-accent) 44%, transparent);
   outline-offset: 5px;
 }
 
-.app-shell[data-theme="nes"] .tile-node--child {
+.app-shell[data-canvas-theme="nes"] .tile-node--child {
   border-style: solid;
 }
 
-.app-shell[data-theme="nes"] .tile-node--primary-node {
+.app-shell[data-canvas-theme="nes"] .tile-node--primary-node {
   border-color: var(--tile-accent);
   background: linear-gradient(to bottom, #e7ebf0 0 50%, #ffffff 50% 100%);
   box-shadow:
@@ -1831,97 +1757,97 @@ button:disabled {
     5px 5px 0 rgba(15, 15, 15, 0.28);
 }
 
-.app-shell[data-theme="nes"] .tile-node--stacked {
+.app-shell[data-canvas-theme="nes"] .tile-node--stacked {
   box-shadow: 5px 5px 0 rgba(15, 15, 15, 0.28);
 }
 
-.app-shell[data-theme="nes"] .tile-node--stacked::before,
-.app-shell[data-theme="nes"] .tile-node--stacked::after {
+.app-shell[data-canvas-theme="nes"] .tile-node--stacked::before,
+.app-shell[data-canvas-theme="nes"] .tile-node--stacked::after {
   border: 2px solid var(--tile-accent);
   border-radius: 4px;
   background: #ffffff;
 }
 
-.app-shell[data-theme="nes"] .tile-node--selected {
+.app-shell[data-canvas-theme="nes"] .tile-node--selected {
   box-shadow:
     0 0 0 3px #ffffff,
     0 0 0 6px #0f0f0f,
     5px 5px 0 rgba(15, 15, 15, 0.28);
 }
 
-.app-shell[data-theme="nes"] .tile-node__icon {
+.app-shell[data-canvas-theme="nes"] .tile-node__icon {
   color: var(--tile-icon-accent, var(--tile-accent));
   border: 2px solid var(--tile-accent);
   border-radius: 3px;
   background: #ffffff;
 }
 
-.app-shell[data-theme="nes"] .tile-node__title,
-.app-shell[data-theme="nes"] .tile-node__stack-meta strong,
-.app-shell[data-theme="nes"] .tile-node__field strong,
-.app-shell[data-theme="nes"] .tile-node__field-action {
+.app-shell[data-canvas-theme="nes"] .tile-node__title,
+.app-shell[data-canvas-theme="nes"] .tile-node__stack-meta strong,
+.app-shell[data-canvas-theme="nes"] .tile-node__field strong,
+.app-shell[data-canvas-theme="nes"] .tile-node__field-action {
   color: #0f0f0f;
 }
 
-.app-shell[data-theme="nes"] .tile-node__type,
-.app-shell[data-theme="nes"] .tile-node__parent,
-.app-shell[data-theme="nes"] .tile-node__field {
+.app-shell[data-canvas-theme="nes"] .tile-node__type,
+.app-shell[data-canvas-theme="nes"] .tile-node__parent,
+.app-shell[data-canvas-theme="nes"] .tile-node__field {
   color: #3f3f3f;
 }
 
-.app-shell[data-theme="nes"] .tile-node__parent,
-.app-shell[data-theme="nes"] .tile-node__stack-meta span {
+.app-shell[data-canvas-theme="nes"] .tile-node__parent,
+.app-shell[data-canvas-theme="nes"] .tile-node__stack-meta span {
   color: var(--tile-accent);
 }
 
-.app-shell[data-theme="nes"] .tile-node__lifecycle {
+.app-shell[data-canvas-theme="nes"] .tile-node__lifecycle {
   border-color: rgba(15, 15, 15, 0.28);
   color: #0f0f0f;
   background: #e7ebf0;
 }
 
-.app-shell[data-theme="nes"] .tile-node__lifecycle--planned {
+.app-shell[data-canvas-theme="nes"] .tile-node__lifecycle--planned {
   border-color: rgba(165, 66, 0, 0.42);
   color: #5a2500;
   background: #ffe0b8;
 }
 
-.app-shell[data-theme="nes"] .tile-node__stack-meta {
+.app-shell[data-canvas-theme="nes"] .tile-node__stack-meta {
   border: 2px solid color-mix(in srgb, var(--tile-accent) 54%, transparent);
   border-radius: 4px;
   background: #f7f7f7;
 }
 
-.app-shell[data-theme="nes"] .tile-node__stack-count {
+.app-shell[data-canvas-theme="nes"] .tile-node__stack-count {
   border-color: #0f0f0f;
   color: #ffffff;
   background: var(--tile-accent);
   box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.3);
 }
 
-.app-shell[data-theme="nes"] .tile-node__handle {
+.app-shell[data-canvas-theme="nes"] .tile-node__handle {
   border-color: #0f0f0f;
   background: var(--tile-accent);
 }
 
-.app-shell[data-theme="nes"] .tile-node__port-label {
+.app-shell[data-canvas-theme="nes"] .tile-node__port-label {
   color: #0f0f0f;
   border: 2px solid var(--tile-accent);
   border-radius: 3px;
   background: #ffffff;
 }
 
-.app-shell[data-theme="nes"] .tile-node__field-action {
+.app-shell[data-canvas-theme="nes"] .tile-node__field-action {
   text-decoration-color: color-mix(in srgb, var(--tile-accent) 52%, transparent);
 }
 
-.app-shell[data-theme="nes"] .tile-node__field-action:hover,
-.app-shell[data-theme="nes"] .tile-node__field-action:focus-visible {
+.app-shell[data-canvas-theme="nes"] .tile-node__field-action:hover,
+.app-shell[data-canvas-theme="nes"] .tile-node__field-action:focus-visible {
   color: var(--tile-accent);
   text-decoration-color: var(--tile-accent);
 }
 
-.app-shell[data-theme="nes"] .tile-node__copy-toast {
+.app-shell[data-canvas-theme="nes"] .tile-node__copy-toast {
   border-color: #0f0f0f;
   border-radius: 3px;
   color: #ffffff;
@@ -1929,7 +1855,7 @@ button:disabled {
   box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.26);
 }
 
-.app-shell[data-theme="nes"] .tile-node__tags span {
+.app-shell[data-canvas-theme="nes"] .tile-node__tags span {
   color: #0f0f0f;
   background: #e7ebf0;
   border: 2px solid color-mix(in srgb, var(--tile-accent) 44%, #0f0f0f);
@@ -2127,7 +2053,7 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) 230px;
   background:
     linear-gradient(180deg, rgba(5, 12, 24, 0.94), rgba(3, 7, 18, 0.98)),
-    var(--canvas-bg);
+    #050b15;
   overflow: hidden;
 }
 
@@ -3501,7 +3427,7 @@ button:disabled {
 .settings-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 130;
   display: flex;
   justify-content: flex-end;
   background: rgba(0, 0, 0, 0.42);
@@ -3861,12 +3787,148 @@ button:disabled {
   box-shadow: inset 0 0 16px color-mix(in srgb, var(--focus-accent) 12%, transparent);
 }
 
+.canvas-theme-editor__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.canvas-theme-editor__summary .settings-section__title { margin-bottom: 4px; }
+
+.canvas-theme-editor__summary span,
+.canvas-theme-editor__status {
+  color: var(--app-muted-text, #91a4bf);
+  font-size: 0.78rem;
+}
+
+.canvas-theme-editor__content {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.canvas-style-preview {
+  position: relative;
+  min-height: 238px;
+  overflow: hidden;
+  border: 1px solid rgba(91, 142, 196, 0.26);
+  border-radius: 10px;
+  isolation: isolate;
+}
+
+.canvas-style-preview::before,
+.canvas-style-preview::after { z-index: -2 !important; }
+
+.canvas-style-preview__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.canvas-style-preview__tile {
+  position: absolute;
+  top: 54px;
+  left: 34px;
+  width: 224px;
+  min-height: 94px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--preview-accent);
+  border-radius: 8px;
+  color: var(--preview-text);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--preview-accent) 18%, transparent), transparent 55%), var(--preview-surface);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--preview-glow) 28%, transparent);
+  padding: 13px;
+}
+
+.canvas-style-preview__tile--blueprint { border-width: 3px; box-shadow: 0 12px 22px rgba(0, 19, 72, 0.32); }
+.canvas-style-preview__tile--nes { border-width: 3px; border-radius: 2px; box-shadow: 7px 7px 0 rgba(15, 15, 15, 0.3); }
+
+.canvas-style-preview__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--preview-accent);
+  border-radius: 7px;
+  color: var(--preview-icon);
+}
+
+.canvas-style-preview__copy { min-width: 0; display: grid; gap: 3px; }
+.canvas-style-preview__copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.canvas-style-preview__copy small { color: var(--preview-muted); font-size: 0.7rem; text-transform: uppercase; }
+
+.canvas-style-preview__badge {
+  border: 1px solid color-mix(in srgb, var(--preview-accent) 45%, transparent);
+  border-radius: 999px;
+  color: var(--preview-text);
+  padding: 3px 5px;
+  font-size: 0.54rem;
+  font-weight: 900;
+}
+
+.canvas-style-preview__handle {
+  position: absolute;
+  right: -6px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--preview-surface);
+  border-radius: 999px;
+  background: var(--preview-accent);
+}
+
+.canvas-style-preview__connector { position: absolute; top: 80px; right: 24px; width: 168px; overflow: visible; }
+.canvas-style-preview__connector text { font-size: 9px; font-weight: 800; }
+
+.canvas-style-preview__swatches { position: absolute; right: 22px; bottom: 28px; display: flex; gap: 7px; }
+.canvas-style-preview__swatches i {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.canvas-style-preview__draft-label {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
+}
+
+.canvas-theme-editor__status--changed { color: #fbbf24; font-weight: 800; }
+.canvas-theme-editor__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+.canvas-theme-editor__apply { margin-left: auto; }
+.canvas-theme-editor__apply:disabled { display: inline-flex; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 /* App Appearance Mode is intentionally scoped to application chrome. Atlas nodes,
    Families, connectors, uploaded icons, and Handbook document surfaces remain
-   controlled by their existing palette/document selectors. */
+   controlled by their existing Canvas Theme/document selectors. */
 .app-shell[data-app-appearance-mode="zima"] {
   --app-shell-bg: #fafaff;
   --app-panel-bg: #fafaff;
+  --app-panel-border: transparent;
+  --app-topbar-bg: #fafaff;
+  --app-control-bg: #fafaff;
+  --app-control-border: transparent;
   --app-text: #454547;
   --app-muted-text: #6f7076;
   --control-bg-rest: #fafaff;
@@ -3884,11 +3946,11 @@ button:disabled {
   --scrollbar-track: #fafaff;
   --scrollbar-thumb: rgba(69, 69, 71, 0.12);
   --panel-bg: var(--app-panel-bg);
-  --panel-border: transparent;
-  --topbar-bg: var(--app-shell-bg);
+  --panel-border: var(--app-panel-border);
+  --topbar-bg: var(--app-topbar-bg);
   --topbar-fade-color: var(--app-shell-bg);
-  --button-bg: var(--control-bg-rest);
-  --button-border: transparent;
+  --button-bg: var(--app-control-bg);
+  --button-border: var(--app-control-border);
   --focus-accent: var(--focus-ring);
   color: var(--app-text);
   background: var(--app-shell-bg);
@@ -4109,6 +4171,37 @@ button:disabled {
   padding-inline: 8px;
 }
 
+.app-shell[data-app-appearance-mode="zima"] .settings-section.canvas-theme-editor {
+  background: #eef7ff;
+  box-shadow: inset 0 0 0 1px rgba(54, 105, 165, 0.08);
+}
+
+.app-shell[data-app-appearance-mode="classic"] .canvas-theme-editor .settings-section__title {
+  color: #fcba03;
+}
+
+.app-shell[data-app-appearance-mode="classic"] .canvas-theme-editor__apply:not(:disabled) {
+  border-color: #466ce8;
+  color: #ffffff;
+  background: #466ce8;
+}
+
+.app-shell[data-app-appearance-mode="classic"] .canvas-theme-editor__apply:not(:disabled):hover {
+  color: #ffffff;
+  background: #3659d2;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .canvas-theme-editor__apply:not(:disabled) {
+  border-color: #0b1f4d;
+  color: #ffffff;
+  background: #0b1f4d;
+}
+
+.app-shell[data-app-appearance-mode="zima"] .canvas-theme-editor__apply:not(:disabled):hover {
+  color: #ffffff;
+  background: #061738;
+}
+
 .app-shell[data-app-appearance-mode="zima"] .settings-section.local-access-settings-card {
   border-color: rgba(74, 222, 128, 0.56);
   color: #ffffff;
@@ -4308,6 +4401,10 @@ button:disabled {
     display: none;
   }
 
+  .canvas-theme-editor__apply:disabled {
+    display: inline-flex;
+  }
+
   .topbar .toolbar-button:disabled {
     display: inline-flex;
   }
@@ -4403,5 +4500,51 @@ button:disabled {
 
   .handbook-section {
     margin-left: calc(var(--section-depth, 0) * 10px);
+  }
+}
+
+@media (max-width: 520px) {
+  .settings-panel {
+    padding: 14px;
+  }
+
+  .canvas-theme-editor__summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .canvas-theme-editor__summary .toolbar-button {
+    max-width: none;
+  }
+
+  .canvas-style-preview {
+    min-height: 270px;
+  }
+
+  .canvas-style-preview__tile {
+    top: 36px;
+    left: 18px;
+    width: calc(100% - 54px);
+  }
+
+  .canvas-style-preview__connector {
+    top: 137px;
+    right: 30px;
+    width: calc(100% - 60px);
+  }
+
+  .canvas-style-preview__swatches {
+    right: auto;
+    bottom: 36px;
+    left: 18px;
+  }
+
+  .canvas-theme-editor__actions > .toolbar-button {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .canvas-theme-editor__apply {
+    margin-left: 0;
   }
 }

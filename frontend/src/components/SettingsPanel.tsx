@@ -1,16 +1,14 @@
 import { Download, ExternalLink, KeyRound, LogOut, ServerCog, ShieldCheck, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { DiscordInviteSettingsBanner } from "./UpdatePopup";
-import { CANVAS_BACKGROUNDS, THEME_PALETTES, getThemePalette } from "../lib/theme";
+import { CanvasThemeEditor } from "./CanvasThemeEditor";
+import type { AppAppearanceMode, CanvasStyleSelection } from "../appearance";
 import type {
-  AppAppearanceMode,
   AppVersion,
   Atlas,
   AuthStatus,
-  CanvasBackgroundId,
   DebugEvent,
   LayoutTemplate,
-  ThemePaletteId,
   UpdateAdvisory,
   UpdateSettings,
   View
@@ -27,8 +25,7 @@ interface SettingsPanelProps {
   debugEvents: DebugEvent[];
   layoutTemplate: LayoutTemplate;
   appAppearanceMode: AppAppearanceMode;
-  canvasBackgroundId: CanvasBackgroundId;
-  paletteId: ThemePaletteId;
+  canvasStyle: CanvasStyleSelection;
   updateAdvisory: UpdateAdvisory | null;
   onAppAppearanceModeChange: (mode: AppAppearanceMode) => void;
   onClearDebugLog: () => void;
@@ -37,8 +34,7 @@ interface SettingsPanelProps {
   onCopyUpdateCommand: () => void | Promise<void>;
   onExportDebugLog: () => void;
   onLogoutAllPasscode: () => void | Promise<void>;
-  onCanvasBackgroundChange: (backgroundId: CanvasBackgroundId) => void;
-  onPaletteChange: (paletteId: ThemePaletteId) => void;
+  onCanvasStyleApply: (selection: CanvasStyleSelection) => void;
   onRemovePasscode: (currentPasscode: string) => void | Promise<void>;
   onSetupPasscode: (passcode: string) => void | Promise<void>;
   onUpdateSettings: (settings: UpdateSettings) => void | Promise<void>;
@@ -54,8 +50,7 @@ export function SettingsPanel({
   debugEvents,
   layoutTemplate,
   appAppearanceMode,
-  canvasBackgroundId,
-  paletteId,
+  canvasStyle,
   updateAdvisory,
   onAppAppearanceModeChange,
   onClearDebugLog,
@@ -64,14 +59,12 @@ export function SettingsPanel({
   onCopyUpdateCommand,
   onExportDebugLog,
   onLogoutAllPasscode,
-  onCanvasBackgroundChange,
-  onPaletteChange,
+  onCanvasStyleApply,
   onRemovePasscode,
   onSetupPasscode,
   onUpdateSettings,
   onViewReleaseNotes
 }: SettingsPanelProps) {
-  const activePalette = getThemePalette(paletteId);
   const recentEvents = debugEvents.slice(-8).reverse();
   const version = appVersion ?? updateAdvisory;
   const updateState = updateAdvisory?.state;
@@ -151,42 +144,7 @@ export function SettingsPanel({
           </div>
         </div>
 
-        <div className="settings-section">
-          <div className="settings-section__title">Theme Palette</div>
-          <div className="palette-options">
-            {THEME_PALETTES.map((palette) => (
-              <button
-                key={palette.id}
-                className={palette.id === paletteId ? "palette-option palette-option--active" : "palette-option"}
-                onClick={() => onPaletteChange(palette.id)}
-              >
-                <span className="palette-option__swatches">
-                  {palette.swatches.map((swatch) => (
-                    <i key={swatch} style={{ background: swatch }} />
-                  ))}
-                </span>
-                <strong>{palette.label}</strong>
-                <small>{palette.description}</small>
-              </button>
-            ))}
-          </div>
-          <div className="settings-note">Current palette: {activePalette.label}. Palette data is stored in this browser only.</div>
-        </div>
-
-        <div className="settings-section">
-          <div className="settings-section__title">Canvas Background</div>
-          <label className="settings-select-field">
-            <span>Background</span>
-            <select value={canvasBackgroundId} onChange={(event) => onCanvasBackgroundChange(event.currentTarget.value as CanvasBackgroundId)}>
-              {CANVAS_BACKGROUNDS.map((background) => (
-                <option key={background.id} value={background.id}>
-                  {background.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="settings-note">{CANVAS_BACKGROUNDS.find((background) => background.id === canvasBackgroundId)?.description}</div>
-        </div>
+        <CanvasThemeEditor activeStyle={canvasStyle} appAppearanceMode={appAppearanceMode} onApply={onCanvasStyleApply} onCancel={onClose} />
 
         <div className="settings-section local-access-settings-card">
           <div className="settings-section__title">Local Access Passcode</div>

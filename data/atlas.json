@@ -3,7 +3,7 @@
   "metadata": {
     "name": "CTRoadmap",
     "description": "Local infrastructure atlas",
-    "updated_at": "2026-07-17T05:26:06.731763+00:00"
+    "updated_at": "2026-07-17T23:51:15.988689+00:00"
   },
   "tiles": [
     {
@@ -571,9 +571,7 @@
         "purpose": "Make Bacon"
       },
       "notes": "",
-      "tags": [
-        "HOT"
-      ]
+      "tags": []
     },
     {
       "id": "iot_device_new_iot_device_3",
@@ -619,6 +617,36 @@
         "protocol": "",
         "model": "Phanny 3000",
         "purpose": "Private Time"
+      },
+      "notes": "",
+      "tags": []
+    },
+    {
+      "id": "node_new_node_1",
+      "type": "node",
+      "title": "DNS Server",
+      "parent": null,
+      "position": {
+        "x": -1655.0686806594085,
+        "y": -410.4058350755431
+      },
+      "size": {
+        "width": 240.0,
+        "height": 132.0
+      },
+      "lifecycle": "live",
+      "fields": {
+        "role": "",
+        "hostname": "",
+        "ip": "",
+        "os": "",
+        "purpose": "",
+        "primary_node": true,
+        "icon_ref": {
+          "kind": "lucide",
+          "id": "lucide:Shield",
+          "name": "Shield"
+        }
       },
       "notes": "",
       "tags": []
@@ -888,6 +916,18 @@
       "label": "contains",
       "notes": "",
       "directional": true
+    },
+    {
+      "id": "link_node_server_2_node_new_node_1_related_to",
+      "from": "node_server_2",
+      "to": "node_new_node_1",
+      "type": "related_to",
+      "from_port": "child",
+      "to_port": "parent",
+      "lifecycle": "live",
+      "label": "DNS Server",
+      "notes": "",
+      "directional": true
     }
   ],
   "views": [
@@ -1004,6 +1044,21 @@
       "representative_id": "mount_samba",
       "name": "3 Mounted Items",
       "name_is_custom": false
+    },
+    {
+      "id": "stack_container_new_container_1_iot_device",
+      "stack_kind": "sibling_type",
+      "parent_id": "container_new_container_1",
+      "tile_type": "iot_device",
+      "member_ids": [
+        "iot_device_new_iot_device_1",
+        "iot_device_new_iot_device_2",
+        "iot_device_new_iot_device_3",
+        "iot_device_new_iot_device_4"
+      ],
+      "representative_id": "iot_device_new_iot_device_2",
+      "name": "4 Iot Devices",
+      "name_is_custom": false
     }
   ],
   "families": [
@@ -1044,7 +1099,8 @@
       "member_tile_ids": [
         "node_micro_server",
         "url_url",
-        "secret_ref_ssh_key"
+        "secret_ref_ssh_key",
+        "flow_wake_sleep"
       ],
       "position": {
         "x": -525.1148720969425,
@@ -1070,7 +1126,8 @@
         "iot_device_new_iot_device_1",
         "iot_device_new_iot_device_2",
         "iot_device_new_iot_device_3",
-        "iot_device_new_iot_device_4"
+        "iot_device_new_iot_device_4",
+        "node_new_node_1"
       ],
       "position": {
         "x": -1677.9643441164558,

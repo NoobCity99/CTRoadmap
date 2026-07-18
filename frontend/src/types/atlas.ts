@@ -33,23 +33,6 @@ export type LinkType =
 
 export type LayoutTemplate = "canvas_topology" | "layered_hierarchy" | "handbook";
 export type ExportFormat = "markdown" | "yaml" | "mermaid";
-export type ThemePaletteId = "cyber" | "aurora" | "ember" | "blueprint" | "nes";
-export type CanvasBackgroundId = "grid" | "hex" | "tron_dark" | "tron_lite" | "blueprint" | "pcb_board" | "nes_grid" | "lt_draft_grid" | "zima_carbon";
-export type AppAppearanceMode = "classic" | "zima";
-
-export interface AppearanceSelection {
-  themePalette: ThemePaletteId;
-  canvasBackground: CanvasBackgroundId;
-}
-
-export interface AppearancePreferencesV1 {
-  version: 1;
-  appAppearanceMode: AppAppearanceMode;
-  perMode: {
-    classic: AppearanceSelection;
-    zima?: AppearanceSelection;
-  };
-}
 export type DebugSeverity = "info" | "warning" | "error";
 export type LinkSourcePort = "out" | "child";
 export type LinkTargetPort = "in" | "parent";

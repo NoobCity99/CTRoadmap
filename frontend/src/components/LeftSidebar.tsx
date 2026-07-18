@@ -1,9 +1,9 @@
 import { BookOpenText, ChevronDown, ChevronUp, CircuitBoard, Eye, LayoutDashboard, Plus, Settings, Trash2 } from "lucide-react";
 import type { CSSProperties, DragEvent, TouchEvent, WheelEvent } from "react";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import { getTileColor } from "../lib/theme";
+import { getTileVisualTokens, type CanvasThemeId } from "../appearance";
 import type { SearchResult } from "../lib/atlasSelectors";
-import type { Atlas, AtlasWarning, LayoutTemplate, LinkType, Selection, ThemePaletteId, TileType, View } from "../types/atlas";
+import type { Atlas, AtlasWarning, LayoutTemplate, LinkType, Selection, TileType, View } from "../types/atlas";
 import { HandbookToc } from "./HandbookToc";
 import type { HandbookThemeMode } from "./HandbookView";
 
@@ -35,7 +35,7 @@ interface LeftSidebarProps {
   selectedHandbookVolumeId: string | null;
   selection: Selection;
   sidebarState: SidebarState;
-  themePaletteId: ThemePaletteId;
+  canvasThemeId: CanvasThemeId;
   warnings: AtlasWarning[];
   onCollapsedPaletteTouchEnd: (event: TouchEvent<HTMLDivElement>) => void;
   onCollapsedPaletteTouchStart: (event: TouchEvent<HTMLDivElement>) => void;
@@ -77,7 +77,7 @@ export function LeftSidebar({
   selectedHandbookVolumeId,
   selection,
   sidebarState,
-  themePaletteId,
+  canvasThemeId,
   warnings,
   onCollapsedPaletteTouchEnd,
   onCollapsedPaletteTouchStart,
@@ -161,7 +161,7 @@ export function LeftSidebar({
                 familyPaletteColor={familyPaletteColor}
                 interactive={interactive}
                 slot="collapsed"
-                themePaletteId={themePaletteId}
+                canvasThemeId={canvasThemeId}
                 onFamilyPaletteClick={onFamilyPaletteClick}
                 onFamilyPaletteDragStart={onFamilyPaletteDragStart}
                 onPaletteClick={onPaletteClick}
@@ -182,7 +182,7 @@ export function LeftSidebar({
                 familyPaletteColor={familyPaletteColor}
                 interactive
                 slot="expanded"
-                themePaletteId={themePaletteId}
+                canvasThemeId={canvasThemeId}
                 onFamilyPaletteClick={onFamilyPaletteClick}
                 onFamilyPaletteDragStart={onFamilyPaletteDragStart}
                 onPaletteClick={onPaletteClick}
@@ -320,7 +320,7 @@ function PaletteEntryButton({
   familyPaletteColor,
   interactive,
   slot,
-  themePaletteId,
+  canvasThemeId,
   onFamilyPaletteClick,
   onFamilyPaletteDragStart,
   onPaletteClick,
@@ -331,7 +331,7 @@ function PaletteEntryButton({
   familyPaletteColor: string;
   interactive: boolean;
   slot: "collapsed" | "expanded";
-  themePaletteId: ThemePaletteId;
+  canvasThemeId: CanvasThemeId;
   onFamilyPaletteClick: () => void;
   onFamilyPaletteDragStart: (event: DragEvent<HTMLButtonElement>) => void;
   onPaletteClick: (type: TileType) => void;
@@ -370,7 +370,7 @@ function PaletteEntryButton({
 
   const config = TILE_TYPE_CONFIG[entry.type];
   const Icon = config.icon;
-  const paletteAccent = themePaletteId === "blueprint" ? getTileColor(entry.type, "cyber") : getTileColor(entry.type, themePaletteId);
+  const paletteAccent = getTileVisualTokens(entry.type, canvasThemeId).iconColor;
   const style = { "--tile-accent": paletteAccent } as CSSProperties;
   return interactive ? (
     <button

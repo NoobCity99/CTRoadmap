@@ -151,6 +151,18 @@ From Settings, an administrator can create or change the passcode, sign out the 
 - Lock the canvas to prevent accidental changes while navigating.
 - Document checks with command and expected-result fields without executing them.
 
+### Flow Tiles And Swimlanes
+
+- New Flow tiles use the Swimlane workspace. Add a Flow from the Tile Palette, select it, and choose **Open Flow Workspace**.
+- Build free-form processes with editable lanes and Process, Decision, Wait, User Action, Start, End, and Note elements.
+- Drag elements between lanes, create directed connections, and edit lanes, elements, connectors, Flow documentation, and Atlas references through the workspace panels.
+- Link lanes to Atlas tiles or Families to show their current title, icon, type, and color without overwriting the lane's manual fallback information.
+- New Flows begin with four uncolored lanes, a Start element in Lane 1, and an End element in Lane 4. Lane roles and positions remain user-defined.
+- View a read-only Swimlane diagram beneath the Flow's documentation in the Handbook, then open the workspace or export that diagram as a PNG.
+- Lifecycle-locked Swimlane Flows can still be opened read-only. Existing legacy Flow tiles retain their editable ordered-step editor, but new legacy Flows cannot be created or duplicated.
+
+Swimlane data is stored inside the normal Flow tile in `data/atlas.json` using the `swimlane.v1` format. Workspace edits use the existing atlas autosave path; CTRoadmap does not execute the documented process.
+
 ### Handbook
 
 - Browse the atlas as a structured handbook organized around primary nodes, families, and documented relationships.
@@ -189,6 +201,11 @@ Layers are persisted in the atlas schema as `views` for compatibility.
 - Download the current atlas as a local JSON backup.
 - Generate Markdown, YAML, and Mermaid exports in `exports/`.
 - Download generated exports from the application toolbar.
+- Export the complete active Canvas layer as a styled PNG directly in the browser.
+- Configure the PNG title, optional title card, and LIGHT or DARK title-card treatment before downloading.
+- Export a complete read-only Swimlane diagram from its Handbook article using **Export PNG**. The Flow export can include its own compact title card while retaining the diagram's current Handbook palette.
+
+PNG generation is client-side and does not write an image to `exports/`, change `data/atlas.json`, or require a PNG API endpoint. Very large diagrams are subject to browser image-size safety limits.
 
 ### Appearance
 
@@ -206,6 +223,7 @@ Layers are persisted in the atlas schema as `views` for compatibility.
 - Configure Local Access Passcode and manage active sessions.
 - Upload, browse, and remove custom icon assets.
 - Export frontend and backend debug information or clear the backend debug log.
+- Checkbox at bottom of settings will turn on/off the infinite scrolling effect of the tile palette. 
 
 Flow steps, check commands, and expected results are documentation only. CTRoadmap does not execute them.
 
@@ -252,7 +270,7 @@ GET  /api/debug/log
 POST /api/debug/log/clear
 ```
 
-Supported export formats are `markdown`, `yaml`, and `mermaid`.
+Supported server export formats are `markdown`, `yaml`, and `mermaid`. PNG canvas export is generated client-side and does not use an API endpoint.
 
 ## Project Log
 

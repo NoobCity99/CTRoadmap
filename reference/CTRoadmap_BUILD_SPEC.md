@@ -732,7 +732,7 @@ Live validation can be added later.
 
 Initial version may run without login if bound to localhost or trusted LAN only.
 
-If exposing beyond localhost/LAN, authentication is required.
+This public fork has no built-in authentication. If it is exposed beyond a trusted local network, restrict access at the network boundary or place it behind an externally authenticated reverse proxy.
 
 ---
 
@@ -935,7 +935,7 @@ Do not build:
 - live system checks
 - command execution
 - automatic scanning
-- authentication unless needed for deployment
+- built-in authentication
 - complex database migration
 
 ---

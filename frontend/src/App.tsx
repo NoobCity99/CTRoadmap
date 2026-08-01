@@ -8,10 +8,9 @@ import {
   type Node,
   type NodeChange
 } from "@xyflow/react";
-import { Loader2, LockKeyhole, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   type DragEvent,
-  type FormEvent,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
   type WheelEvent as ReactWheelEvent,
@@ -22,43 +21,28 @@ import {
   useState
 } from "react";
 import { CanvasFrame, type StackContextMenuView } from "./components/CanvasFrame";
-import { HandbookView, type HandbookThemeMode } from "./components/HandbookView";
 import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { TopBar, type UpdateNoticeView } from "./components/TopBar";
-import { UpdatePopupModal, UPDATE_POPUP_STORAGE_PREFIX } from "./components/UpdatePopup";
-import {
-  getCanvasTheme,
-  useAppearancePreferences,
-  type AppearanceDebugEvent,
-  type CanvasStyleSelection
-} from "./appearance";
+import { TopBar } from "./components/TopBar";
+import { useAppearancePreferences, type AppearanceDebugEvent } from "./appearance";
 import {
   clearBackendDebugLog,
-  changeLocalAccessPasscode,
   downloadAtlasJson,
   downloadExport,
   generateExport,
-  loadAuthStatus,
   loadAppVersion,
   loadAtlas,
   loadBackendDebugLog,
+  loadDemoAtlas,
   loadHealth,
-  loadUpdateAdvisory,
-  loginLocalAccessPasscode,
-  logoutAllLocalAccessPasscode,
   previewAtlasImport,
   readAtlasFile,
-  removeLocalAccessPasscode,
-  saveAtlas,
-  saveUpdateSettings,
-  setupLocalAccessPasscode
+  saveAtlas
 } from "./lib/api";
-import { BRAND_ICON, DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
+import { DEFAULT_FIELDS, LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "./lib/constants";
 import { atlasSummary, createFrontendDebugEvent, downloadDebugLog } from "./lib/debug";
 import {
-  activeTemplateForUi,
   buildEffectiveStackState,
   buildStackState,
   canConnectTiles,
@@ -90,19 +74,15 @@ import {
 } from "./lib/atlasMutations";
 import { buildConnectorObstacles, type ConnectorRoutingMode } from "./lib/edgeRouting";
 import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes } from "./lib/graphMapping";
-import { createSeedAtlas } from "./lib/seed";
 import { validateAtlasWarnings } from "./lib/validation";
-import { buildHandbookDocument, findHandbookVolumeForTile } from "./lib/handbook";
 import type {
   Atlas,
   AppVersion,
-  AuthStatus,
   DebugEvent,
   Family,
   ExportFormat,
   ExportResult,
   AppMode,
-  LayoutTemplate,
   Lifecycle,
   Link,
   LinkSourcePort,
@@ -112,8 +92,6 @@ import type {
   Tile,
   TileStack,
   TileType,
-  UpdateAdvisory,
-  UpdateSettings,
   View
 } from "./types/atlas";
 
@@ -121,16 +99,9 @@ const TILE_DRAG_MIME = "application/ctroadmap-tile-type";
 const FAMILY_DRAG_MIME = "application/ctroadmap-family";
 const FAMILY_PALETTE_COLOR = "#38a3ff";
 const FIT_VIEW_OPTIONS: FitViewOptions = { padding: 0.28, duration: 450 };
-const UPDATE_NOTICE_PREFIX = "ctroadmap:update-notice:";
-const UPDATE_NOTICE_SNOOZE_HOURS = 24;
-const MANUAL_UPDATE_COMMAND = "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d";
 const SIDEBAR_STORAGE_KEY = "ctroadmap.sidebarSections";
-const HANDBOOK_THEME_STORAGE_KEY = "ctroadmap.handbookThemeMode";
 const CONNECTOR_ROUTING_STORAGE_KEY = "ctroadmap.connectorRoutingMode";
-const LOCAL_ACCESS_PROMPT_PREFIX = "ctroadmap:local-access-prompt:";
-const LOCAL_ACCESS_PROMPT_DELAY_MS = 14 * 24 * 60 * 60 * 1000;
 const AUTOSAVE_DEBOUNCE_MS = 1000;
-const UPDATE_POPUP_REMINDER_MS = 72 * 60 * 60 * 1000;
 
 type SaveReason = "autosave" | "manual" | "export";
 
@@ -166,21 +137,12 @@ function AtlasEditor() {
   const queuedSaveRef = useRef(false);
   const currentSavePromiseRef = useRef<Promise<Atlas | null> | null>(null);
   const saveCurrentAtlasRef = useRef<(reason: SaveReason) => Promise<Atlas | null>>(() => Promise.resolve(null));
-  const updatePopupPreviewMode = useMemo(() => isUpdatePopupPreviewMode(), []);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
-  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
-  const [firstRunPromptVisible, setFirstRunPromptVisible] = useState(false);
   const [activeViewId, setActiveViewId] = useState("everything");
   const [backendHealth, setBackendHealth] = useState("unknown");
   const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
   const [appVersion, setAppVersion] = useState<AppVersion | null>(null);
-  const [appVersionChecked, setAppVersionChecked] = useState(false);
-  const [updateAdvisory, setUpdateAdvisory] = useState<UpdateAdvisory | null>(null);
-  const [updateNoticeRevision, setUpdateNoticeRevision] = useState(0);
-  const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("canvas_topology");
   const [selection, setSelection] = useState<Selection>(null);
-  const [selectedHandbookVolumeId, setSelectedHandbookVolumeId] = useState<string | null>(null);
-  const [handbookThemeMode, setHandbookThemeMode] = useState<HandbookThemeMode>(() => getStoredHandbookThemeMode());
   const [searchTerm, setSearchTerm] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -200,7 +162,6 @@ function AtlasEditor() {
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [isInteractive, setIsInteractive] = useState(true);
   const [nodeDragInProgress, setNodeDragInProgress] = useState(false);
-  const [updatePopupOpen, setUpdatePopupOpen] = useState(updatePopupPreviewMode);
 
   const appendDebugEvent = useCallback((action: string, message: string, severity: DebugEvent["severity"] = "info", context: Record<string, unknown> = {}) => {
     setDebugEvents((current) => [...current.slice(-299), createFrontendDebugEvent(action, message, severity, context)]);
@@ -210,12 +171,7 @@ function AtlasEditor() {
     (event: AppearanceDebugEvent) => appendDebugEvent(event.action, event.message, "info", event.context),
     [appendDebugEvent]
   );
-  const { appAppearanceMode, activeCanvasStyle, canvasTheme, setAppAppearanceMode, applyCanvasStyle } = useAppearancePreferences({
-    onDebugEvent: handleAppearanceDebugEvent
-  });
-  const canvasThemeId = activeCanvasStyle.canvasThemeId;
-  const canvasBackgroundId = activeCanvasStyle.canvasBackgroundId;
-  const [appearanceAnnouncement, setAppearanceAnnouncement] = useState("");
+  const { resetCanvasAppearance } = useAppearancePreferences({ onDebugEvent: handleAppearanceDebugEvent });
 
   const closeSettings = useCallback(() => {
     setSettingsOpen(false);
@@ -349,24 +305,6 @@ function AtlasEditor() {
   }, [clearAutosaveTimer]);
 
   useEffect(() => {
-    function handleAuthRequired() {
-      clearAutosaveTimer();
-      latestAtlasRef.current = null;
-      queuedSaveRef.current = false;
-      currentSavePromiseRef.current = null;
-      setAtlas(null);
-      setSelection(null);
-      setSettingsOpen(false);
-      setAuthStatus({ passcode_configured: true, authenticated: false, session_expires_at: null });
-      setFirstRunPromptVisible(false);
-      setStatus("Local Access Passcode required");
-    }
-
-    window.addEventListener("ctroadmap:auth-required", handleAuthRequired);
-    return () => window.removeEventListener("ctroadmap:auth-required", handleAuthRequired);
-  }, [clearAutosaveTimer]);
-
-  useEffect(() => {
     function handleWindowError(event: ErrorEvent) {
       appendDebugEvent("runtime.error", "Unhandled frontend error", "error", {
         error: event.message,
@@ -375,13 +313,11 @@ function AtlasEditor() {
         column: event.colno
       });
     }
-
     function handleUnhandledRejection(event: PromiseRejectionEvent) {
       appendDebugEvent("runtime.unhandled_rejection", "Unhandled frontend promise rejection", "error", {
         error: errorToMessage(event.reason)
       });
     }
-
     window.addEventListener("error", handleWindowError);
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
     return () => {
@@ -391,131 +327,20 @@ function AtlasEditor() {
   }, [appendDebugEvent]);
 
   useEffect(() => {
-    let canceled = false;
-    setStatus("Checking Local Access Passcode...");
-    loadAuthStatus()
-      .then((nextStatus) => {
-        if (canceled) return;
-        setAuthStatus(nextStatus);
-        if (nextStatus.passcode_configured) setFirstRunPromptVisible(false);
-        if (nextStatus.passcode_configured && !nextStatus.authenticated) {
-          setStatus("Local Access Passcode required");
-        }
-        appendDebugEvent("auth.status", "Local Access Passcode status loaded", "info", {
-          passcode_configured: nextStatus.passcode_configured,
-          authenticated: nextStatus.authenticated
-        });
-      })
-      .catch((error) => {
-        if (canceled) return;
-        console.error(error);
-        setStatus("Unable to check Local Access Passcode");
-        appendDebugEvent("auth.status", "Local Access Passcode status failed", "error", { error: error instanceof Error ? error.message : String(error) });
-      });
-    return () => {
-      canceled = true;
-    };
-  }, [appendDebugEvent]);
-
-  const canAccessProtectedApi = Boolean(authStatus && (!authStatus.passcode_configured || authStatus.authenticated));
-
-  useEffect(() => {
-    if (!canAccessProtectedApi) return;
     loadAtlas()
       .then((nextAtlas) => {
         setCleanAtlas(nextAtlas);
         const defaultView = nextAtlas.views.find((view) => view.id === "everything") ?? nextAtlas.views[0];
-        if (defaultView) {
-          setActiveViewId(defaultView.id);
-          setLayoutTemplate(activeTemplateForUi(defaultView.layout_template));
-        }
+        if (defaultView) setActiveViewId(defaultView.id);
         setStatus("Atlas loaded");
         appendDebugEvent("atlas.load", "Atlas loaded", "info", atlasSummary(nextAtlas));
       })
       .catch((error) => {
         console.error(error);
         setStatus("Unable to load atlas");
-        appendDebugEvent("atlas.load", "Atlas load failed", "error", { error: error instanceof Error ? error.message : String(error) });
+        appendDebugEvent("atlas.load", "Atlas load failed", "error", { error: errorToMessage(error) });
       });
-  }, [appendDebugEvent, canAccessProtectedApi, setCleanAtlas]);
-
-  const applyAuthStatus = useCallback((nextStatus: AuthStatus) => {
-    setAuthStatus(nextStatus);
-    if (nextStatus.passcode_configured) setFirstRunPromptVisible(false);
-    return nextStatus;
-  }, []);
-
-  const refreshAuthStatus = useCallback(async () => {
-    const nextStatus = await loadAuthStatus();
-    return applyAuthStatus(nextStatus);
-  }, [applyAuthStatus]);
-
-  const clearProtectedAppState = useCallback(() => {
-    clearAutosaveTimer();
-    latestAtlasRef.current = null;
-    queuedSaveRef.current = false;
-    currentSavePromiseRef.current = null;
-    setAtlas(null);
-    setSelection(null);
-    setExportResults({});
-    setUpdateAdvisory(null);
-  }, [clearAutosaveTimer]);
-
-  const handleLoginPasscode = useCallback(
-    async (passcode: string) => {
-      const nextStatus = await loginLocalAccessPasscode(passcode);
-      applyAuthStatus(nextStatus);
-      setStatus("Local Access Passcode accepted");
-      appendDebugEvent("auth.login", "Local Access Passcode login succeeded");
-    },
-    [appendDebugEvent, applyAuthStatus]
-  );
-
-  const handleSetupPasscode = useCallback(
-    async (passcode: string) => {
-      const nextStatus = await setupLocalAccessPasscode(passcode);
-      applyAuthStatus(nextStatus);
-      setStatus("Local Access Passcode set");
-      appendDebugEvent("auth.setup", "Local Access Passcode configured");
-    },
-    [appendDebugEvent, applyAuthStatus]
-  );
-
-  const handleChangePasscode = useCallback(
-    async (currentPasscode: string, newPasscode: string) => {
-      const nextStatus = await changeLocalAccessPasscode(currentPasscode, newPasscode);
-      applyAuthStatus(nextStatus);
-      setStatus("Local Access Passcode changed");
-      appendDebugEvent("auth.change_passcode", "Local Access Passcode changed");
-    },
-    [appendDebugEvent, applyAuthStatus]
-  );
-
-  const handleRemovePasscode = useCallback(
-    async (currentPasscode: string) => {
-      const nextStatus = await removeLocalAccessPasscode(currentPasscode);
-      applyAuthStatus(nextStatus);
-      setStatus("Local Access Passcode removed");
-      appendDebugEvent("auth.remove_passcode", "Local Access Passcode removed");
-    },
-    [appendDebugEvent, applyAuthStatus]
-  );
-
-  const handleLogoutAllPasscode = useCallback(async () => {
-    await logoutAllLocalAccessPasscode();
-    clearProtectedAppState();
-    const nextStatus = await refreshAuthStatus();
-    setStatus(nextStatus.passcode_configured ? "All sessions logged out" : "Local Access Passcode not configured");
-    appendDebugEvent("auth.logout_all", "All Local Access Passcode sessions logged out");
-  }, [appendDebugEvent, clearProtectedAppState, refreshAuthStatus]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(HANDBOOK_THEME_STORAGE_KEY, handbookThemeMode);
-    } catch {
-      // Local UI state is optional; storage failures should not block atlas editing.
-    }
-  }, [handbookThemeMode]);
+  }, [appendDebugEvent, setCleanAtlas]);
 
   useEffect(() => {
     storeConnectorRoutingMode(connectorRoutingMode);
@@ -525,13 +350,6 @@ function AtlasEditor() {
     storeSidebarState(sidebarState);
   }, [sidebarState]);
 
-  useEffect(() => {
-    if (updatePopupPreviewMode) return;
-    if (!appVersion?.current_version) return;
-    if (shouldShowUpdatePopup(appVersion.current_version)) {
-      setUpdatePopupOpen(true);
-    }
-  }, [appVersion, updatePopupPreviewMode]);
 
   useEffect(() => {
     loadAppVersion()
@@ -542,35 +360,10 @@ function AtlasEditor() {
       .catch((error) => {
         appendDebugEvent("app.version", "App version load failed", "error", { error: error instanceof Error ? error.message : String(error) });
       })
-      .finally(() => setAppVersionChecked(true));
+      ;
   }, [appendDebugEvent]);
 
-  useEffect(() => {
-    if (!authStatus || authStatus.passcode_configured || !atlas || !appVersionChecked) {
-      if (authStatus?.passcode_configured) setFirstRunPromptVisible(false);
-      return;
-    }
-    const version = appVersion?.current_version ?? "unknown";
-    if (shouldShowLocalAccessPrompt(version)) {
-      recordLocalAccessPromptShown(version);
-      setFirstRunPromptVisible(true);
-    }
-  }, [appVersion?.current_version, appVersionChecked, atlas, authStatus]);
 
-  useEffect(() => {
-    if (!canAccessProtectedApi) return;
-    loadUpdateAdvisory()
-      .then((advisory) => {
-        setUpdateAdvisory(advisory);
-        appendDebugEvent("app.update", "Update advisory loaded", advisory.status === "failed" ? "warning" : "info", {
-          status: advisory.status,
-          latest_version: advisory.latest_version ?? null
-        });
-      })
-      .catch((error) => {
-        appendDebugEvent("app.update", "Update advisory load failed", "error", { error: error instanceof Error ? error.message : String(error) });
-      });
-  }, [appendDebugEvent, canAccessProtectedApi]);
 
   const activeView = useMemo(() => getActiveView(atlas, activeViewId), [atlas, activeViewId]);
 
@@ -656,16 +449,14 @@ function AtlasEditor() {
         atlas,
         childrenByParent,
         isInteractive,
-        layoutTemplate,
         selection,
         stackState,
-        canvasThemeId,
         visibleTiles,
         visibleLinks,
         onFocusFamily: handleFocusFamily,
         onResizeFamily: handleResizeFamily
       }),
-    [appMode, atlas, canvasThemeId, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, layoutTemplate, selection, stackState, visibleLinks, visibleTiles]
+    [appMode, atlas, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, selection, stackState, visibleLinks, visibleTiles]
   );
 
   useEffect(() => {
@@ -673,7 +464,7 @@ function AtlasEditor() {
     setFlowNodes(derivedNodes);
   }, [derivedNodes]);
 
-  const effectiveConnectorRoutingMode: ConnectorRoutingMode = connectorRoutingMode === "avoid_tiles" && layoutTemplate === "canvas_topology" && !nodeDragInProgress ? "avoid_tiles" : "curved";
+  const effectiveConnectorRoutingMode: ConnectorRoutingMode = connectorRoutingMode === "avoid_tiles" && !nodeDragInProgress ? "avoid_tiles" : "curved";
 
   const routingObstacles = useMemo(
     () => (effectiveConnectorRoutingMode === "avoid_tiles" ? buildConnectorObstacles(flowNodes) : []),
@@ -682,11 +473,11 @@ function AtlasEditor() {
 
   const edges: Edge[] = useMemo(
     () =>
-      mapAtlasToEdges(appMode, canvasThemeId, visibleLinks, stackState, {
+      mapAtlasToEdges(appMode, visibleLinks, stackState, {
         connectorRoutingMode: effectiveConnectorRoutingMode,
         routingObstacles
       }),
-    [appMode, canvasThemeId, effectiveConnectorRoutingMode, routingObstacles, stackState, visibleLinks]
+    [appMode, effectiveConnectorRoutingMode, routingObstacles, stackState, visibleLinks]
   );
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
@@ -698,9 +489,7 @@ function AtlasEditor() {
   const getCanvasDebugContext = useCallback(
     (extra: Record<string, unknown> = {}) => ({
       active_view_id: activeView?.id ?? null,
-      active_view_title: activeView?.title ?? "None",
-      layout_template: layoutTemplate,
-      visible_tiles: visibleTiles.length,
+      active_view_title: activeView?.title ?? "None",      visible_tiles: visibleTiles.length,
       visible_links: visibleLinks.length,
       total_tiles: atlas?.tiles.length ?? 0,
       total_links: atlas?.links.length ?? 0,
@@ -714,7 +503,7 @@ function AtlasEditor() {
       visible_link_filters: activeView?.visible_links.length ?? 0,
       ...extra
     }),
-    [activeView, appMode, atlas, layoutTemplate, lifecycleCounts, searchTerm, visibleLinks.length, visibleTiles.length]
+    [activeView, appMode, atlas, lifecycleCounts, searchTerm, visibleLinks.length, visibleTiles.length]
   );
 
   const selectTileAndFocus = useCallback(
@@ -745,15 +534,6 @@ function AtlasEditor() {
     [selectTileAndFocus]
   );
 
-  const handleCanvasStyleApply = useCallback(
-    (selection: CanvasStyleSelection) => {
-      applyCanvasStyle(selection);
-      const appliedTheme = getCanvasTheme(selection.canvasThemeId);
-      setAppearanceAnnouncement(`${appliedTheme.label} with ${selection.canvasBackgroundId.replace(/_/g, " ")} applied.`);
-      closeSettings();
-    },
-    [applyCanvasStyle, closeSettings]
-  );
 
   const handleConnectorRoutingModeToggle = useCallback(() => {
     setConnectorRoutingMode((current) => {
@@ -834,10 +614,7 @@ function AtlasEditor() {
       const events = [...debugEvents, ...backendEvents].sort((left, right) => left.timestamp.localeCompare(right.timestamp));
       downloadDebugLog(events, {
         app: "CTRoadmap",
-        active_view: activeView?.title ?? "None",
-        layout_template: layoutTemplate,
-        canvas_theme: canvasThemeId,
-        backend_health: backendHealth,
+        active_view: activeView?.title ?? "None",        backend_health: backendHealth,
         frontend_events: debugEvents.length,
         backend_events: backendEvents.length
       });
@@ -846,7 +623,7 @@ function AtlasEditor() {
       appendDebugEvent("debug.export", "Debug log export failed", "error", { error: error instanceof Error ? error.message : String(error) });
       window.alert(error instanceof Error ? error.message : "Debug log export failed");
     }
-  }, [activeView, appendDebugEvent, backendHealth, canvasThemeId, debugEvents, layoutTemplate]);
+  }, [activeView, appendDebugEvent, backendHealth, debugEvents]);
 
   const handleClearDebugLog = useCallback(() => {
     setDebugEvents([]);
@@ -855,89 +632,11 @@ function AtlasEditor() {
     });
   }, [appendDebugEvent]);
 
-  const handleUpdateSettings = useCallback(
-    async (settings: UpdateSettings) => {
-      if (!updateAdvisory) return;
-      try {
-        const state = await saveUpdateSettings(settings);
-        const nextAdvisory: UpdateAdvisory = {
-          ...updateAdvisory,
-          status: state.update_checks_enabled ? updateAdvisory.status : "disabled",
-          state
-        };
-        setUpdateAdvisory(nextAdvisory);
-        if (state.update_checks_enabled) {
-          loadUpdateAdvisory()
-            .then(setUpdateAdvisory)
-            .catch((error) => {
-              appendDebugEvent("app.update", "Update advisory refresh failed", "error", { error: error instanceof Error ? error.message : String(error) });
-            });
-        }
-        appendDebugEvent("app.update.settings", "Update advisory settings saved", "info", {
-          enabled: state.update_checks_enabled,
-          interval: state.check_interval_hours
-        });
-      } catch (error) {
-        appendDebugEvent("app.update.settings", "Update advisory settings failed", "error", { error: error instanceof Error ? error.message : String(error) });
-        window.alert(error instanceof Error ? error.message : "Unable to save update settings");
-      }
-    },
-    [appendDebugEvent, updateAdvisory]
-  );
 
-  const handleCopyUpdateCommand = useCallback(async () => {
-    const command = updateAdvisory?.target?.update_command || MANUAL_UPDATE_COMMAND;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(command);
-        setStatus("Update command copied");
-      } else {
-        window.prompt("Copy update command", command);
-        setStatus("Update command shown");
-      }
-      appendDebugEvent("app.update.copy_command", "Update command copied", "info", { deployment_type: updateAdvisory?.deployment_type ?? "docker" });
-    } catch (error) {
-      window.prompt("Copy update command", command);
-      appendDebugEvent("app.update.copy_command", "Clipboard copy failed; command shown", "warning", { error: error instanceof Error ? error.message : String(error) });
-    }
-  }, [appendDebugEvent, updateAdvisory]);
 
-  const handleViewReleaseNotes = useCallback(() => {
-    const url = updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url;
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
-    appendDebugEvent("app.update.release_notes", "Release notes opened", "info", { url });
-  }, [appendDebugEvent, updateAdvisory]);
 
-  const handleDismissUpdatePopup = useCallback(() => {
-    if (!updatePopupPreviewMode && appVersion?.current_version) {
-      recordUpdatePopupDismissal(appVersion.current_version);
-    }
-    setUpdatePopupOpen(false);
-    appendDebugEvent("update.popup.dismiss", "Update pop-up dismissed", "info", { preview: updatePopupPreviewMode, version: appVersion?.current_version ?? "unknown" });
-  }, [appVersion?.current_version, appendDebugEvent, updatePopupPreviewMode]);
 
-  const handleJoinUpdatePopupDiscord = useCallback(() => {
-    if (!updatePopupPreviewMode && appVersion?.current_version) {
-      recordUpdatePopupCompleted(appVersion.current_version);
-    }
-    setUpdatePopupOpen(false);
-    appendDebugEvent("update.popup.discord_join", "Update pop-up Discord invite opened", "info", {
-      preview: updatePopupPreviewMode,
-      version: appVersion?.current_version ?? "unknown"
-    });
-  }, [appVersion?.current_version, appendDebugEvent, updatePopupPreviewMode]);
 
-  const handleRemindUpdateLater = useCallback(() => {
-    const key = updateNoticeKey(updateAdvisory);
-    window.localStorage.setItem(key, new Date().toISOString());
-    setUpdateNoticeRevision((revision) => revision + 1);
-    setStatus("Update reminder snoozed");
-    appendDebugEvent("app.update.remind_later", "Update advisory reminder snoozed", "info", {
-      status: updateAdvisory?.status ?? "unknown",
-      latest_version: updateAdvisory?.latest_version ?? null
-    });
-  }, [appendDebugEvent, updateAdvisory]);
 
   const handleSave = useCallback(async () => {
     if (!latestAtlasRef.current) return;
@@ -1016,7 +715,6 @@ function AtlasEditor() {
         const nextView = imported.views.find((view) => view.id === "everything") ?? imported.views[0];
         if (nextView) {
           setActiveViewId(nextView.id);
-          setLayoutTemplate(activeTemplateForUi(nextView.layout_template));
         }
         setSelection(null);
         setStatus("Atlas imported");
@@ -1045,10 +743,6 @@ function AtlasEditor() {
   const handleCreateTile = useCallback(
     (type: TileType, position?: { x: number; y: number }, parentId?: string) => {
       if (!atlas) return;
-      if (layoutTemplate !== "canvas_topology") {
-        setStatus("Tile topology changes are available in Canvas template");
-        return;
-      }
       const title = nextGeneratedTileTitle(type, atlas.tiles);
       const tileId = createId(type, title, atlas.tiles.map((tile) => tile.id));
       const parentTile = parentId ? atlas.tiles.find((tile) => tile.id === parentId) : null;
@@ -1089,7 +783,7 @@ function AtlasEditor() {
       setStatus(parentId ? "Subtile created" : "Tile created");
       appendDebugEvent(parentId ? "tile.create_subtile" : "tile.create", parentId ? "Subtile created" : "Tile created", "info", { type, parent: parentId ?? null, lifecycle: tile.lifecycle });
     },
-    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const getViewportCenterPosition = useCallback(() => {
@@ -1103,10 +797,6 @@ function AtlasEditor() {
 
   const handleCreateFamily = useCallback((positionOverride?: { x: number; y: number }) => {
     if (!atlas) return;
-    if (layoutTemplate !== "canvas_topology") {
-      setStatus("Families are available in Canvas template");
-      return;
-    }
     const title = window.prompt("Family title", "New Family");
     if (!title) return;
     const position = positionOverride ?? getViewportCenterPosition() ?? { x: 160 + (atlas.families ?? []).length * 28, y: 140 + (atlas.families ?? []).length * 28 };
@@ -1131,7 +821,7 @@ function AtlasEditor() {
     setSelection({ kind: "family", id: family.id });
     setStatus("Family created");
     appendDebugEvent("family.create", "Family created", "info", { family_id: family.id });
-  }, [appendDebugEvent, atlas, getViewportCenterPosition, layoutTemplate, updateAtlas]);
+  }, [appendDebugEvent, atlas, getViewportCenterPosition, updateAtlas]);
 
   const handleFamilyPaletteClick = useCallback(() => {
     if (Date.now() - lastPaletteDragAt.current < 250) return;
@@ -1147,35 +837,34 @@ function AtlasEditor() {
   );
 
   const handlePaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>, type: TileType) => {
-    if (!isInteractive || layoutTemplate !== "canvas_topology") {
+    if (!isInteractive) {
       event.preventDefault();
       return;
     }
     event.dataTransfer.setData(TILE_DRAG_MIME, type);
     event.dataTransfer.effectAllowed = "copy";
-  }, [isInteractive, layoutTemplate]);
+  }, [isInteractive]);
 
   const handleFamilyPaletteDragStart = useCallback((event: DragEvent<HTMLButtonElement>) => {
-    if (!isInteractive || layoutTemplate !== "canvas_topology") {
+    if (!isInteractive) {
       event.preventDefault();
-      if (layoutTemplate !== "canvas_topology") setStatus("Families are available in Canvas template");
       return;
     }
     event.dataTransfer.setData(FAMILY_DRAG_MIME, "family");
     event.dataTransfer.effectAllowed = "copy";
-  }, [isInteractive, layoutTemplate]);
+  }, [isInteractive]);
 
   const handlePaletteDragEnd = useCallback(() => {
     lastPaletteDragAt.current = Date.now();
   }, []);
 
   const handleCanvasDragOver = useCallback((event: DragEvent<HTMLElement>) => {
-    if (!isInteractive || layoutTemplate !== "canvas_topology") return;
+    if (!isInteractive) return;
     const dragTypes = Array.from(event.dataTransfer.types);
     if (!dragTypes.includes(TILE_DRAG_MIME) && !dragTypes.includes(FAMILY_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
-  }, [isInteractive, layoutTemplate]);
+  }, [isInteractive]);
 
   const handleCanvasDrop = useCallback(
     (event: DragEvent<HTMLElement>) => {
@@ -1185,10 +874,6 @@ function AtlasEditor() {
         if (!isInteractive) {
           setStatus("Interactivity locked");
           appendDebugEvent("canvas.locked_drop", "Family drop blocked while interactivity is locked", "warning", getCanvasDebugContext({ type: "family" }));
-          return;
-        }
-        if (layoutTemplate !== "canvas_topology") {
-          setStatus("Families are available in Canvas template");
           return;
         }
         handleCreateFamily(
@@ -1207,10 +892,6 @@ function AtlasEditor() {
         appendDebugEvent("canvas.locked_drop", "Tile drop blocked while interactivity is locked", "warning", getCanvasDebugContext({ type }));
         return;
       }
-      if (layoutTemplate !== "canvas_topology") {
-        setStatus("Tile topology changes are available in Canvas template");
-        return;
-      }
       handleCreateTile(
         type,
         screenToFlowPosition({
@@ -1219,7 +900,7 @@ function AtlasEditor() {
         })
       );
     },
-    [appendDebugEvent, getCanvasDebugContext, handleCreateFamily, handleCreateTile, isInteractive, layoutTemplate, screenToFlowPosition]
+    [appendDebugEvent, getCanvasDebugContext, handleCreateFamily, handleCreateTile, isInteractive, screenToFlowPosition]
   );
 
   const handleAddSubtile = useCallback(
@@ -1236,10 +917,6 @@ function AtlasEditor() {
       if (!isInteractive) {
         setStatus("Interactivity locked");
         appendDebugEvent("canvas.locked_connect", "Relationship creation blocked while interactivity is locked", "warning", getCanvasDebugContext());
-        return;
-      }
-      if (layoutTemplate !== "canvas_topology") {
-        setStatus("Relationship changes are available in Canvas template");
         return;
       }
       if (!atlas || !connection.source || !connection.target) return;
@@ -1277,7 +954,7 @@ function AtlasEditor() {
       setStatus("Relationship created");
       appendDebugEvent("link.create", "Relationship created", "info", { type, from: connection.source, to: connection.target, from_port: fromPort, to_port: toPort, lifecycle: link.lifecycle });
     },
-    [appendDebugEvent, appMode, atlas, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, atlas, getCanvasDebugContext, isInteractive, updateAtlas]
   );
 
   const handleNodesChange = useCallback(
@@ -1309,10 +986,6 @@ function AtlasEditor() {
       }
       isNodeDragging.current = false;
       setNodeDragInProgress(false);
-      if (layoutTemplate !== "canvas_topology") {
-        setFlowNodes(derivedNodes);
-        return;
-      }
       const tilePositionsById = new Map(
         draggedNodes
           .filter((draggedNode) => draggedNode.type !== "familyNode" && isLifecycleEditable(resolveLifecycle(draggedNode.data?.tile as Tile | undefined), appMode))
@@ -1352,7 +1025,7 @@ function AtlasEditor() {
         })
       );
     },
-    [appendDebugEvent, appMode, derivedNodes, getCanvasDebugContext, isInteractive, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, derivedNodes, getCanvasDebugContext, isInteractive, updateAtlas]
   );
 
   const handleCanvasDoubleClick = useCallback(
@@ -1407,28 +1080,11 @@ function AtlasEditor() {
     [atlas, stackState.stackByRepresentative]
   );
 
-  const handleUpdateMetadataName = useCallback(
-    (name: string) => {
-      updateAtlas((current) => ({
-        ...current,
-        metadata: {
-          ...current.metadata,
-          name
-        }
-      }));
-    },
-    [updateAtlas]
-  );
 
   const handleUpdateTile = useCallback(
     (tile: Tile) => {
       if (!isLifecycleEditable(resolveLifecycle(tile), appMode)) {
         setStatus("Selection is read-only in this mode");
-        return;
-      }
-      const currentTile = latestAtlasRef.current?.tiles.find((candidate) => candidate.id === tile.id);
-      if (layoutTemplate === "handbook" && currentTile && (currentTile.parent !== tile.parent || currentTile.type !== tile.type)) {
-        setStatus("Placement changes are locked in Handbook");
         return;
       }
       updateAtlas((current) => {
@@ -1463,37 +1119,23 @@ function AtlasEditor() {
       setStatus("Tile updated");
       appendDebugEvent("tile.update", "Tile updated", "info", { id: tile.id, type: tile.type });
     },
-    [appendDebugEvent, appMode, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, updateAtlas]
   );
 
   const handleUpdateFamily = useCallback(
     (family: Family) => {
       updateAtlas((current) => ({
         ...current,
-        families: (current.families ?? []).map((candidate) => {
-          if (candidate.id !== family.id) return candidate;
-          if (layoutTemplate !== "handbook") return family;
-          return {
-            ...family,
-            member_tile_ids: candidate.member_tile_ids,
-            position: candidate.position,
-            size: candidate.size,
-            order: candidate.order
-          };
-        })
+        families: (current.families ?? []).map((candidate) => (candidate.id === family.id ? family : candidate))
       }));
       setStatus("Family updated");
       appendDebugEvent("family.update", "Family updated", "info", { family_id: family.id });
     },
-    [appendDebugEvent, layoutTemplate, updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleDeleteFamily = useCallback(
     (familyId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Family deletion is locked in Handbook");
-        return;
-      }
       if (!window.confirm("Delete this Family? Member tiles will not be deleted.")) return;
       updateAtlas((current) => ({
         ...current,
@@ -1503,38 +1145,12 @@ function AtlasEditor() {
       setStatus("Family deleted");
       appendDebugEvent("family.delete", "Family deleted", "warning", { family_id: familyId });
     },
-    [appendDebugEvent, layoutTemplate, updateAtlas]
-  );
-
-  const handleMoveHandbookFamily = useCallback(
-    (familyId: string, direction: -1 | 1) => {
-      updateAtlas((current) => {
-        const orderedFamilies = [...(current.families ?? [])].sort((left, right) => left.order - right.order);
-        const index = orderedFamilies.findIndex((family) => family.id === familyId);
-        const targetIndex = index + direction;
-        if (index < 0 || targetIndex < 0 || targetIndex >= orderedFamilies.length) return current;
-        const nextFamilies = [...orderedFamilies];
-        const currentFamily = nextFamilies[index];
-        nextFamilies[index] = nextFamilies[targetIndex];
-        nextFamilies[targetIndex] = currentFamily;
-        const orderById = new Map(nextFamilies.map((family, order) => [family.id, order]));
-        return {
-          ...current,
-          families: (current.families ?? []).map((family) => ({ ...family, order: orderById.get(family.id) ?? family.order }))
-        };
-      });
-      setStatus("Handbook volume order updated");
-      appendDebugEvent("handbook.family_order", "Handbook volume order updated", "info", { family_id: familyId, direction });
-    },
     [appendDebugEvent, updateAtlas]
   );
 
+
   const handleToggleTileFamily = useCallback(
     (tileId: string, familyId: string, included: boolean) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Family membership changes are locked in Handbook");
-        return;
-      }
       updateAtlas((current) => ({
         ...current,
         families: (current.families ?? []).map((family) => {
@@ -1554,15 +1170,11 @@ function AtlasEditor() {
       setStatus(included ? "Tile added to Family" : "Tile removed from Family");
       appendDebugEvent("family.membership", included ? "Tile added to Family" : "Tile removed from Family", "info", { family_id: familyId, tile_id: tileId });
     },
-    [appendDebugEvent, layoutTemplate, updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleDeleteTile = useCallback(
     (tileId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Tile deletion is locked in Handbook");
-        return;
-      }
       const tile = atlas?.tiles.find((candidate) => candidate.id === tileId);
       if (tile && !isLifecycleEditable(resolveLifecycle(tile), appMode)) {
         setStatus("Selection is read-only in this mode");
@@ -1582,15 +1194,11 @@ function AtlasEditor() {
       setStatus("Tile deleted");
       appendDebugEvent("tile.delete", "Tile deleted", "warning", { id: tileId });
     },
-    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const handleDuplicateTile = useCallback(
     (tileId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Tile duplication is locked in Handbook");
-        return;
-      }
       if (!atlas) return;
       const source = atlas.tiles.find((tile) => tile.id === tileId);
       if (!source) return;
@@ -1621,7 +1229,7 @@ function AtlasEditor() {
       setStatus("Tile duplicated");
       appendDebugEvent("tile.duplicate", "Tile duplicated", "info", { source: tileId, duplicate: duplicateId, type: source.type });
     },
-    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const handleUpdateLink = useCallback(
@@ -1632,35 +1240,16 @@ function AtlasEditor() {
       }
       updateAtlas((current) => ({
         ...current,
-        links: current.links.map((candidate) => {
-          if (candidate.id !== link.id) return candidate;
-          if (
-            layoutTemplate === "handbook" &&
-            (candidate.from !== link.from ||
-              candidate.to !== link.to ||
-              candidate.type !== link.type ||
-              candidate.from_port !== link.from_port ||
-              candidate.to_port !== link.to_port ||
-              candidate.directional !== link.directional)
-          ) {
-            setStatus("Relationship topology is locked in Handbook");
-            return candidate;
-          }
-          return link;
-        })
+        links: current.links.map((candidate) => (candidate.id === link.id ? link : candidate))
       }));
       setStatus("Relationship updated");
       appendDebugEvent("link.update", "Relationship updated", "info", { id: link.id, type: link.type });
     },
-    [appendDebugEvent, appMode, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, updateAtlas]
   );
 
   const handleDeleteLink = useCallback(
     (linkId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Relationship deletion is locked in Handbook");
-        return;
-      }
       const link = atlas?.links.find((candidate) => candidate.id === linkId);
       if (link && !isLifecycleEditable(resolveLifecycle(link), appMode)) {
         setStatus("Selection is read-only in this mode");
@@ -1671,15 +1260,11 @@ function AtlasEditor() {
       setStatus("Relationship deleted");
       appendDebugEvent("link.delete", "Relationship deleted", "warning", { id: linkId });
     },
-    [appendDebugEvent, appMode, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, appMode, atlas, updateAtlas]
   );
 
   const handleStackSiblings = useCallback(
     (tileId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Stack changes are locked in Handbook");
-        return;
-      }
       if (!atlas) return;
       const source = atlas.tiles.find((tile) => tile.id === tileId);
       if (!source?.parent) return;
@@ -1705,15 +1290,11 @@ function AtlasEditor() {
       setStackContextMenu(null);
       appendDebugEvent("stack.create", "Sibling tiles stacked", "info", { stack_id: stack.id, parent_id: stack.parent_id, tile_type: stack.tile_type, members: stack.member_ids.length });
     },
-    [appendDebugEvent, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const handleStackMountChildren = useCallback(
     (mountTileId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Stack changes are locked in Handbook");
-        return;
-      }
       if (!atlas) return;
       const mountTile = atlas.tiles.find((tile) => tile.id === mountTileId);
       if (!mountTile || mountTile.type !== "mount") return;
@@ -1738,15 +1319,11 @@ function AtlasEditor() {
       setStackContextMenu(null);
       appendDebugEvent("stack.mount_children.create", "Mounted child tiles stacked", "info", { stack_id: stack.id, mount_id: mountTile.id, members: stack.member_ids.length });
     },
-    [appendDebugEvent, atlas, layoutTemplate, updateAtlas]
+    [appendDebugEvent, atlas, updateAtlas]
   );
 
   const handleUpdateStack = useCallback(
     (stack: TileStack) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Stack changes are locked in Handbook");
-        return;
-      }
       updateAtlas((current) => ({
         ...current,
         stacks: (current.stacks ?? []).map((candidate) => (candidate.id === stack.id ? stack : candidate))
@@ -1754,15 +1331,11 @@ function AtlasEditor() {
       setStatus("Stack updated");
       appendDebugEvent("stack.update", "Stack updated", "info", { stack_id: stack.id });
     },
-    [appendDebugEvent, layoutTemplate, updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handleUnstack = useCallback(
     (stackId: string) => {
-      if (layoutTemplate === "handbook") {
-        setStatus("Stack changes are locked in Handbook");
-        return;
-      }
       updateAtlas((current) => ({
         ...current,
         stacks: (current.stacks ?? []).filter((stack) => stack.id !== stackId)
@@ -1772,7 +1345,7 @@ function AtlasEditor() {
       setStatus("Stack removed");
       appendDebugEvent("stack.delete", "Stack removed", "info", { stack_id: stackId });
     },
-    [appendDebugEvent, layoutTemplate, updateAtlas]
+    [appendDebugEvent, updateAtlas]
   );
 
   const handlePromoteTile = useCallback(
@@ -1818,51 +1391,16 @@ function AtlasEditor() {
 
   const handleSelectView = useCallback(
     (view: View) => {
-      const nextTemplate = activeTemplateForUi(view.layout_template);
       setActiveViewId(view.id);
-      setLayoutTemplate(nextTemplate);
-      if (nextTemplate === "handbook") setSelectedHandbookVolumeId(null);
       setSelection(null);
       setStatus(`Layer: ${view.title}`);
-      appendDebugEvent("view.select", "Layer selected", "info", { id: view.id, title: view.title, layout_template: view.layout_template });
+      appendDebugEvent("view.select", "Layer selected", "info", { id: view.id, title: view.title });
     },
     [appendDebugEvent]
   );
 
-  const handleTemplateChange = useCallback(
-    (nextTemplate: LayoutTemplate) => {
-      if (nextTemplate === "handbook") {
-        const selectedTileId = selection?.kind === "tile" ? selection.id : null;
-        const currentAtlas = latestAtlasRef.current;
-        if (selectedTileId && currentAtlas) {
-          const volume = findHandbookVolumeForTile(buildHandbookDocument(currentAtlas), selectedTileId);
-          setSelectedHandbookVolumeId(volume?.id ?? null);
-        } else {
-          setSelectedHandbookVolumeId(null);
-        }
-      }
-      setLayoutTemplate(nextTemplate);
-      updateAtlas((current) => ({
-        ...current,
-        views: current.views.map((view) => (view.id === activeViewId ? { ...view, layout_template: nextTemplate } : view))
-      }));
-      setStatus(nextTemplate === "canvas_topology" ? "Canvas topology template" : "Handbook template");
-      appendDebugEvent("view.template", "Layout template changed", "info", { layout_template: nextTemplate });
-    },
-    [activeViewId, appendDebugEvent, selection, updateAtlas]
-  );
 
-  const handleSelectHandbookVolume = useCallback((volumeId: string) => {
-    setSelectedHandbookVolumeId(volumeId);
-    setSelection(null);
-    setStatus("Handbook volume selected");
-  }, []);
 
-  const handleSelectHandbookTile = useCallback((volumeId: string, tileId: string) => {
-    setSelectedHandbookVolumeId(volumeId);
-    setSelection({ kind: "tile", id: tileId });
-    setStatus("Handbook tile selected");
-  }, []);
 
   const handleCreateView = useCallback(() => {
     if (!atlas) return;
@@ -1875,15 +1413,13 @@ function AtlasEditor() {
       description: "",
       visible_types: sourceView ? [...sourceView.visible_types] : [],
       visible_links: sourceView ? [...sourceView.visible_links] : [],
-      camera: { x: 0, y: 0, zoom: 1 },
-      layout_template: sourceView?.layout_template ?? layoutTemplate
+      camera: { x: 0, y: 0, zoom: 1 }
     };
     updateAtlas((current) => ({ ...current, views: [...current.views, view] }));
     setActiveViewId(view.id);
-    setLayoutTemplate(activeTemplateForUi(view.layout_template));
     setStatus(`Created layer: ${view.title}`);
     appendDebugEvent("view.create", "Layer created", "info", { id: view.id, title: view.title });
-  }, [activeView, appendDebugEvent, atlas, layoutTemplate, updateAtlas]);
+  }, [activeView, appendDebugEvent, atlas, updateAtlas]);
 
   const handleEditView = useCallback(() => {
     if (!activeView) return;
@@ -1909,7 +1445,6 @@ function AtlasEditor() {
     const nextView = remainingViews.find((view) => view.id === "everything") ?? remainingViews[0];
     updateAtlas((current) => ({ ...current, views: current.views.filter((view) => view.id !== activeView.id) }));
     setActiveViewId(nextView.id);
-    setLayoutTemplate(activeTemplateForUi(nextView.layout_template));
     setSelection(null);
     setStatus(`Deleted layer: ${activeView.title}`);
     appendDebugEvent("view.delete", "Layer deleted", "warning", { id: activeView.id, title: activeView.title });
@@ -1951,16 +1486,25 @@ function AtlasEditor() {
     [activeView, updateAtlas]
   );
 
-  const handleLoadSeed = useCallback(() => {
-    if (!window.confirm("This will overwrite your current ALTAS, Download your current ATLAS .json file first so you can revert to it later if you don't want to lose it.")) return;
-    const seed = createSeedAtlas();
-    commitDirtyAtlas(seed);
+  const handleLoadDemo = useCallback(async () => {
+    if (!window.confirm("Replace the current atlas with the owner-supplied runtime demo? Download your current atlas JSON first if you may want to restore it.")) return;
     setResetMenuOpen(false);
-    setActiveViewId("everything");
-    setLayoutTemplate("canvas_topology");
-    setSelection(null);
-    setStatus("CTDC sample loaded");
-    appendDebugEvent("seed.load", "CTDC sample loaded", "info", atlasSummary(seed));
+    setStatus("Loading demo...");
+    try {
+      const demo = withAtlasDefaults(await loadDemoAtlas());
+      commitDirtyAtlas(sanitizeAtlas(demo));
+      const nextView = demo.views.find((view) => view.id === "everything") ?? demo.views[0];
+      if (nextView) setActiveViewId(nextView.id);
+      setSelection(null);
+      setStackContextMenu(null);
+      setStatus("Demo loaded");
+      appendDebugEvent("demo.load", "Runtime demo loaded", "info", atlasSummary(demo));
+    } catch (error) {
+      const message = errorToMessage(error);
+      setStatus(message);
+      appendDebugEvent("demo.load", "Runtime demo load failed", "warning", { error: message });
+      window.alert(message);
+    }
   }, [appendDebugEvent, commitDirtyAtlas]);
 
   const handleWipeCanvas = useCallback(() => {
@@ -1985,7 +1529,6 @@ function AtlasEditor() {
     setResetMenuOpen(false);
     setSelection(null);
     setStackContextMenu(null);
-    setSelectedHandbookVolumeId(null);
     setStatus("Canvas wiped");
     appendDebugEvent("canvas.wipe", "Canvas wiped", "warning", { tiles: tileCount, links: linkCount, families: familyCount });
   }, [appendDebugEvent, commitDirtyAtlas]);
@@ -2019,7 +1562,6 @@ function AtlasEditor() {
         return;
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
-        if (layoutTemplate === "handbook") return;
         if (selection?.kind === "tile") {
           event.preventDefault();
           handleDuplicateTile(selection.id);
@@ -2027,7 +1569,6 @@ function AtlasEditor() {
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
-        if (layoutTemplate === "handbook") return;
         if (selection?.kind === "tile") {
           event.preventDefault();
           handleDeleteTile(selection.id);
@@ -2049,31 +1590,12 @@ function AtlasEditor() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleDeleteLink, handleDeleteTile, handleDuplicateTile, handleSave, layoutTemplate, selection]);
+  }, [handleDeleteLink, handleDeleteTile, handleDuplicateTile, handleSave, selection]);
 
   const brokenLinkCount = atlas
     ? atlas.links.filter((link) => !atlas.tiles.some((tile) => tile.id === link.from) || !atlas.tiles.some((tile) => tile.id === link.to)).length
     : 0;
   const warnings = useMemo(() => (atlas ? validateAtlasWarnings(atlas) : []), [atlas]);
-  const updateNotice = useMemo<UpdateNoticeView | null>(() => {
-    if (!updateAdvisory) return null;
-    if (isUpdateNoticeSnoozed(updateAdvisory)) return null;
-    if (updateAdvisory.status === "available") {
-      return {
-        tone: "available",
-        title: `Update ${updateAdvisory.latest_version ?? ""} available`.trim(),
-        message: updateAdvisory.target?.notes || "A newer CTRoadmap build is available."
-      };
-    }
-    if (updateAdvisory.status === "disabled" || updateAdvisory.status === "failed") {
-      return {
-        tone: "manual",
-        title: "Manual update check",
-        message: "Beta Docker updates can be checked manually when advisory checks are unavailable."
-      };
-    }
-    return null;
-  }, [updateAdvisory, updateNoticeRevision]);
 
   useEffect(() => {
     if (!atlas) return;
@@ -2104,19 +1626,6 @@ function AtlasEditor() {
 
   const saveStatusClass = lastSaveError ? "save-status save-status--error" : isDirty ? "save-status save-status--dirty" : "save-status";
 
-  if (!authStatus) {
-    return (
-      <div className="boot-screen">
-        <Loader2 className="spin" size={36} />
-        <span>{status}</span>
-      </div>
-    );
-  }
-
-  if (authStatus.passcode_configured && !authStatus.authenticated) {
-    return <LocalAccessLoginScreen status={status} onLogin={handleLoginPasscode} />;
-  }
-
   if (!atlas) {
     return (
       <div className="boot-screen">
@@ -2127,14 +1636,8 @@ function AtlasEditor() {
   }
 
   return (
-    <div
-      className={firstRunPromptVisible ? "app-shell app-shell--with-local-access-prompt" : "app-shell"}
-      data-canvas-theme={canvasThemeId}
-      data-canvas-theme-variant={canvasTheme.variant}
-      data-app-appearance-mode={appAppearanceMode}
-    >
+    <div className="app-shell">
       <TopBar
-        appAppearanceMode={appAppearanceMode}
         appMode={appMode}
         exportMenuOpen={exportMenuOpen}
         exportMenuRef={exportMenuRef}
@@ -2149,14 +1652,10 @@ function AtlasEditor() {
         settingsButtonRef={settingsButtonRef}
         searchTerm={searchTerm}
         settingsOpen={settingsOpen}
-        updateAdvisory={updateAdvisory}
-        updateNotice={updateNotice}
-        onCopyUpdateCommand={() => void handleCopyUpdateCommand()}
         onExportMenuToggle={() => setExportMenuOpen((open) => !open)}
         onFileSelected={(file) => void handleImportAtlas(file)}
-        onLoadSeed={handleLoadSeed}
+        onLoadDemo={() => void handleLoadDemo()}
         onDownloadAtlasJson={handleDownloadAtlasJson}
-        onRemindUpdateLater={handleRemindUpdateLater}
         onResetMenuToggle={() => setResetMenuOpen((open) => !open)}
         onSave={() => void handleSave()}
         onSearchChange={setSearchTerm}
@@ -2169,30 +1668,8 @@ function AtlasEditor() {
         }}
         onToggleSettings={handleToggleSettings}
         onToolbarExport={(format) => void handleToolbarExport(format)}
-        onViewReleaseNotes={handleViewReleaseNotes}
         onWipeCanvas={handleWipeCanvas}
       />
-
-      {firstRunPromptVisible ? (
-        <div className="local-access-prompt" role="status">
-          <div>
-            <strong>Set a Local Access Passcode</strong>
-            <span>CTRoadmap is open on this port to any machine on YOUR network. You can protect this local workspace with an optional passphrase of at least 8 characters.</span>
-          </div>
-          <button
-            className="local-access-prompt__action"
-            onClick={() => {
-              setSettingsOpen(true);
-              setFirstRunPromptVisible(false);
-            }}
-          >
-            <LockKeyhole size={18} /> Set Access Passcode
-          </button>
-          <button className="local-access-prompt__dismiss" onClick={() => setFirstRunPromptVisible(false)} aria-label="Dismiss Local Access Passcode prompt">
-            <X size={18} />
-          </button>
-        </div>
-      ) : null}
 
       <main className="workspace">
         <LeftSidebar
@@ -2201,15 +1678,10 @@ function AtlasEditor() {
           atlas={atlas}
           collapsedPaletteEntries={collapsedPaletteEntries}
           familyPaletteColor={FAMILY_PALETTE_COLOR}
-          handbookThemeMode={handbookThemeMode}
-          layoutTemplate={layoutTemplate}
           searchResults={searchResults}
           searchTerm={searchTerm}
-          selectedHandbookTileId={selection?.kind === "tile" ? selection.id : null}
-          selectedHandbookVolumeId={selectedHandbookVolumeId}
           selection={selection}
           sidebarState={sidebarState}
-          canvasThemeId={canvasThemeId}
           warnings={warnings}
           onCollapsedPaletteTouchEnd={handleCollapsedPaletteTouchEnd}
           onCollapsedPaletteTouchStart={handleCollapsedPaletteTouchStart}
@@ -2220,94 +1692,72 @@ function AtlasEditor() {
           onEditView={handleEditView}
           onFamilyPaletteClick={handleFamilyPaletteClick}
           onFamilyPaletteDragStart={handleFamilyPaletteDragStart}
-          onHandbookThemeModeChange={setHandbookThemeMode}
-          onMoveHandbookFamily={handleMoveHandbookFamily}
           onPaletteClick={handlePaletteClick}
           onPaletteDragEnd={handlePaletteDragEnd}
           onPaletteDragStart={handlePaletteDragStart}
           onSelectSearchResult={selectSearchResult}
-          onSelectHandbookTile={handleSelectHandbookTile}
-          onSelectHandbookVolume={handleSelectHandbookVolume}
           onSelectView={handleSelectView}
           onSelectWarningLink={(linkId) => setSelection({ kind: "link", id: linkId })}
           onSelectWarningTile={selectTileAndFocus}
-          onTemplateChange={handleTemplateChange}
           onToggleSidebarSection={toggleSidebarSection}
           onToggleViewLinkType={handleToggleViewLinkType}
           onToggleViewTileType={handleToggleViewTileType}
         />
 
-        {layoutTemplate === "handbook" ? (
-          <HandbookView
-            atlas={atlas}
-            selectedVolumeId={selectedHandbookVolumeId}
-            themeMode={handbookThemeMode}
-            selection={selection}
-            onMetadataNameChange={handleUpdateMetadataName}
-            onNotesFocus={() => setSelection(null)}
-            onSelectTile={(tileId) => setSelection({ kind: "tile", id: tileId })}
-            onUpdateTile={handleUpdateTile}
-          />
-        ) : (
-          <CanvasFrame
-            activeViewId={activeViewId}
-            appMode={appMode}
-            brokenLinkCount={brokenLinkCount}
-            canvasBackgroundId={canvasBackgroundId}
-            canvasRef={canvasRef}
-            connectorRoutingMode={connectorRoutingMode}
-            edges={edges}
-            exportResults={exportResults}
-            fitViewOptions={FIT_VIEW_OPTIONS}
-            flowNodes={flowNodes}
-            isInteractive={isInteractive}
-            layoutTemplate={layoutTemplate}
-            lifecycleCounts={lifecycleCounts}
-            searchResultsCount={searchResults.length}
-            searchTerm={searchTerm}
-            stackContextMenu={stackContextMenu}
-            status={status}
-            canvasThemeId={canvasThemeId}
-            viewBarOpen={viewBarOpen}
-            views={atlas.views}
-            visibleLinks={visibleLinks}
-            visibleTiles={visibleTiles}
-            warningsCount={warnings.length}
-            onCanvasDoubleClick={handleCanvasDoubleClick}
-            onCanvasDragOver={handleCanvasDragOver}
-            onCanvasDrop={handleCanvasDrop}
-            onConnect={handleConnect}
-            onConnectorRoutingModeToggle={handleConnectorRoutingModeToggle}
-            onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
-            onInteractiveChange={handleInteractiveChange}
-            onNodeClick={(node) => {
-              if (node.type === "familyNode") {
-                const family = node.data?.family as Family | undefined;
-                if (family) setSelection({ kind: "family", id: family.id });
-                return;
-              }
-              selectTileAndFocus(node.id);
-            }}
-            onNodeContextMenu={handleNodeContextMenu}
-            onNodeDragStart={handleNodeDragStart}
-            onNodeDragStop={handleNodeDragStop}
-            onNodesChange={handleNodesChange}
-            onPaneClick={() => {
-              setSelection(null);
-              setStackContextMenu(null);
-            }}
-            onReactFlowError={handleReactFlowError}
-            onSelectView={handleSelectView}
-            onStackMountChildren={handleStackMountChildren}
-            onStackSiblings={handleStackSiblings}
-            onToggleViewBar={() => setViewBarOpen((open) => !open)}
-            onUnstack={handleUnstack}
-          />
-        )}
+        <CanvasFrame
+          activeViewId={activeViewId}
+          appMode={appMode}
+          brokenLinkCount={brokenLinkCount}
+          canvasRef={canvasRef}
+          connectorRoutingMode={connectorRoutingMode}
+          edges={edges}
+          exportResults={exportResults}
+          fitViewOptions={FIT_VIEW_OPTIONS}
+          flowNodes={flowNodes}
+          isInteractive={isInteractive}
+          lifecycleCounts={lifecycleCounts}
+          searchResultsCount={searchResults.length}
+          searchTerm={searchTerm}
+          stackContextMenu={stackContextMenu}
+          status={status}
+          viewBarOpen={viewBarOpen}
+          views={atlas.views}
+          visibleLinks={visibleLinks}
+          visibleTiles={visibleTiles}
+          warningsCount={warnings.length}
+          onCanvasDoubleClick={handleCanvasDoubleClick}
+          onCanvasDragOver={handleCanvasDragOver}
+          onCanvasDrop={handleCanvasDrop}
+          onConnect={handleConnect}
+          onConnectorRoutingModeToggle={handleConnectorRoutingModeToggle}
+          onEdgeClick={(edge) => setSelection({ kind: "link", id: edge.id })}
+          onInteractiveChange={handleInteractiveChange}
+          onNodeClick={(node) => {
+            if (node.type === "familyNode") {
+              const family = node.data?.family as Family | undefined;
+              if (family) setSelection({ kind: "family", id: family.id });
+              return;
+            }
+            selectTileAndFocus(node.id);
+          }}
+          onNodeContextMenu={handleNodeContextMenu}
+          onNodeDragStart={handleNodeDragStart}
+          onNodeDragStop={handleNodeDragStop}
+          onNodesChange={handleNodesChange}
+          onPaneClick={() => {
+            setSelection(null);
+            setStackContextMenu(null);
+          }}
+          onReactFlowError={handleReactFlowError}
+          onSelectView={handleSelectView}
+          onStackMountChildren={handleStackMountChildren}
+          onStackSiblings={handleStackSiblings}
+          onToggleViewBar={() => setViewBarOpen((open) => !open)}
+          onUnstack={handleUnstack}
+        />
 
         <Inspector
           atlas={atlas}
-          layoutTemplate={layoutTemplate}
           mode={appMode}
           selection={selection}
           onUpdateTile={handleUpdateTile}
@@ -2331,98 +1781,17 @@ function AtlasEditor() {
           atlas={atlas}
           activeView={activeView}
           appVersion={appVersion}
-          authStatus={authStatus}
           backendHealth={backendHealth}
           debugEvents={debugEvents}
-          layoutTemplate={layoutTemplate}
-          appAppearanceMode={appAppearanceMode}
-          canvasStyle={activeCanvasStyle}
-          updateAdvisory={updateAdvisory}
           onClearDebugLog={handleClearDebugLog}
-          onAppAppearanceModeChange={setAppAppearanceMode}
           onClose={closeSettings}
-          onCopyUpdateCommand={handleCopyUpdateCommand}
           onExportDebugLog={handleExportDebugLog}
-          onCanvasStyleApply={handleCanvasStyleApply}
-          onChangePasscode={handleChangePasscode}
-          onLogoutAllPasscode={handleLogoutAllPasscode}
-          onRemovePasscode={handleRemovePasscode}
-          onSetupPasscode={handleSetupPasscode}
-          onUpdateSettings={handleUpdateSettings}
-          onViewReleaseNotes={handleViewReleaseNotes}
+          onResetCanvasAppearance={() => {
+            resetCanvasAppearance();
+            setStatus("Canvas appearance reset to CYBER · HEX");
+          }}
         />
       ) : null}
-
-      <div className="sr-only" aria-live="polite" aria-atomic="true">{appearanceAnnouncement}</div>
-
-      {updatePopupOpen ? (
-        <UpdatePopupModal
-          currentVersion={appVersion?.current_version ?? "Preview"}
-          onClose={handleDismissUpdatePopup}
-          onInviteClick={handleJoinUpdatePopupDiscord}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-interface LocalAccessLoginScreenProps {
-  status: string;
-  onLogin: (passcode: string) => Promise<void>;
-}
-
-function LocalAccessLoginScreen({ status, onLogin }: LocalAccessLoginScreenProps) {
-  const BrandIcon = BRAND_ICON;
-  const [passcode, setPasscode] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    try {
-      await onLogin(passcode);
-      setPasscode("");
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : String(loginError));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <div className="local-access-screen">
-      <form className="local-access-card" onSubmit={handleSubmit}>
-        <div className="local-access-card__brand">
-          <div className="local-access-card__brand-mark">
-            <BrandIcon size={30} />
-          </div>
-          <div>
-            <strong>CTRoadmap</strong>
-            <span>Local Infrastructure Atlas</span>
-          </div>
-        </div>
-        <div>
-          <h1>Local Access Passcode</h1>
-          <p>{status}</p>
-        </div>
-        <label>
-          <span>Local Access Passcode</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={passcode}
-            onChange={(event) => setPasscode(event.currentTarget.value)}
-            autoFocus
-          />
-        </label>
-        <button className="toolbar-button" type="submit" disabled={submitting}>
-          {submitting ? <Loader2 className="spin" size={17} /> : <LockKeyhole size={17} />}
-          Log in
-        </button>
-        {error ? <div className="local-access-error">{error}</div> : null}
-      </form>
     </div>
   );
 }
@@ -2471,14 +1840,6 @@ function storeSidebarState(state: SidebarState): void {
   }
 }
 
-function getStoredHandbookThemeMode(): HandbookThemeMode {
-  try {
-    const stored = window.localStorage.getItem(HANDBOOK_THEME_STORAGE_KEY);
-    return stored === "light" ? "light" : "dark";
-  } catch {
-    return "dark";
-  }
-}
 
 function getStoredConnectorRoutingMode(): ConnectorRoutingMode {
   try {
@@ -2523,149 +1884,6 @@ function defaultLinkType(
   return "depends_on";
 }
 
-function updateNoticeKey(advisory: UpdateAdvisory | null): string {
-  if (!advisory) return `${UPDATE_NOTICE_PREFIX}unknown`;
-  if (advisory.status === "available") {
-    return `${UPDATE_NOTICE_PREFIX}available:${advisory.latest_version ?? "unknown"}`;
-  }
-  return `${UPDATE_NOTICE_PREFIX}manual:${advisory.status}`;
-}
-
-function isUpdateNoticeSnoozed(advisory: UpdateAdvisory): boolean {
-  const key = updateNoticeKey(advisory);
-  const hiddenAt = window.localStorage.getItem(key);
-  if (!hiddenAt) return false;
-  const hiddenDate = new Date(hiddenAt);
-  if (Number.isNaN(hiddenDate.getTime())) {
-    window.localStorage.removeItem(key);
-    return false;
-  }
-  const expiresAt = hiddenDate.getTime() + UPDATE_NOTICE_SNOOZE_HOURS * 60 * 60 * 1000;
-  if (Date.now() < expiresAt) return true;
-  window.localStorage.removeItem(key);
-  return false;
-}
-
-interface LocalAccessPromptRecord {
-  shownCount: number;
-  lastShownAt: string | null;
-}
-
-function localAccessPromptKey(version: string): string {
-  return `${LOCAL_ACCESS_PROMPT_PREFIX}${version}`;
-}
-
-function shouldShowLocalAccessPrompt(version: string): boolean {
-  const record = readLocalAccessPromptRecord(version);
-  if (record.shownCount <= 0) return true;
-  if (record.shownCount >= 2) return false;
-  if (!record.lastShownAt) return true;
-  const lastShown = new Date(record.lastShownAt);
-  if (Number.isNaN(lastShown.getTime())) return true;
-  return Date.now() >= lastShown.getTime() + LOCAL_ACCESS_PROMPT_DELAY_MS;
-}
-
-function recordLocalAccessPromptShown(version: string): void {
-  const record = readLocalAccessPromptRecord(version);
-  const nextRecord: LocalAccessPromptRecord = {
-    shownCount: Math.min(2, record.shownCount + 1),
-    lastShownAt: new Date().toISOString()
-  };
-  try {
-    window.localStorage.setItem(localAccessPromptKey(version), JSON.stringify(nextRecord));
-  } catch {
-    // Local prompt state is optional; storage failures should not block atlas access.
-  }
-}
-
-function readLocalAccessPromptRecord(version: string): LocalAccessPromptRecord {
-  try {
-    const stored = window.localStorage.getItem(localAccessPromptKey(version));
-    if (!stored) return { shownCount: 0, lastShownAt: null };
-    const parsed = JSON.parse(stored) as Partial<LocalAccessPromptRecord>;
-    return {
-      shownCount: Number.isFinite(parsed.shownCount) ? Math.max(0, Number(parsed.shownCount)) : 0,
-      lastShownAt: typeof parsed.lastShownAt === "string" ? parsed.lastShownAt : null
-    };
-  } catch {
-    return { shownCount: 0, lastShownAt: null };
-  }
-}
-
-interface UpdatePopupStorageState {
-  dismissCount?: number;
-  lastDismissedAt?: string;
-  completed?: boolean;
-}
-
-function isUpdatePopupPreviewMode(): boolean {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("previewUpdatePopup") === "1" || params.get("previewDiscordInvite") === "1";
-  } catch {
-    return false;
-  }
-}
-
-function updatePopupStorageKey(version: string): string {
-  return `${UPDATE_POPUP_STORAGE_PREFIX}${version}`;
-}
-
-function readUpdatePopupState(version: string): UpdatePopupStorageState | null {
-  try {
-    const stored = window.localStorage.getItem(updatePopupStorageKey(version));
-    if (!stored) return null;
-    const parsed = JSON.parse(stored) as UpdatePopupStorageState;
-    return parsed && typeof parsed === "object" ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function shouldShowUpdatePopup(version: string): boolean {
-  const state = readUpdatePopupState(version);
-  if (!state) return true;
-  if (state.completed) return false;
-  const dismissCount = Number(state.dismissCount ?? 0);
-  if (dismissCount >= 2) return false;
-  if (dismissCount <= 0) return true;
-  const lastDismissedAt = state.lastDismissedAt ? new Date(state.lastDismissedAt) : null;
-  if (!lastDismissedAt || Number.isNaN(lastDismissedAt.getTime())) return true;
-  return Date.now() - lastDismissedAt.getTime() >= UPDATE_POPUP_REMINDER_MS;
-}
-
-function recordUpdatePopupDismissal(version: string): void {
-  try {
-    const state = readUpdatePopupState(version);
-    const dismissCount = Math.min(2, Number(state?.dismissCount ?? 0) + 1);
-    window.localStorage.setItem(
-      updatePopupStorageKey(version),
-      JSON.stringify({
-        dismissCount,
-        lastDismissedAt: new Date().toISOString(),
-        completed: false
-      })
-    );
-  } catch {
-    // The update pop-up is UI-only; storage failures should not affect atlas editing.
-  }
-}
-
-function recordUpdatePopupCompleted(version: string): void {
-  try {
-    window.localStorage.setItem(
-      updatePopupStorageKey(version),
-      JSON.stringify({
-        dismissCount: 2,
-        lastDismissedAt: new Date().toISOString(),
-        completed: true
-      })
-    );
-  } catch {
-    // The update pop-up is UI-only; storage failures should not affect atlas editing.
-  }
-}
-
 function asSourcePort(value: string | null | undefined): LinkSourcePort {
   return value === "child" ? "child" : "out";
 }
@@ -2689,3 +1907,8 @@ function formatSaveTime(date: Date): string {
 }
 
 export default App;
+
+
+
+
+

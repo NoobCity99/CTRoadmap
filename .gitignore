@@ -5,8 +5,8 @@ frontend/dist/
 .DS_Store
 *.pyc
 data/*.backup.json
-data/auth.json
-data/update_state.json
+data/atlas.json
+data/demo.json
 exports/*
 !exports/.gitkeep
 ImportFeasability.md
@@ -22,5 +22,4 @@ gui inspiration1.png
 gui inspiration2.png
 TECHNICAL_ARCHITECTURE.md
 dev/
-backend\app\auth.py
 CTRoadmap_ZIMA_App_Appearance_Mode_Codex_Plan.md

@@ -1,18 +1,10 @@
-import { AlertTriangle, Check, Clock3, Download, ExternalLink, Flame, Loader2, MonitorX, Plus, Save, Settings, Upload, X } from "lucide-react";
+import { AlertTriangle, Check, Clock3, Download, Flame, Loader2, MonitorX, Plus, Save, Settings, Upload } from "lucide-react";
 import type { RefObject } from "react";
-import type { AppAppearanceMode } from "../appearance";
-import type { AppMode, ExportFormat, UpdateAdvisory } from "../types/atlas";
+import type { AppMode, ExportFormat } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
 import { SearchBox } from "./SearchBox";
 
-export interface UpdateNoticeView {
-  tone: string;
-  title: string;
-  message: string;
-}
-
 interface TopBarProps {
-  appAppearanceMode: AppAppearanceMode;
   appMode: AppMode;
   exportMenuOpen: boolean;
   exportMenuRef: RefObject<HTMLDivElement>;
@@ -27,26 +19,20 @@ interface TopBarProps {
   settingsButtonRef: RefObject<HTMLButtonElement>;
   searchTerm: string;
   settingsOpen: boolean;
-  updateAdvisory: UpdateAdvisory | null;
-  updateNotice: UpdateNoticeView | null;
-  onCopyUpdateCommand: () => void;
   onExportMenuToggle: () => void;
   onFileSelected: (file: File) => void;
-  onLoadSeed: () => void;
+  onLoadDemo: () => void;
   onDownloadAtlasJson: () => void;
-  onRemindUpdateLater: () => void;
   onResetMenuToggle: () => void;
   onSave: () => void;
   onSearchChange: (value: string) => void;
   onToggleAppMode: () => void;
   onToggleSettings: () => void;
   onToolbarExport: (format: ExportFormat) => void;
-  onViewReleaseNotes: () => void;
   onWipeCanvas: () => void;
 }
 
 export function TopBar({
-  appAppearanceMode,
   appMode,
   exportMenuOpen,
   exportMenuRef,
@@ -61,21 +47,16 @@ export function TopBar({
   settingsButtonRef,
   searchTerm,
   settingsOpen,
-  updateAdvisory,
-  updateNotice,
-  onCopyUpdateCommand,
   onExportMenuToggle,
   onFileSelected,
-  onLoadSeed,
+  onLoadDemo,
   onDownloadAtlasJson,
-  onRemindUpdateLater,
   onResetMenuToggle,
   onSave,
   onSearchChange,
   onToggleAppMode,
   onToggleSettings,
   onToolbarExport,
-  onViewReleaseNotes,
   onWipeCanvas
 }: TopBarProps) {
   const saveStatusTone = saveStatusClass.includes("save-status--error") ? "error" : isSaving || saveStatusClass.includes("save-status--dirty") ? "pending" : "saved";
@@ -84,11 +65,7 @@ export function TopBar({
     <header className="topbar">
       <div className="topbar__main">
         <div className="brand" aria-label="CTRoadmap Homelab Diagram and Documentation">
-          <img
-            className="brand__logo"
-            src={appAppearanceMode === "zima" ? "/assets/branding/ctroadmap-zima.png" : "/brand/ctroadmap-topbar-logo.png"}
-            alt="CTRoadmap Homelab Diagram and Documentation"
-          />
+          <img className="brand__logo" src="/brand/ctroadmap-topbar-logo.png" alt="CTRoadmap Homelab Diagram and Documentation" />
         </div>
         <div className="topbar__actions">
           <button className="toolbar-button toolbar-button--icon-only" onClick={onSave} disabled={isSaving} title="Save" aria-label="Save">
@@ -97,64 +74,25 @@ export function TopBar({
           <span className={`${saveStatusClass} save-status--icon save-status--${saveStatusTone}`} title={saveStatusText} aria-label={saveStatusText}>
             {saveStatusTone === "error" ? <AlertTriangle size={14} /> : saveStatusTone === "pending" ? <Clock3 size={14} /> : <Check size={14} />}
           </span>
-          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import Atlas">
-            <Upload size={18} /> Import Atlas
-          </button>
-          <input
-            ref={fileInputRef}
-            className="hidden-input"
-            type="file"
-            accept="application/json,.json"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              if (file) onFileSelected(file);
-            }}
-          />
-          <button className="toolbar-button" onClick={onDownloadAtlasJson} title="Download Atlas">
-            <Download size={18} /> Download Atlas
-          </button>
+          <button className="toolbar-button" onClick={() => fileInputRef.current?.click()} title="Import Atlas"><Upload size={18} /> Import Atlas</button>
+          <input ref={fileInputRef} className="hidden-input" type="file" accept="application/json,.json" onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            if (file) onFileSelected(file);
+          }} />
+          <button className="toolbar-button" onClick={onDownloadAtlasJson} title="Download Atlas"><Download size={18} /> Download Atlas</button>
           <div className="toolbar-menu" ref={resetMenuRef}>
-            <button className="toolbar-button" type="button" aria-haspopup="menu" aria-expanded={resetMenuOpen} onClick={onResetMenuToggle} title="Reset">
-              <MonitorX size={18} /> Reset
-            </button>
+            <button className="toolbar-button" type="button" aria-haspopup="menu" aria-expanded={resetMenuOpen} onClick={onResetMenuToggle} title="Reset"><MonitorX size={18} /> Reset</button>
             {resetMenuOpen ? (
               <div className="toolbar-popover" role="menu" aria-label="Reset">
-                <button type="button" role="menuitem" onClick={onLoadSeed}>
-                  <Upload size={16} /> Load Demo
-                </button>
-                <button type="button" role="menuitem" className="toolbar-popover__danger" onClick={onWipeCanvas}>
-                  <Flame size={16} /> Wipe Canvas
-                </button>
+                <button type="button" role="menuitem" onClick={onLoadDemo}><Upload size={16} /> Load Demo</button>
+                <button type="button" role="menuitem" className="toolbar-popover__danger" onClick={onWipeCanvas}><Flame size={16} /> Wipe Canvas</button>
               </div>
             ) : null}
           </div>
           <ExportMenu exportMenuOpen={exportMenuOpen} exportMenuRef={exportMenuRef} isExporting={isExporting} onExport={onToolbarExport} onToggle={onExportMenuToggle} />
-          <button
-            className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"}
-            onClick={onToggleAppMode}
-            title="Planning Mode"
-          >
+          <button className={appMode === "planning" ? "toolbar-button toolbar-button--planning toolbar-button--active" : "toolbar-button toolbar-button--planning"} onClick={onToggleAppMode} title="Planning Mode">
             <Plus size={18} /> Planning Mode
           </button>
-          {updateNotice ? (
-            <div className={`update-advisory update-advisory--${updateNotice.tone}`}>
-              <div>
-                <strong>{updateNotice.title}</strong>
-                <span>{updateNotice.message}</span>
-              </div>
-              {updateAdvisory?.target?.release_notes_url || updateAdvisory?.target?.download_url ? (
-                <button className="mini-icon-button" onClick={onViewReleaseNotes} title="View release notes" aria-label="View release notes">
-                  <ExternalLink size={15} />
-                </button>
-              ) : null}
-              <button className="mini-icon-button" onClick={onCopyUpdateCommand} title="Copy update command" aria-label="Copy update command">
-                <Download size={15} />
-              </button>
-              <button className="mini-icon-button" onClick={onRemindUpdateLater} title="Remind me later" aria-label="Remind me later">
-                <X size={15} />
-              </button>
-            </div>
-          ) : null}
         </div>
       </div>
       <div className="topbar__right">

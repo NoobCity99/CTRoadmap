@@ -1,18 +1,16 @@
 import { MarkerType, type Edge, type Node, type NodeChange } from "@xyflow/react";
-import { getLinkVisualTokens, getTileVisualTokens, type CanvasThemeId } from "../appearance";
+import { getLinkVisualTokens, getTileVisualTokens } from "../appearance";
 import { isLifecycleEditable, resolveLifecycle, resolveSourcePort, resolveTargetPort, type StackState } from "./atlasSelectors";
 import type { ConnectorRoutingMode, RoutingRect } from "./edgeRouting";
-import type { AppMode, Atlas, Family, LayoutTemplate, Link, Tile } from "../types/atlas";
+import type { AppMode, Atlas, Family, Link, Tile } from "../types/atlas";
 
 export interface GraphMappingOptions {
   appMode: AppMode;
   atlas: Atlas | null;
   childrenByParent: Map<string, Tile[]>;
   isInteractive: boolean;
-  layoutTemplate: LayoutTemplate;
   selection: { kind: string; id: string } | null;
   stackState: StackState;
-  canvasThemeId: CanvasThemeId;
   visibleTiles: Tile[];
   visibleLinks: Link[];
   onFocusFamily: (family: Family) => void;
@@ -29,19 +27,14 @@ export function mapAtlasToNodes({
   atlas,
   childrenByParent,
   isInteractive,
-  layoutTemplate,
   selection,
   stackState,
-  canvasThemeId,
   visibleTiles,
   onFocusFamily,
   onResizeFamily
 }: GraphMappingOptions): Node[] {
   if (!atlas) return [];
-  const layoutPositions = layoutTemplate === "layered_hierarchy" ? computeLayeredPositions(visibleTiles) : new Map<string, { x: number; y: number }>();
-  const familyNodes: Node[] =
-    layoutTemplate === "canvas_topology"
-      ? [...(atlas.families ?? [])]
+  const familyNodes: Node[] = [...(atlas.families ?? [])]
           .sort((left, right) => left.order - right.order)
           .map((family) => ({
             id: familyNodeId(family.id),
@@ -64,22 +57,20 @@ export function mapAtlasToNodes({
               onResizeFamily,
               onFocusFamily
             }
-          }))
-      : [];
+          }));
 
   const tileNodes = visibleTiles.map((tile) => {
     const parentTitle = tile.parent ? atlas.tiles.find((candidate) => candidate.id === tile.parent)?.title : undefined;
-    const position = layoutPositions.get(tile.id) ?? tile.position;
     const lifecycle = resolveLifecycle(tile);
     const editable = isLifecycleEditable(lifecycle, appMode);
     const stack = stackState.stackByRepresentative.get(tile.id);
-    const tileVisuals = getTileVisualTokens(tile.type, canvasThemeId);
+    const tileVisuals = getTileVisualTokens(tile.type);
     return {
       id: tile.id,
       type: "tileNode",
-      position,
+      position: tile.position,
       zIndex: 1000,
-      draggable: isInteractive && editable && !stack && layoutTemplate === "canvas_topology",
+      draggable: isInteractive && editable && !stack,
       data: {
         tile,
         parentTitle,
@@ -96,12 +87,12 @@ export function mapAtlasToNodes({
   return [...familyNodes, ...tileNodes];
 }
 
-export function mapAtlasToEdges(appMode: AppMode, canvasThemeId: CanvasThemeId, visibleLinks: Link[], stackState: StackState, options: EdgeMappingOptions = {}): Edge[] {
+export function mapAtlasToEdges(appMode: AppMode, visibleLinks: Link[], stackState: StackState, options: EdgeMappingOptions = {}): Edge[] {
   const useAvoidTiles = options.connectorRoutingMode === "avoid_tiles";
   return visibleLinks.map((link) => {
     const lifecycle = resolveLifecycle(link);
     const editable = isLifecycleEditable(lifecycle, appMode);
-    const linkVisuals = getLinkVisualTokens(link.type, canvasThemeId);
+    const linkVisuals = getLinkVisualTokens(link.type);
     const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
     return {
       id: link.id,
@@ -144,30 +135,3 @@ export function familyNodeId(familyId: string): string {
   return `family:${familyId}`;
 }
 
-export function computeLayeredPositions(tiles: Tile[]): Map<string, { x: number; y: number }> {
-  const positions = new Map<string, { x: number; y: number }>();
-  const byParent = new Map<string, Tile[]>();
-  const roots = tiles.filter((tile) => !tile.parent || !tiles.some((candidate) => candidate.id === tile.parent));
-
-  for (const tile of tiles) {
-    if (!tile.parent) continue;
-    const siblings = byParent.get(tile.parent) ?? [];
-    siblings.push(tile);
-    byParent.set(tile.parent, siblings);
-  }
-
-  function place(tile: Tile, depth: number, row: { value: number }) {
-    positions.set(tile.id, { x: 140 + depth * 330, y: 120 + row.value * 138 });
-    row.value += 1;
-    for (const child of byParent.get(tile.id) ?? []) {
-      place(child, depth + 1, row);
-    }
-  }
-
-  roots.forEach((tile, index) => {
-    const row = { value: index === 0 ? 0 : positions.size + 1 };
-    place(tile, 0, row);
-  });
-
-  return positions;
-}

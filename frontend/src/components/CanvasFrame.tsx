@@ -18,8 +18,8 @@ import { FamilyNode } from "./FamilyNode";
 import { TileNode } from "./TileNode";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import type { ConnectorRoutingMode } from "../lib/edgeRouting";
-import { getCanvasBackground, getTileVisualTokens, type CanvasBackgroundId, type CanvasThemeId } from "../appearance";
-import type { AppMode, ExportFormat, Family, LayoutTemplate, Link, Tile, View } from "../types/atlas";
+import { HEX_BACKGROUND, getTileVisualTokens } from "../appearance";
+import type { AppMode, ExportFormat, Family, Link, Tile, View } from "../types/atlas";
 import { LayerBar } from "./LayerBar";
 
 const nodeTypes = { tileNode: TileNode, familyNode: FamilyNode };
@@ -39,7 +39,6 @@ interface CanvasFrameProps {
   activeViewId: string;
   appMode: AppMode;
   brokenLinkCount: number;
-  canvasBackgroundId: CanvasBackgroundId;
   canvasRef: RefObject<HTMLElement>;
   connectorRoutingMode: ConnectorRoutingMode;
   edges: Edge[];
@@ -47,13 +46,11 @@ interface CanvasFrameProps {
   fitViewOptions: FitViewOptions;
   flowNodes: Node[];
   isInteractive: boolean;
-  layoutTemplate: LayoutTemplate;
   lifecycleCounts: { plannedTiles: number; plannedLinks: number };
   searchResultsCount: number;
   searchTerm: string;
   stackContextMenu: StackContextMenuView | null;
   status: string;
-  canvasThemeId: CanvasThemeId;
   viewBarOpen: boolean;
   views: View[];
   visibleLinks: Link[];
@@ -84,7 +81,6 @@ export function CanvasFrame({
   activeViewId,
   appMode,
   brokenLinkCount,
-  canvasBackgroundId,
   canvasRef,
   connectorRoutingMode,
   edges,
@@ -92,13 +88,11 @@ export function CanvasFrame({
   fitViewOptions,
   flowNodes,
   isInteractive,
-  layoutTemplate,
   lifecycleCounts,
   searchResultsCount,
   searchTerm,
   stackContextMenu,
   status,
-  canvasThemeId,
   viewBarOpen,
   views,
   visibleLinks,
@@ -124,13 +118,11 @@ export function CanvasFrame({
   onToggleViewBar,
   onUnstack
 }: CanvasFrameProps) {
-  const canvasBackground = getCanvasBackground(canvasBackgroundId);
-  const overlay = canvasBackground.reactFlowOverlay;
+  const overlay = HEX_BACKGROUND.reactFlowOverlay;
   return (
     <section
       ref={canvasRef}
-      className={`canvas-frame canvas-frame--${layoutTemplate}`}
-      data-background={canvasBackgroundId}
+      className="canvas-frame"
       onDragOver={onCanvasDragOver}
       onDrop={onCanvasDrop}
       onDoubleClick={onCanvasDoubleClick}
@@ -150,7 +142,7 @@ export function CanvasFrame({
         onEdgeClick={(_, edge) => onEdgeClick(edge)}
         onError={onReactFlowError}
         onPaneClick={onPaneClick}
-        nodesDraggable={isInteractive && layoutTemplate === "canvas_topology"}
+        nodesDraggable={isInteractive}
         nodesConnectable={isInteractive}
         elementsSelectable
         fitView
@@ -172,7 +164,7 @@ export function CanvasFrame({
           nodeColor={(node) => {
             const family = node.data.family as Family | undefined;
             if (family) return family.color || "#38a3ff";
-            return getTileVisualTokens((node.data.tile as Tile).type, canvasThemeId).accentColor;
+            return getTileVisualTokens((node.data.tile as Tile).type).accentColor;
           }}
         />
         <Controls fitViewOptions={fitViewOptions} onInteractiveChange={onInteractiveChange} />

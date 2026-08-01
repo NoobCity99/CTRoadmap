@@ -125,7 +125,6 @@ def render_markdown(atlas: Atlas) -> str:
                 f"### {view.title}",
                 "",
                 f"- ID: `{view.id}`",
-                f"- Template: `{view.layout_template}`",
                 f"- Visible Tile Types: {', '.join(view.visible_types) if view.visible_types else 'All'}",
                 f"- Visible Relationship Types: {', '.join(view.visible_links) if view.visible_links else 'All'}",
                 "",

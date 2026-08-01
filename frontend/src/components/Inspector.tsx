@@ -1,16 +1,11 @@
-import { ChevronDown, ChevronUp, Copy, Plus, Trash2, Upload, X } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
-import { deleteTileIcon, listTileIcons, uploadTileIcon } from "../lib/api";
 import { getFamilyMembershipState } from "../lib/atlasSelectors";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import { iconRefLabel, LUCIDE_ICON_OPTIONS, lucideNameToIconRef, normalizeTileIconRef, TileIconGlyph, uploadedAssetToIconRef, uploadedResultToIconRef } from "../lib/icons";
-import type { AppMode, Atlas, Family, FlowStep, LayoutTemplate, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileIconRef, TileStack, TileType, UploadedIconAsset } from "../types/atlas";
+import type { AppMode, Atlas, Family, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileStack, TileType } from "../types/atlas";
 
 interface InspectorProps {
   atlas: Atlas;
-  layoutTemplate: LayoutTemplate;
   mode: AppMode;
   selection: Selection;
   onUpdateTile: (tile: Tile) => void;
@@ -30,7 +25,6 @@ interface InspectorProps {
 
 export function Inspector({
   atlas,
-  layoutTemplate,
   mode,
   selection,
   onUpdateTile,
@@ -51,7 +45,6 @@ export function Inspector({
   const selectedLink = selection?.kind === "link" ? atlas.links.find((link) => link.id === selection.id) : null;
   const selectedStack = selection?.kind === "stack" ? atlas.stacks?.find((stack) => stack.id === selection.id) : null;
   const selectedFamily = selection?.kind === "family" ? atlas.families?.find((family) => family.id === selection.id) : null;
-  const handbookMode = layoutTemplate === "handbook";
 
   if (selectedFamily) {
     const members = selectedFamily.member_tile_ids.map((memberId) => atlas.tiles.find((tile) => tile.id === memberId)).filter((tile): tile is Tile => Boolean(tile));
@@ -85,7 +78,7 @@ export function Inspector({
           </label>
           <label>
             Order
-            <input type="number" disabled={handbookMode} value={selectedFamily.order} onChange={(event) => onUpdateFamily({ ...selectedFamily, order: Number(event.target.value) || 0 })} />
+            <input type="number" value={selectedFamily.order} onChange={(event) => onUpdateFamily({ ...selectedFamily, order: Number(event.target.value) || 0 })} />
           </label>
           <div className="family-inspector__readout">
             <span>Position</span>
@@ -108,7 +101,7 @@ export function Inspector({
             )}
           </div>
         </div>
-        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteFamily(selectedFamily.id)}>
+        <button className="danger-button" onClick={() => onDeleteFamily(selectedFamily.id)}>
           <Trash2 size={16} /> Delete Family
         </button>
       </aside>
@@ -160,7 +153,7 @@ export function Inspector({
             </ul>
           </div>
         </div>
-        <button className="ghost-button" disabled={handbookMode} onClick={() => onUnstack(selectedStack.id)}>
+        <button className="ghost-button" onClick={() => onUnstack(selectedStack.id)}>
           Unstack
         </button>
       </aside>
@@ -173,7 +166,7 @@ export function Inspector({
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
     const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(
-      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node") && key !== "icon_ref"
+      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node")
     );
     const lifecycle = resolveLifecycle(selectedTile);
     const editable = isLifecycleEditable(lifecycle, mode);
@@ -198,11 +191,9 @@ export function Inspector({
           <ReadOnlyModeNotice lifecycle={lifecycle} mode={mode} kind="tile" onGoLive={lifecycle === "planned" && mode === "live" ? () => onPromoteTile(selectedTile.id) : undefined} />
         ) : null}
         <fieldset disabled={!editable} className="inspector__fieldset">
-        <TileIconEditor defaultIcon={Icon} defaultLabel={config.label} accentColor={config.color} tile={selectedTile} onUpdateTile={onUpdateTile} />
         <label>
           Type
           <select
-            disabled={handbookMode}
             value={selectedTile.type}
             onChange={(event) => onUpdateTile({ ...selectedTile, type: event.target.value as TileType })}
           >
@@ -216,7 +207,6 @@ export function Inspector({
         <label>
           Parent
           <select
-            disabled={handbookMode}
             value={selectedTile.parent ?? ""}
             onChange={(event) => onUpdateTile({ ...selectedTile, parent: event.target.value || null })}
           >
@@ -258,7 +248,7 @@ export function Inspector({
                     <input
                       type="checkbox"
                       checked={membership.checked}
-                      disabled={handbookMode || membership.inherited}
+                      disabled={membership.inherited}
                       onChange={(event) => onToggleTileFamily(selectedTile.id, family.id, event.target.checked)}
                     />
                     {family.title}
@@ -342,13 +332,13 @@ export function Inspector({
             onChange={(event) => onUpdateTile({ ...selectedTile, notes: event.target.value })}
           />
         </label>
-        <button className="ghost-button" disabled={handbookMode} onClick={() => onAddSubtile(selectedTile.id)}>
+        <button className="ghost-button" onClick={() => onAddSubtile(selectedTile.id)}>
           <Plus size={16} /> Add Subtile
         </button>
-        <button className="ghost-button" disabled={handbookMode} onClick={() => onDuplicateTile(selectedTile.id)}>
+        <button className="ghost-button" onClick={() => onDuplicateTile(selectedTile.id)}>
           <Copy size={16} /> Duplicate Tile
         </button>
-        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteTile(selectedTile.id)}>
+        <button className="danger-button" onClick={() => onDeleteTile(selectedTile.id)}>
           <Trash2 size={16} /> Delete Tile
         </button>
         </fieldset>
@@ -387,7 +377,6 @@ export function Inspector({
         <label>
           From
           <select
-            disabled={handbookMode}
             value={selectedLink.from}
             onChange={(event) => onUpdateLink({ ...selectedLink, from: event.target.value })}
           >
@@ -401,7 +390,6 @@ export function Inspector({
         <label>
           To
           <select
-            disabled={handbookMode}
             value={selectedLink.to}
             onChange={(event) => onUpdateLink({ ...selectedLink, to: event.target.value })}
           >
@@ -415,7 +403,6 @@ export function Inspector({
         <label>
           Type
           <select
-            disabled={handbookMode}
             value={selectedLink.type}
             onChange={(event) => {
               const type = event.target.value as LinkType;
@@ -437,7 +424,6 @@ export function Inspector({
         <label>
           From Port
           <select
-            disabled={handbookMode}
             value={resolveSourcePort(selectedLink)}
             onChange={(event) => onUpdateLink({ ...selectedLink, from_port: event.target.value as LinkSourcePort })}
           >
@@ -448,7 +434,6 @@ export function Inspector({
         <label>
           To Port
           <select
-            disabled={handbookMode}
             value={resolveTargetPort(selectedLink)}
             onChange={(event) => onUpdateLink({ ...selectedLink, to_port: event.target.value as LinkTargetPort })}
           >
@@ -466,7 +451,6 @@ export function Inspector({
         <label className="checkbox-label">
           <input
             type="checkbox"
-            disabled={handbookMode}
             checked={selectedLink.directional ?? true}
             onChange={(event) => onUpdateLink({ ...selectedLink, directional: event.target.checked })}
           />
@@ -479,7 +463,7 @@ export function Inspector({
             onChange={(event) => onUpdateLink({ ...selectedLink, notes: event.target.value })}
           />
         </label>
-        <button className="danger-button" disabled={handbookMode} onClick={() => onDeleteLink(selectedLink.id)}>
+        <button className="danger-button" onClick={() => onDeleteLink(selectedLink.id)}>
           <Trash2 size={16} /> Delete Link
         </button>
         </fieldset>
@@ -502,201 +486,6 @@ interface FlowStepEditorProps {
   atlas: Atlas;
   tile: Tile;
   onUpdateTile: (tile: Tile) => void;
-}
-
-function TileIconEditor({
-  accentColor,
-  defaultIcon,
-  defaultLabel,
-  onUpdateTile,
-  tile
-}: {
-  accentColor: string;
-  defaultIcon: LucideIcon;
-  defaultLabel: string;
-  onUpdateTile: (tile: Tile) => void;
-  tile: Tile;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [uploadedIcons, setUploadedIcons] = useState<UploadedIconAsset[]>([]);
-  const [loadingUploadedIcons, setLoadingUploadedIcons] = useState(false);
-  const [uploadingIcon, setUploadingIcon] = useState(false);
-  const [editingUploadedIcons, setEditingUploadedIcons] = useState(false);
-  const [deletingIconIds, setDeletingIconIds] = useState<Set<string>>(() => new Set());
-  const [loadError, setLoadError] = useState("");
-  const iconRef = normalizeTileIconRef(tile);
-  const selectedIconId = iconRef?.id ?? "default";
-
-  useEffect(() => {
-    setExpanded(false);
-    setEditingUploadedIcons(false);
-    setLoadError("");
-    setDeletingIconIds(new Set());
-  }, [tile.id]);
-
-  useEffect(() => {
-    if (!expanded) return;
-    let active = true;
-    setLoadingUploadedIcons(true);
-    setLoadError("");
-    void listTileIcons()
-      .then((result) => {
-        if (active) setUploadedIcons(result.icons);
-      })
-      .catch((error) => {
-        if (active) setLoadError(error instanceof Error ? error.message : "Could not load uploaded icons.");
-      })
-      .finally(() => {
-        if (active) setLoadingUploadedIcons(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [expanded]);
-
-  function applyIconRef(nextIconRef: TileIconRef | null) {
-    const fields = { ...tile.fields };
-    if (nextIconRef) fields.icon_ref = nextIconRef;
-    else delete fields.icon_ref;
-    onUpdateTile({ ...tile, fields });
-  }
-
-  function handleUpload(file: File) {
-    setUploadingIcon(true);
-    void uploadTileIcon(file)
-      .then((uploaded) => {
-        const nextIconRef = uploadedResultToIconRef(uploaded);
-        setUploadedIcons((current) => [nextIconRef, ...current.filter((icon) => icon.id !== nextIconRef.id)]);
-        applyIconRef(nextIconRef);
-      })
-      .catch((error) => window.alert(error instanceof Error ? error.message : "Icon upload failed"))
-      .finally(() => setUploadingIcon(false));
-  }
-
-  function handleDeleteUploadedIcon(asset: UploadedIconAsset) {
-    setDeletingIconIds((current) => new Set(current).add(asset.id));
-    void deleteTileIcon(asset.filename)
-      .then(() => {
-        setUploadedIcons((current) => current.filter((icon) => icon.id !== asset.id));
-        if (selectedIconId === asset.id) applyIconRef(null);
-      })
-      .catch((error) => window.alert(error instanceof Error ? error.message : "Icon delete failed"))
-      .finally(() =>
-        setDeletingIconIds((current) => {
-          const next = new Set(current);
-          next.delete(asset.id);
-          return next;
-        })
-      );
-  }
-
-  return (
-    <div className={expanded ? "icon-editor icon-editor--expanded" : "icon-editor"} style={{ "--tile-accent": accentColor } as CSSProperties}>
-      <div className="icon-editor__summary">
-        <div className="icon-editor__preview">
-          <TileIconGlyph fallback={defaultIcon} iconRef={iconRef} size={24} strokeWidth={2.2} />
-        </div>
-        <div className="icon-editor__meta">
-          <div className="field-editor__title">Icon</div>
-          <strong>{iconRefLabel(iconRef, defaultLabel)}</strong>
-          <span>{iconRef?.kind === "uploaded" ? "Uploaded icon" : iconRef?.kind === "lucide" ? "Lucide icon" : "Tile type default"}</span>
-        </div>
-      </div>
-      <div className="icon-editor__actions">
-        <button className="ghost-button" type="button" onClick={() => setExpanded((current) => !current)}>
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Choose Icon
-        </button>
-        <button className="ghost-button" type="button" disabled={!iconRef} onClick={() => applyIconRef(null)}>
-          <X size={16} /> Use Default
-        </button>
-      </div>
-      {expanded ? (
-        <div className="icon-library">
-          <div className="icon-library__section-head">
-            <button className="ghost-button icon-library__edit" type="button" onClick={() => setEditingUploadedIcons((current) => !current)}>
-              {editingUploadedIcons ? "Done" : "Edit"}
-            </button>
-            <label className={uploadingIcon ? "ghost-button icon-library__upload icon-library__upload--busy" : "ghost-button icon-library__upload"}>
-              <Upload size={16} />
-              <span>{uploadingIcon ? "Uploading" : "Upload New Icon"}</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  event.currentTarget.value = "";
-                  if (file) handleUpload(file);
-                }}
-              />
-            </label>
-          </div>
-          <div className="icon-library__pool" role="listbox" aria-label="Icon library">
-            {loadingUploadedIcons ? <div className="icon-library__empty">Loading uploaded icons...</div> : null}
-            {loadError ? <div className="icon-library__empty icon-library__empty--error">{loadError}</div> : null}
-            {!loadingUploadedIcons && !loadError && uploadedIcons.length === 0 ? <div className="icon-library__empty">No uploaded icons yet.</div> : null}
-            {uploadedIcons.length ? (
-              <div className="icon-library__grid">
-                {uploadedIcons.map((asset) => {
-                  const assetRef = uploadedAssetToIconRef(asset);
-                  const selected = selectedIconId === assetRef.id;
-                  const deleting = deletingIconIds.has(asset.id);
-                  return (
-                    <div key={assetRef.id} className={editingUploadedIcons ? "icon-library__option-shell icon-library__option-shell--editing" : "icon-library__option-shell"}>
-                      <button
-                        aria-pressed={selected}
-                        className={selected ? "icon-library__option icon-library__option--selected" : "icon-library__option"}
-                        disabled={deleting}
-                        title={asset.filename}
-                        type="button"
-                        onClick={() => applyIconRef(assetRef)}
-                      >
-                        <TileIconGlyph alt={asset.filename} fallback={defaultIcon} iconRef={assetRef} size={22} />
-                        <span>{asset.filename}</span>
-                      </button>
-                      {editingUploadedIcons ? (
-                        <button
-                          aria-label={`Remove ${asset.filename} from icon library`}
-                          className="icon-library__delete"
-                          disabled={deleting}
-                          title={`Remove ${asset.filename}`}
-                          type="button"
-                          onClick={() => handleDeleteUploadedIcon(asset)}
-                        >
-                          <X size={12} strokeWidth={3} />
-                        </button>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
-            <div className="icon-library__divider" />
-            <div className="icon-library__grid">
-              {LUCIDE_ICON_OPTIONS.map((option) => {
-                const selected = selectedIconId === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    aria-pressed={selected}
-                    className={selected ? "icon-library__option icon-library__option--selected" : "icon-library__option"}
-                    title={option.label}
-                    type="button"
-                    onClick={() => {
-                      const nextIconRef = lucideNameToIconRef(option.name);
-                      if (nextIconRef) applyIconRef(nextIconRef);
-                    }}
-                  >
-                    <option.Icon size={22} strokeWidth={2.2} />
-                    <span>{option.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
 }
 
 function FlowStepEditor({ atlas, tile, onUpdateTile }: FlowStepEditorProps) {
@@ -912,3 +701,5 @@ function resolveSourcePort(link: Link): LinkSourcePort {
 function resolveTargetPort(link: Link): LinkTargetPort {
   return link.to_port ?? (link.type === "contains" ? "parent" : "in");
 }
+
+

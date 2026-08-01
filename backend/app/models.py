@@ -40,7 +40,6 @@ LinkType = Literal[
     "related_to",
 ]
 
-LayoutTemplate = Literal["canvas_topology", "layered_hierarchy", "handbook"]
 LinkSourcePort = Literal["out", "child"]
 LinkTargetPort = Literal["in", "parent"]
 Lifecycle = Literal["live", "planned"]
@@ -147,7 +146,6 @@ class View(BaseModel):
     visible_types: list[TileType] = Field(default_factory=list)
     visible_links: list[LinkType] = Field(default_factory=list)
     camera: ViewCamera = Field(default_factory=ViewCamera)
-    layout_template: LayoutTemplate = "canvas_topology"
 
 
 class Atlas(BaseModel):
@@ -446,7 +444,6 @@ def default_views() -> list[View]:
             description="Physical nodes, drives, and IoT devices",
             visible_types=["node", "drive", "iot_device"],
             visible_links=[],
-            layout_template="canvas_topology",
         ),
         View(
             id="software",
@@ -454,7 +451,6 @@ def default_views() -> list[View]:
             description="Services, containers, and URLs",
             visible_types=["service", "container", "url"],
             visible_links=[],
-            layout_template="canvas_topology",
         ),
         View(
             id="infrastructure",
@@ -462,7 +458,6 @@ def default_views() -> list[View]:
             description="Scripts, secrets, configs, notes, mounts, flows, and checks",
             visible_types=["script", "secret_ref", "config", "note", "mount", "flow", "check"],
             visible_links=[],
-            layout_template="canvas_topology",
         ),
         View(
             id="everything",

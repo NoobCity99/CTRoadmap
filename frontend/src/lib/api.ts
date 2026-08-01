@@ -1,9 +1,8 @@
-import type { AppVersion, Atlas, AtlasImportPreview, AuthStatus, DebugEvent, ExportFormat, ExportResult, HealthResult, IconAssetListResult, IconUploadResult, UpdateAdvisory, UpdateSettings, UpdateState } from "../types/atlas";
+import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult } from "../types/atlas";
 
 interface ApiRequestOptions {
   method?: string;
   json?: unknown;
-  formData?: FormData;
 }
 
 interface ApiErrorOptions {
@@ -31,6 +30,10 @@ export async function loadAtlas(): Promise<Atlas> {
   return requestJson<Atlas>("/api/atlas");
 }
 
+export async function loadDemoAtlas(): Promise<Atlas> {
+  return requestJson<Atlas>("/api/atlas/demo");
+}
+
 export async function saveAtlas(atlas: Atlas): Promise<Atlas> {
   return requestJson<Atlas>("/api/atlas", { method: "PUT", json: atlas });
 }
@@ -39,47 +42,8 @@ export async function loadHealth(): Promise<HealthResult> {
   return requestJson<HealthResult>("/api/health");
 }
 
-export async function loadAuthStatus(): Promise<AuthStatus> {
-  return requestJson<AuthStatus>("/api/auth/status");
-}
-
-export async function setupLocalAccessPasscode(passcode: string): Promise<AuthStatus> {
-  return requestJson<AuthStatus>("/api/auth/setup", { method: "POST", json: { passcode } });
-}
-
-export async function loginLocalAccessPasscode(passcode: string): Promise<AuthStatus> {
-  return requestJson<AuthStatus>("/api/auth/login", { method: "POST", json: { passcode } });
-}
-
-export async function logoutLocalAccessPasscode(): Promise<void> {
-  await requestVoid("/api/auth/logout", { method: "POST" });
-}
-
-export async function changeLocalAccessPasscode(currentPasscode: string, newPasscode: string): Promise<AuthStatus> {
-  return requestJson<AuthStatus>("/api/auth/change-passcode", {
-    method: "POST",
-    json: { current_passcode: currentPasscode, new_passcode: newPasscode }
-  });
-}
-
-export async function removeLocalAccessPasscode(currentPasscode: string): Promise<AuthStatus> {
-  return requestJson<AuthStatus>("/api/auth/remove-passcode", { method: "POST", json: { current_passcode: currentPasscode } });
-}
-
-export async function logoutAllLocalAccessPasscode(): Promise<void> {
-  await requestVoid("/api/auth/logout-all", { method: "POST" });
-}
-
 export async function loadAppVersion(): Promise<AppVersion> {
   return requestJson<AppVersion>("/api/app/version");
-}
-
-export async function loadUpdateAdvisory(): Promise<UpdateAdvisory> {
-  return requestJson<UpdateAdvisory>("/api/app/update");
-}
-
-export async function saveUpdateSettings(settings: UpdateSettings): Promise<UpdateState> {
-  return requestJson<UpdateState>("/api/app/update/settings", { method: "PUT", json: settings });
 }
 
 export async function generateExport(format: ExportFormat): Promise<ExportResult> {
@@ -92,7 +56,7 @@ export async function loadBackendDebugLog(): Promise<DebugEvent[]> {
 }
 
 export async function clearBackendDebugLog(): Promise<void> {
-  await requestVoid("/api/debug/log/clear", { method: "POST" });
+  await request("/api/debug/log/clear", { method: "POST" });
 }
 
 export function downloadExport(format: ExportFormat): void {
@@ -108,24 +72,8 @@ export async function previewAtlasImport(atlas: Atlas): Promise<AtlasImportPrevi
   return requestJson<AtlasImportPreview>("/api/atlas/preview", { method: "POST", json: atlas });
 }
 
-export async function uploadTileIcon(file: File): Promise<IconUploadResult> {
-  const formData = new FormData();
-  formData.append("file", file);
-  return requestJson<IconUploadResult>("/api/assets/icons", { method: "POST", formData });
-}
-
-export async function listTileIcons(): Promise<IconAssetListResult> {
-  return requestJson<IconAssetListResult>("/api/assets/icons");
-}
-
-export async function deleteTileIcon(filename: string): Promise<void> {
-  await requestVoid(`/api/assets/icons/${encodeURIComponent(filename)}`, { method: "DELETE" });
-}
-
 export function downloadAtlasJson(atlas: Atlas): void {
-  const blob = new Blob([JSON.stringify(atlas, null, 2), "\n"], {
-    type: "application/json"
-  });
+  const blob = new Blob([JSON.stringify(atlas, null, 2), "\n"], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -141,99 +89,53 @@ async function requestJson<T>(url: string, options: ApiRequestOptions = {}): Pro
   return response.json() as Promise<T>;
 }
 
-async function requestVoid(url: string, options: ApiRequestOptions = {}): Promise<void> {
-  await request(url, options);
-}
-
-async function request(url: string, options: ApiRequestOptions): Promise<Response> {
+async function request(url: string, { method = "GET", json }: ApiRequestOptions = {}): Promise<Response> {
   let response: Response;
   try {
-    response = await fetch(url, toRequestInit(options));
-  } catch (error) {
-    throw new ApiError({
-      status: 0,
-      statusText: "Network Error",
-      url,
-      message: errorToMessage(error)
+    response = await fetch(url, {
+      method,
+      ...(json === undefined
+        ? {}
+        : {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(json)
+          })
     });
+  } catch (error) {
+    throw new ApiError({ status: 0, statusText: "Network Error", url, message: errorToMessage(error) });
   }
 
-  if (!response.ok) {
-    if (response.status === 401 && !url.startsWith("/api/auth/")) {
-      window.dispatchEvent(new CustomEvent("ctroadmap:auth-required"));
-    }
-    throw await createApiError(response, url);
-  }
-
+  if (!response.ok) throw await createApiError(response, url);
   return response;
-}
-
-function toRequestInit({ method = "GET", json, formData }: ApiRequestOptions): RequestInit {
-  if (json !== undefined && formData !== undefined) {
-    throw new Error("API requests cannot send both JSON and FormData bodies.");
-  }
-
-  if (json !== undefined) {
-    return {
-      method,
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(json)
-    };
-  }
-
-  if (formData !== undefined) {
-    return {
-      method,
-      credentials: "include",
-      body: formData
-    };
-  }
-
-  return { method, credentials: "include" };
 }
 
 async function createApiError(response: Response, url: string): Promise<ApiError> {
   const text = await response.text().catch(() => "");
   const message = errorMessageFromBody(text) || response.statusText || `Request failed with status ${response.status}`;
-  return new ApiError({
-    status: response.status,
-    statusText: response.statusText,
-    url,
-    message
-  });
+  return new ApiError({ status: response.status, statusText: response.statusText, url, message });
 }
 
 function errorMessageFromBody(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return "";
-
   try {
     const parsed = JSON.parse(trimmed) as unknown;
-    if (isRecord(parsed) && "detail" in parsed) {
-      return detailToMessage(parsed.detail);
-    }
+    if (isRecord(parsed) && "detail" in parsed) return detailToMessage(parsed.detail);
   } catch {
-    // Plain text response bodies are already useful user-facing messages.
+    // Plain text response bodies are already suitable for display.
   }
-
   return trimmed;
 }
 
 function detailToMessage(detail: unknown): string {
   if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    return detail.map(detailItemToMessage).filter(Boolean).join("\n");
-  }
+  if (Array.isArray(detail)) return detail.map(detailItemToMessage).filter(Boolean).join("\n");
   return detailItemToMessage(detail);
 }
 
 function detailItemToMessage(detail: unknown): string {
   if (typeof detail === "string") return detail;
   if (!isRecord(detail)) return safeStringify(detail);
-
   const message = typeof detail.msg === "string" ? detail.msg : safeStringify(detail);
   const location = Array.isArray(detail.loc) ? detail.loc.map(String).join(".") : "";
   return location ? `${location}: ${message}` : message;

@@ -7,7 +7,6 @@ import {
   Folder,
   Globe,
   KeyRound,
-  Network,
   Play,
   Router,
   Server,
@@ -109,4 +108,3 @@ export const DEFAULT_FIELDS: Record<TileType, Record<string, unknown>> = {
   note: { text: "" }
 };
 
-export const BRAND_ICON = Network;

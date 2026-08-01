@@ -3,7 +3,6 @@ import type {
   AppMode,
   Atlas,
   Family,
-  LayoutTemplate,
   Lifecycle,
   Link,
   LinkSourcePort,
@@ -247,10 +246,6 @@ export function defaultStackName(count: number, tileType: TileType): string {
 
 export function defaultMountStackName(count: number): string {
   return `${count} Mounted Items`;
-}
-
-export function activeTemplateForUi(template: LayoutTemplate): LayoutTemplate {
-  return template === "layered_hierarchy" ? "handbook" : template;
 }
 
 export function resolveSourcePort(link: Link): LinkSourcePort {

@@ -1,9 +1,8 @@
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
-import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import type { TileVisualTokens } from "../appearance";
 import type { Tile } from "../types/atlas";
 
@@ -32,13 +31,7 @@ export function TileNode({ data, selected }: NodeProps) {
   const fieldEntries = getTileFieldPreviews(tile);
   const tags = tile.tags ?? [];
   const isPrimaryNode = tile.type === "node" && tile.fields?.primary_node === true;
-  const iconRef = normalizeTileIconRef(tile);
-  const [iconFailed, setIconFailed] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
-
-  useEffect(() => {
-    setIconFailed(false);
-  }, [iconRef?.id]);
 
   async function handleCopyPath(path: string) {
     try {
@@ -84,7 +77,7 @@ export function TileNode({ data, selected }: NodeProps) {
       {stack ? <div className={stack.badgeShape === "hex" ? "tile-node__stack-count tile-node__stack-count--hex" : "tile-node__stack-count"}>{stack.count}</div> : null}
       <div className="tile-node__header">
         <div className="tile-node__icon">
-          <TileIconGlyph fallback={Icon} forceFallback={iconFailed} iconRef={iconRef} onUploadedError={() => setIconFailed(true)} size={20} strokeWidth={2.2} />
+          <Icon size={20} strokeWidth={2.2} />
         </div>
         <div className="tile-node__title-wrap">
           <div className="tile-node__title">{tile.title}</div>
@@ -134,7 +127,6 @@ function getTileFieldPreviews(tile: Tile): Array<[string, string]> {
 
 function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
   if (tile.type === "node" && key === "primary_node") return "";
-  if (key === "icon_ref") return "";
   if (value === "" || value === null || value === undefined) return "";
   if (tile.type === "flow" && key === "steps") {
     const stepCount = Array.isArray(value) ? value.length : 0;

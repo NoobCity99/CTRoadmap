@@ -1,29 +1,22 @@
 import { Box } from "lucide-react";
 import type { CSSProperties } from "react";
-import { getCanvasBackground, getCanvasTheme, getLinkVisualTokens, getTileVisualTokens, type CanvasStyleSelection } from "../appearance";
+import { CYBER_THEME, getLinkVisualTokens, getTileVisualTokens, HEX_BACKGROUND } from "../appearance";
 
-interface CanvasStylePreviewProps {
-  selection: CanvasStyleSelection;
-}
-
-export function CanvasStylePreview({ selection }: CanvasStylePreviewProps) {
-  const theme = getCanvasTheme(selection.canvasThemeId);
-  const background = getCanvasBackground(selection.canvasBackgroundId);
-  const tile = getTileVisualTokens("service", selection.canvasThemeId);
-  const link = getLinkVisualTokens("calls", selection.canvasThemeId);
-  const overlayStyle = getOverlayStyle(background.reactFlowOverlay);
+export function CanvasStylePreview() {
+  const tile = getTileVisualTokens("service");
+  const link = getLinkVisualTokens("calls");
+  const overlay = HEX_BACKGROUND.reactFlowOverlay;
+  const overlayStyle: CSSProperties = {
+    backgroundImage: `radial-gradient(circle, ${overlay.color} 0 ${Math.max(1, overlay.size)}px, transparent ${Math.max(1, overlay.size)}px)`,
+    backgroundSize: `${overlay.gap}px ${overlay.gap}px`,
+    opacity: overlay.opacity
+  };
 
   return (
-    <div
-      className="canvas-style-preview canvas-frame"
-      data-background={selection.canvasBackgroundId}
-      data-canvas-theme={selection.canvasThemeId}
-      data-canvas-theme-variant={theme.variant}
-      aria-label="Canvas Style preview; changes are not applied"
-    >
+    <div className="canvas-style-preview canvas-frame" aria-label="Fixed CYBER and HEX Canvas preview">
       <div className="canvas-style-preview__overlay" style={overlayStyle} />
       <div
-        className={`canvas-style-preview__tile canvas-style-preview__tile--${theme.variant}`}
+        className="canvas-style-preview__tile"
         style={{
           "--preview-accent": tile.accentColor,
           "--preview-icon": tile.iconColor,
@@ -43,22 +36,10 @@ export function CanvasStylePreview({ selection }: CanvasStylePreviewProps) {
         <rect x="55" y="4" width="43" height="18" rx="4" fill={link.labelSurfaceColor} />
         <text x="76.5" y="17" textAnchor="middle" fill={link.labelTextColor}>calls</text>
       </svg>
-      <div className="canvas-style-preview__swatches" aria-label={`${theme.label} colors`}>
-        {theme.swatches.map((swatch) => <i key={swatch} style={{ background: swatch }} />)}
+      <div className="canvas-style-preview__swatches" aria-label="Cyber colors">
+        {CYBER_THEME.swatches.map((swatch) => <i key={swatch} style={{ background: swatch }} />)}
       </div>
-      <span className="canvas-style-preview__draft-label">PREVIEW · NOT APPLIED</span>
+      <span className="canvas-style-preview__draft-label">FIXED PUBLIC FORK BASE</span>
     </div>
   );
-}
-
-function getOverlayStyle(overlay: ReturnType<typeof getCanvasBackground>["reactFlowOverlay"]): CSSProperties {
-  const color = overlay.color;
-  const gap = `${overlay.gap}px`;
-  const size = `${Math.max(1, overlay.size)}px`;
-  const backgroundImage = overlay.variant === "lines"
-    ? `linear-gradient(${color} ${size}, transparent ${size}), linear-gradient(90deg, ${color} ${size}, transparent ${size})`
-    : overlay.variant === "cross"
-      ? `linear-gradient(${color} ${size}, transparent ${size}), linear-gradient(90deg, ${color} ${size}, transparent ${size})`
-      : `radial-gradient(circle, ${color} 0 ${size}, transparent ${size})`;
-  return { backgroundImage, backgroundSize: `${gap} ${gap}`, opacity: overlay.opacity };
 }

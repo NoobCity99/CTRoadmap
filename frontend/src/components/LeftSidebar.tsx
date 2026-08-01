@@ -1,11 +1,9 @@
-import { BookOpenText, ChevronDown, ChevronUp, CircuitBoard, Eye, LayoutDashboard, Plus, Settings, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CircuitBoard, Eye, Plus, Settings, Trash2 } from "lucide-react";
 import type { CSSProperties, DragEvent, TouchEvent, WheelEvent } from "react";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
-import { getTileVisualTokens, type CanvasThemeId } from "../appearance";
+import { getTileVisualTokens } from "../appearance";
 import type { SearchResult } from "../lib/atlasSelectors";
-import type { Atlas, AtlasWarning, LayoutTemplate, LinkType, Selection, TileType, View } from "../types/atlas";
-import { HandbookToc } from "./HandbookToc";
-import type { HandbookThemeMode } from "./HandbookView";
+import type { Atlas, AtlasWarning, LinkType, Selection, TileType, View } from "../types/atlas";
 
 export type SidebarSectionId = "tilePalette" | "views" | "filters" | "relationships";
 export type PaletteEntry = { kind: "tile"; type: TileType } | { kind: "family" };
@@ -27,15 +25,10 @@ interface LeftSidebarProps {
   atlas: Atlas;
   collapsedPaletteEntries: readonly CollapsedPaletteEntry[];
   familyPaletteColor: string;
-  handbookThemeMode: HandbookThemeMode;
-  layoutTemplate: LayoutTemplate;
   searchResults: SearchResult[];
   searchTerm: string;
-  selectedHandbookTileId: string | null;
-  selectedHandbookVolumeId: string | null;
   selection: Selection;
   sidebarState: SidebarState;
-  canvasThemeId: CanvasThemeId;
   warnings: AtlasWarning[];
   onCollapsedPaletteTouchEnd: (event: TouchEvent<HTMLDivElement>) => void;
   onCollapsedPaletteTouchStart: (event: TouchEvent<HTMLDivElement>) => void;
@@ -46,18 +39,13 @@ interface LeftSidebarProps {
   onEditView: () => void;
   onFamilyPaletteClick: () => void;
   onFamilyPaletteDragStart: (event: DragEvent<HTMLButtonElement>) => void;
-  onHandbookThemeModeChange: (mode: HandbookThemeMode) => void;
-  onMoveHandbookFamily: (familyId: string, direction: -1 | 1) => void;
   onPaletteClick: (type: TileType) => void;
   onPaletteDragEnd: () => void;
   onPaletteDragStart: (event: DragEvent<HTMLButtonElement>, type: TileType) => void;
   onSelectSearchResult: (result: SearchResult) => void;
-  onSelectHandbookTile: (volumeId: string, tileId: string) => void;
-  onSelectHandbookVolume: (volumeId: string) => void;
   onSelectView: (view: View) => void;
   onSelectWarningLink: (linkId: string) => void;
   onSelectWarningTile: (tileId: string) => void;
-  onTemplateChange: (template: LayoutTemplate) => void;
   onToggleSidebarSection: (section: SidebarSectionId) => void;
   onToggleViewLinkType: (type: LinkType) => void;
   onToggleViewTileType: (type: TileType) => void;
@@ -69,15 +57,10 @@ export function LeftSidebar({
   atlas,
   collapsedPaletteEntries,
   familyPaletteColor,
-  handbookThemeMode,
-  layoutTemplate,
   searchResults,
   searchTerm,
-  selectedHandbookTileId,
-  selectedHandbookVolumeId,
   selection,
   sidebarState,
-  canvasThemeId,
   warnings,
   onCollapsedPaletteTouchEnd,
   onCollapsedPaletteTouchStart,
@@ -88,55 +71,17 @@ export function LeftSidebar({
   onEditView,
   onFamilyPaletteClick,
   onFamilyPaletteDragStart,
-  onHandbookThemeModeChange,
-  onMoveHandbookFamily,
   onPaletteClick,
   onPaletteDragEnd,
   onPaletteDragStart,
   onSelectSearchResult,
-  onSelectHandbookTile,
-  onSelectHandbookVolume,
   onSelectView,
   onSelectWarningLink,
   onSelectWarningTile,
-  onTemplateChange,
   onToggleSidebarSection,
   onToggleViewLinkType,
   onToggleViewTileType
 }: LeftSidebarProps) {
-  if (layoutTemplate === "handbook") {
-    return (
-      <aside className="sidebar">
-        <div className="panel-title panel-title--spaced">Template</div>
-        <div className="segmented">
-          <button onClick={() => onTemplateChange("canvas_topology")}>
-            <LayoutDashboard size={15} /> Canvas
-          </button>
-          <button className="active" onClick={() => onTemplateChange("handbook")}>
-            <BookOpenText size={15} /> Handbook
-          </button>
-        </div>
-        <div className="panel-title panel-title--spaced">Display</div>
-        <div className="segmented">
-          <button className={handbookThemeMode === "dark" ? "active" : ""} onClick={() => onHandbookThemeModeChange("dark")}>
-            Dark
-          </button>
-          <button className={handbookThemeMode === "light" ? "active" : ""} onClick={() => onHandbookThemeModeChange("light")}>
-            Light
-          </button>
-        </div>
-        <HandbookToc
-          atlas={atlas}
-          selectedTileId={selectedHandbookTileId}
-          selectedVolumeId={selectedHandbookVolumeId}
-          onMoveFamily={onMoveHandbookFamily}
-          onSelectTile={onSelectHandbookTile}
-          onSelectVolume={onSelectHandbookVolume}
-        />
-      </aside>
-    );
-  }
-
   return (
     <aside className="sidebar">
       <section className={sidebarState.collapsed.tilePalette ? "sidebar-section sidebar-section--collapsed" : "sidebar-section"}>
@@ -161,7 +106,6 @@ export function LeftSidebar({
                 familyPaletteColor={familyPaletteColor}
                 interactive={interactive}
                 slot="collapsed"
-                canvasThemeId={canvasThemeId}
                 onFamilyPaletteClick={onFamilyPaletteClick}
                 onFamilyPaletteDragStart={onFamilyPaletteDragStart}
                 onPaletteClick={onPaletteClick}
@@ -182,7 +126,6 @@ export function LeftSidebar({
                 familyPaletteColor={familyPaletteColor}
                 interactive
                 slot="expanded"
-                canvasThemeId={canvasThemeId}
                 onFamilyPaletteClick={onFamilyPaletteClick}
                 onFamilyPaletteDragStart={onFamilyPaletteDragStart}
                 onPaletteClick={onPaletteClick}
@@ -215,16 +158,6 @@ export function LeftSidebar({
         ) : (
           <div className="warning-empty">Use search to find tiles and relationships</div>
         )}
-      </div>
-
-      <div className="panel-title panel-title--spaced">Template</div>
-      <div className="segmented">
-        <button className={layoutTemplate === "canvas_topology" ? "active" : ""} onClick={() => onTemplateChange("canvas_topology")}>
-          <LayoutDashboard size={15} /> Canvas
-        </button>
-        <button onClick={() => onTemplateChange("handbook")}>
-          <BookOpenText size={15} /> Handbook
-        </button>
       </div>
 
       <section className={sidebarState.collapsed.views ? "sidebar-section sidebar-section--collapsed sidebar-section--spaced" : "sidebar-section sidebar-section--spaced"}>
@@ -320,7 +253,6 @@ function PaletteEntryButton({
   familyPaletteColor,
   interactive,
   slot,
-  canvasThemeId,
   onFamilyPaletteClick,
   onFamilyPaletteDragStart,
   onPaletteClick,
@@ -331,7 +263,6 @@ function PaletteEntryButton({
   familyPaletteColor: string;
   interactive: boolean;
   slot: "collapsed" | "expanded";
-  canvasThemeId: CanvasThemeId;
   onFamilyPaletteClick: () => void;
   onFamilyPaletteDragStart: (event: DragEvent<HTMLButtonElement>) => void;
   onPaletteClick: (type: TileType) => void;
@@ -370,7 +301,7 @@ function PaletteEntryButton({
 
   const config = TILE_TYPE_CONFIG[entry.type];
   const Icon = config.icon;
-  const paletteAccent = getTileVisualTokens(entry.type, canvasThemeId).iconColor;
+  const paletteAccent = getTileVisualTokens(entry.type).iconColor;
   const style = { "--tile-accent": paletteAccent } as CSSProperties;
   return interactive ? (
     <button

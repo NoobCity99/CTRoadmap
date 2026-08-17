@@ -15,7 +15,8 @@ from backend.app.models import Atlas, empty_atlas
 class PublicForkSchemaTests(unittest.TestCase):
     def test_empty_atlas_has_canvas_only_default_layers(self) -> None:
         atlas = empty_atlas()
-        self.assertEqual([view.id for view in atlas.views], ["hardware", "software", "infrastructure", "everything"])
+        self.assertEqual([view.id for view in atlas.views], [
+                         "hardware", "software", "infrastructure", "everything"])
         for view in atlas.model_dump()["views"]:
             self.assertNotIn("layout_template", view)
 
@@ -48,7 +49,8 @@ class DemoStorageTests(unittest.TestCase):
 
     def test_valid_demo_is_read_without_creating_canonical_atlas(self) -> None:
         self.data_dir.mkdir(parents=True)
-        self.demo_path.write_text(json.dumps(empty_atlas().model_dump(by_alias=True)), encoding="utf-8")
+        self.demo_path.write_text(json.dumps(
+            empty_atlas().model_dump(by_alias=True)), encoding="utf-8")
         demo = storage.read_demo_atlas()
         self.assertEqual(len(demo.views), 4)
         self.assertFalse(self.atlas_path.exists())
@@ -68,7 +70,8 @@ class DemoStorageTests(unittest.TestCase):
 
     def test_invalid_schema_is_rejected(self) -> None:
         self.data_dir.mkdir(parents=True)
-        self.demo_path.write_text('{"views":[{"id":"x","title":"X","layout_template":"handbook"}]}', encoding="utf-8")
+        self.demo_path.write_text(
+            '{"views":[{"id":"x","title":"X","layout_template":"handbook"}]}', encoding="utf-8")
         with self.assertRaises(ValidationError):
             storage.read_demo_atlas()
         self.assertFalse(self.atlas_path.exists())
@@ -76,3 +79,4 @@ class DemoStorageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+# v0.6.0

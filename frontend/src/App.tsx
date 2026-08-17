@@ -489,7 +489,7 @@ function AtlasEditor() {
   const getCanvasDebugContext = useCallback(
     (extra: Record<string, unknown> = {}) => ({
       active_view_id: activeView?.id ?? null,
-      active_view_title: activeView?.title ?? "None",      visible_tiles: visibleTiles.length,
+      active_view_title: activeView?.title ?? "None", visible_tiles: visibleTiles.length,
       visible_links: visibleLinks.length,
       total_tiles: atlas?.tiles.length ?? 0,
       total_links: atlas?.links.length ?? 0,
@@ -614,7 +614,7 @@ function AtlasEditor() {
       const events = [...debugEvents, ...backendEvents].sort((left, right) => left.timestamp.localeCompare(right.timestamp));
       downloadDebugLog(events, {
         app: "CTRoadmap",
-        active_view: activeView?.title ?? "None",        backend_health: backendHealth,
+        active_view: activeView?.title ?? "None", backend_health: backendHealth,
         frontend_events: debugEvents.length,
         backend_events: backendEvents.length
       });
@@ -811,7 +811,7 @@ function AtlasEditor() {
       },
       size: { width: 360, height: 240 },
       order: ((atlas.families ?? []).reduce((maxOrder, candidate) => Math.max(maxOrder, candidate.order), -1) ?? -1) + 1,
-      color: "#38a3ff",
+      color: "#2a94f2",
       tag: ""
     };
     updateAtlas((current) => ({

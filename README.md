@@ -1,9 +1,33 @@
-# CTRoadmap
-![alt text](readmebanner4.png)
+![alt text](ReadmeBanner6.png)
 
-CTRoadmap is a local-first infrastructure atlas for documenting nodes, services, storage, scripts, configs, URLs, and operational relationships. It is a Docker-served beta application backed by the human-readable `data/atlas.json` file.
+<p align="center">
+  <a href="https://github.com/NoobCity99/CTRoadmap/stargazers">
+    <img src="https://img.shields.io/github/stars/NoobCity99/CTRoadmap?style=for-the-badge&logo=github&color=E53935">
+  </a>
+  <a href="https://github.com/NoobCity99/CTRoadmap/pkgs/container/ctroadmap">
+    <img src="https://img.shields.io/badge/dynamic/json?url=https://ghcr-badge.elias.eu.org/api/NoobCity99/CTRoadmap/ctroadmap&query=downloadCount&label=DOWNLOADS&logo=docker&style=for-the-badge">
+  </a>
+</p>
 
-CTRoadmap is documentation-only software. It does not execute commands, open SSH sessions, issue Docker calls, or run live checks against your infrastructure.
+<p align="center">
+  <img src="https://img.shields.io/badge/Compatible-Synology-green?style=for-the-badge&logo=sega">
+  <img src="https://img.shields.io/badge/🍎%20MOBILE VIEW-READY-8A2BE2?style=for-the-badge&logo=android">
+</p>
+
+CTRoadmap is a local-first infrastructure Diagram & Documentation tool for your **HOMELAB** via nodes, services, storage, scripts, configs, URLs, and operational relationships. It is a Docker-served beta application backed by the human-readable `data/atlas.json` file.
+
+CTRoadmap is documentation-only software. It __does not__ execute commands, open SSH sessions, issue Docker calls, or run live checks against your infrastructure.
+
+<table>
+  <tr>
+    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
+    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
+  </tr>
+  <tr>
+    <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
+    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
+  </tr>
+</table>
 
 ## Beta Docker Install
 
@@ -105,6 +129,7 @@ Update Advisory is informational only. CTRoadmap does not auto-update, run Docke
 CTRoadmap stores its persistent state in bind-mounted directories so that replacing or updating the container does not replace your atlas.
 
 - `data/atlas.json` is the canonical atlas containing tiles, relationships, families, stacks, and saved Layers.
+- `data/history/` contains the persistent rolling Undo/Redo manifest and snapshots for up to five prior Atlas changes.
 - `data/assets/icons/` contains icons uploaded through the Icon Library.
 - `data/auth.json` contains local passcode configuration and session state when Local Access Passcode is enabled.
 - `data/update_state.json` stores update-advisory settings and cached advisory state.
@@ -119,16 +144,8 @@ cp -a exports exports.backup
 
 Keep backups outside the installation directory before uninstalling or making destructive host changes.
 
-<table>
-  <tr>
-    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
-    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
-  </tr>
-  <tr>
-    <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
-    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
-  </tr>
-</table>
+The toolbar provides persistent Undo and Redo for canonical Atlas edits. History survives browser and container restarts, while `data/atlas.json` remains a normal standalone Atlas that can be copied or imported independently.
+
 
 # FEATURES
 

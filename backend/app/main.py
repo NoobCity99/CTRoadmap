@@ -18,7 +18,7 @@ from .storage import read_atlas, read_demo_atlas, write_atlas
 from .version import AppVersion, get_app_version
 
 
-app = FastAPI(title="CTRoadmap", version="0.4.0-beta")
+app = FastAPI(title="CTRoadmap", version="0.7.0-beta")
 
 
 class ExportResult(BaseModel):
@@ -66,11 +66,13 @@ def get_atlas() -> Atlas:
         record_debug_event(
             "atlas.load",
             "Atlas loaded",
-            context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views)},
+            context={"tiles": len(atlas.tiles), "links": len(
+                atlas.links), "views": len(atlas.views)},
         )
         return atlas
     except (OSError, json.JSONDecodeError, ValidationError, ValueError) as exc:
-        record_debug_event("atlas.load", "Atlas load failed", "error", {"error": str(exc)})
+        record_debug_event("atlas.load", "Atlas load failed",
+                           "error", {"error": str(exc)})
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -80,19 +82,23 @@ def get_demo_atlas() -> Atlas:
         atlas = read_demo_atlas()
     except FileNotFoundError as exc:
         message = "No demo is configured. Fork owners can provide data/demo.json."
-        record_debug_event("atlas.demo", "Optional demo atlas not found", "warning", {"path": str(DEMO_PATH)})
+        record_debug_event("atlas.demo", "Optional demo atlas not found", "warning", {
+                           "path": str(DEMO_PATH)})
         raise HTTPException(status_code=404, detail=message) from exc
     except (json.JSONDecodeError, ValidationError, ValueError) as exc:
-        record_debug_event("atlas.demo", "Demo atlas validation failed", "warning", {"error": str(exc)})
+        record_debug_event("atlas.demo", "Demo atlas validation failed", "warning", {
+                           "error": str(exc)})
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except OSError as exc:
-        record_debug_event("atlas.demo", "Demo atlas load failed", "error", {"error": str(exc)})
+        record_debug_event("atlas.demo", "Demo atlas load failed", "error", {
+                           "error": str(exc)})
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     record_debug_event(
         "atlas.demo",
         "Demo atlas validated",
-        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views)},
+        context={"tiles": len(atlas.tiles), "links": len(
+            atlas.links), "views": len(atlas.views)},
     )
     return atlas
 
@@ -104,11 +110,13 @@ def put_atlas(atlas: Atlas) -> Atlas:
         record_debug_event(
             "atlas.save",
             "Atlas saved",
-            context={"tiles": len(saved.tiles), "links": len(saved.links), "views": len(saved.views)},
+            context={"tiles": len(saved.tiles), "links": len(
+                saved.links), "views": len(saved.views)},
         )
         return saved
     except (OSError, ValidationError, ValueError) as exc:
-        record_debug_event("atlas.save", "Atlas save failed", "error", {"error": str(exc)})
+        record_debug_event("atlas.save", "Atlas save failed",
+                           "error", {"error": str(exc)})
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
@@ -118,17 +126,20 @@ def preview_atlas_import(payload: Any = Body(...)) -> AtlasImportPreview:
         atlas = Atlas.model_validate(payload)
     except ValidationError as exc:
         errors = [format_validation_error(error) for error in exc.errors()]
-        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {"errors": len(errors)})
+        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {
+                           "errors": len(errors)})
         return AtlasImportPreview(valid=False, errors=errors)
     except ValueError as exc:
-        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {"error": str(exc)})
+        record_debug_event("atlas.preview", "Atlas import preview failed", "warning", {
+                           "error": str(exc)})
         return AtlasImportPreview(valid=False, errors=[str(exc)])
 
     warnings = atlas_preview_warnings(atlas)
     record_debug_event(
         "atlas.preview",
         "Atlas import preview validated",
-        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(atlas.views), "families": len(atlas.families), "warnings": len(warnings)},
+        context={"tiles": len(atlas.tiles), "links": len(atlas.links), "views": len(
+            atlas.views), "families": len(atlas.families), "warnings": len(warnings)},
     )
     return AtlasImportPreview(
         valid=True,
@@ -146,9 +157,11 @@ def generate_export(format_: ExportFormat) -> ExportResult:
         atlas = read_atlas()
         write_export(format_, atlas)
     except (OSError, ValidationError, ValueError) as exc:
-        record_debug_event("export.generate", "Export generation failed", "error", {"format": format_, "error": str(exc)})
+        record_debug_event("export.generate", "Export generation failed", "error", {
+                           "format": format_, "error": str(exc)})
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    record_debug_event("export.generate", "Export generated", context={"format": format_, "filename": EXPORT_FILES[format_]})
+    record_debug_event("export.generate", "Export generated", context={
+                       "format": format_, "filename": EXPORT_FILES[format_]})
     return ExportResult(
         format=format_,
         filename=EXPORT_FILES[format_],
@@ -165,9 +178,11 @@ def download_export(format_: ExportFormat) -> FileResponse:
             atlas = read_atlas()
             write_export(format_, atlas)
         except (OSError, ValidationError, ValueError) as exc:
-            record_debug_event("export.download", "Export download generation failed", "error", {"format": format_, "error": str(exc)})
+            record_debug_event("export.download", "Export download generation failed", "error", {
+                               "format": format_, "error": str(exc)})
             raise HTTPException(status_code=500, detail=str(exc)) from exc
-    record_debug_event("export.download", "Export downloaded", context={"format": format_, "filename": EXPORT_FILES[format_]})
+    record_debug_event("export.download", "Export downloaded", context={
+                       "format": format_, "filename": EXPORT_FILES[format_]})
     return FileResponse(path, filename=EXPORT_FILES[format_], media_type=EXPORT_MEDIA_TYPES[format_])
 
 
@@ -185,7 +200,8 @@ def clear_debug_log() -> dict[str, str]:
 
 @app.api_route("/api/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 def unknown_api_route(full_path: str) -> None:
-    raise HTTPException(status_code=404, detail=f"Unknown API route: /api/{full_path}")
+    raise HTTPException(
+        status_code=404, detail=f"Unknown API route: /api/{full_path}")
 
 
 if FRONTEND_DIST.exists():
@@ -206,7 +222,8 @@ def atlas_preview_warnings(atlas: Atlas) -> list[str]:
     if not atlas.tiles:
         warnings.append("The imported atlas has no tiles.")
     if not atlas.views:
-        warnings.append("The imported atlas has no layers; default layers will be applied.")
+        warnings.append(
+            "The imported atlas has no layers; default layers will be applied.")
     return warnings
 
 

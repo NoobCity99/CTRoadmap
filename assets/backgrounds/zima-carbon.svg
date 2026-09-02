@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Pearl white carbon fiber seamless tile">
+  <defs>
+    <linearGradient id="pearlSheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.58"/>
+      <stop offset="45%" stop-color="#f8f8fc" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#ececf2" stop-opacity="0.44"/>
+    </linearGradient>
+    <linearGradient id="weaveLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.68"/>
+      <stop offset="100%" stop-color="#f0f0f6" stop-opacity="0.38"/>
+    </linearGradient>
+    <linearGradient id="weaveDark" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ececf2" stop-opacity="0.52"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.18"/>
+    </linearGradient>
+    <pattern id="diagA" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
+      <rect x="0" y="0" width="8" height="16" fill="url(#weaveLight)"/>
+      <rect x="8" y="0" width="8" height="16" fill="url(#weaveDark)"/>
+    </pattern>
+    <pattern id="diagB" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(-45)">
+      <rect x="0" y="0" width="8" height="16" fill="url(#weaveDark)"/>
+      <rect x="8" y="0" width="8" height="16" fill="url(#weaveLight)"/>
+    </pattern>
+    <pattern id="microCross" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0 4H8M4 0V8" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+
+  <!-- Transparent base by design; CSS can provide #fafaff behind it. -->
+  <rect width="128" height="128" fill="url(#diagA)" opacity="0.42"/>
+  <rect width="128" height="128" fill="url(#diagB)" opacity="0.34"/>
+  <rect width="128" height="128" fill="url(#pearlSheen)" opacity="0.48"/>
+  <rect width="128" height="128" fill="url(#microCross)" opacity="0.55"/>
+
+  <!-- subtle tile-edge continuity accents -->
+  <g opacity="0.16">
+    <path d="M0 16H128M0 48H128M0 80H128M0 112H128" stroke="#ffffff" stroke-width="0.5"/>
+    <path d="M16 0V128M48 0V128M80 0V128M112 0V128" stroke="#ececf2" stroke-width="0.5"/>
+  </g>
+</svg>

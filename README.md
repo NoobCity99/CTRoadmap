@@ -1,4 +1,4 @@
-![alt text](ReadmeBanner6.png)
+![alt text](ReadmeBanner7.png)
 
 <p align="center">
   <a href="https://github.com/NoobCity99/CTRoadmap/stargazers">
@@ -133,7 +133,7 @@ CTRoadmap stores its persistent state in bind-mounted directories so that replac
 - `data/assets/icons/` contains icons uploaded through the Icon Library.
 - `data/auth.json` contains local passcode configuration and session state when Local Access Passcode is enabled.
 - `data/update_state.json` stores update-advisory settings and cached advisory state.
-- `exports/` contains generated Markdown, YAML, and Mermaid exports.
+- `exports/` contains generated Markdown, YAML, PDF, PNG and Mermaid exports
 
 Back up the complete persistent state rather than only the atlas file:
 
@@ -183,8 +183,16 @@ Swimlane data is stored inside the normal Flow tile in `data/atlas.json` using t
 ### Handbook
 
 - Browse the atlas as a structured handbook organized around primary nodes, families, and documented relationships.
+- ADDRESS BOOK in your table of contents lists ALL **URL** & **IP** addresses found in your atlas. 
 - Add detailed operational notes and reference information to tiles and relationships.
 - Move between handbook entries and the corresponding canvas items.
+
+### Rack View Builder
+
+- Build a visual representation of your rack mounted server set up
+- View in desktop & mobile 
+- Add tiles from your canvas
+- Features will expand with your feedback 
 
 ### Layers
 
@@ -199,6 +207,7 @@ Layers are persisted in the atlas schema as `views` for compatibility.
 - Model planned tiles and relationships before they go live.
 - Visually distinguish planned infrastructure from live infrastructure.
 - Promote planned items when they become operational.
+- Does anyone even use this? I'm thinking of removing it.
 
 ### Families
 
@@ -219,6 +228,7 @@ Layers are persisted in the atlas schema as `views` for compatibility.
 - Generate Markdown, YAML, and Mermaid exports in `exports/`.
 - Download generated exports from the application toolbar.
 - Export the complete active Canvas layer as a styled PNG directly in the browser.
+- Export a PDF Copy of your **HANDBOOK** , complete with cover page and table of contents. 
 - Configure the PNG title, optional title card, and LIGHT or DARK title-card treatment before downloading.
 - Export a complete read-only Swimlane diagram from its Handbook article using **Export PNG**. The Flow export can include its own compact title card while retaining the diagram's current Handbook palette.
 

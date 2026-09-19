@@ -1,0 +1,243 @@
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node {
+  border-color: rgba(255, 255, 255, 0.86);
+  color: #061d4d;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), transparent 58%),
+    rgba(238, 247, 255, 0.82);
+  box-shadow: 0 14px 26px rgba(0, 19, 72, 0.43), 0 0 24px color-mix(in srgb, var(--tile-accent) 34%, rgba(0, 24, 94, 0.6));
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--parent {
+  outline-color: rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--primary-node {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(0, 65, 186, 0.52),
+    0 16px 32px rgba(0, 19, 72, 0.55),
+    0 0 34px rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--stacked {
+  box-shadow: 0 16px 32px rgba(0, 19, 72, 0.53), 0 0 26px rgba(255, 255, 255, 0.22);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--stacked::before,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--stacked::after {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(226, 241, 255, 0.72);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node--selected {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.88),
+    0 18px 34px rgba(0, 19, 72, 0.6),
+    0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__icon {
+  color: var(--tile-icon-accent, #073071);
+  border-color: color-mix(in srgb, var(--tile-icon-accent, #073071) 42%, rgba(0, 65, 186, 0.18));
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__title,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__stack-meta strong,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field strong,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field-action {
+  color: #061d4d;
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__type,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__parent,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field {
+  color: rgba(6, 29, 77, 0.72);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__parent,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__stack-meta span {
+  color: #00358f;
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__lifecycle {
+  border-color: rgba(0, 65, 186, 0.24);
+  color: #06245a;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__lifecycle--planned {
+  border-color: rgba(137, 104, 0, 0.28);
+  color: #4f3b00;
+  background: rgba(255, 248, 214, 0.62);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__stack-meta {
+  border-color: rgba(0, 65, 186, 0.24);
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__stack-count {
+  border-color: rgba(0, 26, 91, 0.58);
+  color: #061d4d;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 20px rgba(0, 19, 72, 0.35);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__handle {
+  border-color: rgba(255, 255, 255, 0.88);
+  background: #00358f;
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__port-label {
+  color: #061d4d;
+  border-color: rgba(0, 65, 186, 0.28);
+  background: rgba(238, 247, 255, 0.9);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field-action {
+  text-decoration-color: rgba(0, 65, 186, 0.42);
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field-action:hover,
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__field-action:focus-visible {
+  color: #00184f;
+  text-decoration-color: #0041ba;
+}
+
+.app-shell[data-canvas-theme="blueprint"] .react-flow .tile-node__tags span {
+  color: #061d4d;
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(0, 65, 186, 0.26);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node {
+  border: 3px solid var(--tile-accent);
+  border-radius: 4px;
+  color: #0f0f0f;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 rgba(15, 15, 15, 0.24);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--parent {
+  outline: 2px solid color-mix(in srgb, var(--tile-accent) 44%, transparent);
+  outline-offset: 5px;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--child {
+  border-style: solid;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--primary-node {
+  border-color: var(--tile-accent);
+  background: linear-gradient(to bottom, #c6ccd2 0 50%, #ffffff 50% 100%);
+  box-shadow:
+    0 0 0 2px rgba(15, 15, 15, 0.72),
+    5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--stacked {
+  box-shadow: 5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--stacked::before,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--stacked::after {
+  border: 2px solid var(--tile-accent);
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node--selected {
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 6px #0f0f0f,
+    5px 5px 0 rgba(15, 15, 15, 0.28);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__icon {
+  color: var(--tile-icon-accent, var(--tile-accent));
+  border: 2px solid var(--tile-accent);
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__title,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__stack-meta strong,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field strong,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field-action {
+  color: #0f0f0f;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__type,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__parent,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field {
+  color: #3f3f3f;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__parent,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__stack-meta span {
+  color: var(--tile-accent);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__lifecycle {
+  border-color: rgba(15, 15, 15, 0.28);
+  color: #0f0f0f;
+  background: #e7ebf0;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__lifecycle--planned {
+  border-color: rgba(165, 66, 0, 0.42);
+  color: #5a2500;
+  background: #ffe0b8;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__stack-meta {
+  border: 2px solid color-mix(in srgb, var(--tile-accent) 54%, transparent);
+  border-radius: 4px;
+  background: #f7f7f7;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__stack-count {
+  border-color: #0f0f0f;
+  color: #ffffff;
+  background: var(--tile-accent);
+  box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.3);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__handle {
+  border-color: #0f0f0f;
+  background: var(--tile-accent);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__port-label {
+  color: #0f0f0f;
+  border: 2px solid var(--tile-accent);
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field-action {
+  text-decoration-color: color-mix(in srgb, var(--tile-accent) 52%, transparent);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field-action:hover,
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__field-action:focus-visible {
+  color: var(--tile-accent);
+  text-decoration-color: var(--tile-accent);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__copy-toast {
+  border-color: #0f0f0f;
+  border-radius: 3px;
+  color: #ffffff;
+  background: #008751;
+  box-shadow: 3px 3px 0 rgba(15, 15, 15, 0.26);
+}
+
+.app-shell[data-canvas-theme="nes"] .react-flow .tile-node__tags span {
+  color: #0f0f0f;
+  background: #e7ebf0;
+  border: 2px solid color-mix(in srgb, var(--tile-accent) 44%, #0f0f0f);
+  border-radius: 3px;
+}
+

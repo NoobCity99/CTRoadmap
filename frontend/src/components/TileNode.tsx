@@ -1,8 +1,9 @@
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Position, useUpdateNodeInternals } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
+import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import type { TileVisualTokens } from "../appearance";
 import type { Tile } from "../types/atlas";
 
@@ -11,6 +12,7 @@ export interface TileNodeData extends Record<string, unknown> {
   hasChildren?: boolean;
   iconAccentColor?: string;
   isMuted?: boolean;
+  isSelected?: boolean;
   lifecycle?: "live" | "planned";
   stack?: {
     badgeShape?: "circle" | "hex";
@@ -24,14 +26,21 @@ export interface TileNodeData extends Record<string, unknown> {
   parentTitle?: string;
 }
 
-export function TileNode({ data, selected }: NodeProps) {
-  const { accentColor, hasChildren, iconAccentColor, isMuted, lifecycle = "live", stack, tile, parentTitle, visualTokens } = data as TileNodeData;
+export function TileNode({ id, data, selected, dragging, width, height }: NodeProps) {
+  const { accentColor, hasChildren, iconAccentColor, isMuted, isSelected, lifecycle = "live", stack, tile, parentTitle, visualTokens } = data as TileNodeData;
+  const tileSelected = isSelected ?? Boolean(selected);
   const config = TILE_TYPE_CONFIG[tile.type];
   const Icon = config.icon;
   const fieldEntries = getTileFieldPreviews(tile);
   const tags = tile.tags ?? [];
   const isPrimaryNode = tile.type === "node" && tile.fields?.primary_node === true;
   const [copyNotice, setCopyNotice] = useState("");
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // Theme/selection remapping can move handles without resizing the outer node.
+  useEffect(() => {
+    if (width && height) updateNodeInternals(id);
+  }, [id, visualTokens, tileSelected, width, height, updateNodeInternals]);
 
   async function handleCopyPath(path: string) {
     try {
@@ -52,12 +61,15 @@ export function TileNode({ data, selected }: NodeProps) {
       className={`tile-node tile-node--${tile.type} ${parentTitle ? "tile-node--child" : ""} ${hasChildren ? "tile-node--parent" : ""} ${
         isMuted ? "tile-node--muted" : ""
       } ${
-        selected ? "tile-node--selected" : ""
+        tileSelected ? "tile-node--selected" : ""
       } ${
         isPrimaryNode ? "tile-node--primary-node" : ""
       } ${
         stack ? "tile-node--stacked" : ""
       }`}
+      data-tile-selected={tileSelected}
+      data-tile-dragging={Boolean(dragging)}
+      data-tile-presentation={visualTokens?.tilePresentation ?? "standard"}
       style={{
         "--tile-accent": accentColor ?? config.color,
         "--tile-icon-accent": iconAccentColor ?? accentColor ?? config.color,
@@ -76,8 +88,9 @@ export function TileNode({ data, selected }: NodeProps) {
       {copyNotice ? <div className="tile-node__copy-toast">{copyNotice}</div> : null}
       {stack ? <div className={stack.badgeShape === "hex" ? "tile-node__stack-count tile-node__stack-count--hex" : "tile-node__stack-count"}>{stack.count}</div> : null}
       <div className="tile-node__header">
+        {visualTokens?.tilePresentation === "cover-reveal" ? <span className="cover-reveal-art" aria-hidden="true" /> : null}
         <div className="tile-node__icon">
-          <Icon size={20} strokeWidth={2.2} />
+          <TileIconGlyph fallback={Icon} iconRef={normalizeTileIconRef(tile)} size={20} strokeWidth={2.2} />
         </div>
         <div className="tile-node__title-wrap">
           <div className="tile-node__title">{tile.title}</div>
@@ -85,6 +98,7 @@ export function TileNode({ data, selected }: NodeProps) {
         </div>
         {lifecycle === "planned" ? <div className="tile-node__lifecycle tile-node__lifecycle--planned">planned</div> : null}
       </div>
+      <div className="tile-node__body">
       {stack ? (
         <div className="tile-node__stack-meta">
           <strong>{stack.name}</strong>
@@ -95,7 +109,7 @@ export function TileNode({ data, selected }: NodeProps) {
       {fieldEntries.length > 0 ? (
         <div className="tile-node__fields">
           {fieldEntries.slice(0, 3).map(([key, value]) => (
-            <div key={key} className="tile-node__field">
+            <div key={key} className="tile-node__field" data-field-key={key.toLowerCase()}>
               <span>{key}</span>
               <TileFieldValue fieldKey={key} value={value} onCopyPath={handleCopyPath} />
             </div>
@@ -109,6 +123,7 @@ export function TileNode({ data, selected }: NodeProps) {
           ))}
         </div>
       ) : null}
+      </div>
       <Handle id="out" type="source" position={Position.Right} className="tile-node__handle tile-node__handle--out" />
       <div className="tile-node__port-label tile-node__port-label--out">OUT</div>
       <Handle id="child" type="source" position={Position.Bottom} className="tile-node__handle tile-node__handle--child" />
@@ -126,6 +141,7 @@ function getTileFieldPreviews(tile: Tile): Array<[string, string]> {
 }
 
 function formatFieldPreview(tile: Tile, key: string, value: unknown): string {
+  if (key === "icon_ref") return "";
   if (tile.type === "node" && key === "primary_node") return "";
   if (value === "" || value === null || value === undefined) return "";
   if (tile.type === "flow" && key === "steps") {

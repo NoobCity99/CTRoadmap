@@ -1,0 +1,232 @@
+/* Shared cover-reveal defaults. Theme skins override visual variables only. */
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: color-mix(in srgb, var(--atlas-tile-accent, var(--tile-accent, #64748b)) 70%, #000000);
+  --cover-color-2: var(--atlas-tile-accent, var(--tile-accent, #64748b));
+  --cover-color-3: color-mix(in srgb, var(--atlas-tile-accent, var(--tile-accent, #64748b)) 70%, #ffffff);
+  --cover-reveal-body-surface: var(--atlas-tile-surface, #ffffff);
+  --cover-reveal-body-text: var(--atlas-tile-text, #111318);
+  --cover-reveal-body-muted: var(--atlas-tile-muted-text, #4b5563);
+  --cover-reveal-title-color: #ffffff;
+  --cover-reveal-title-shadow: none;
+  --cover-reveal-icon-box-bg: #111318;
+  --cover-reveal-icon-box-border: #ffffff;
+  --cover-reveal-radius: 7px;
+  --cover-gradient-angle: 30deg;
+  --cover-gradient-stop-1: 35%;
+  --cover-gradient-stop-2: 75%;
+  --cover-gradient-stop-3: 100%;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .cover-reveal-art {
+  /* Optional decorative slot; skins opt in without adding input targets. */
+  display: none;
+  pointer-events: none;
+}
+
+/* Shared FLOW stripe geometry and accent-derived fallback palette. */
+.app-shell .tile-node--flow[data-tile-presentation="cover-reveal"] {
+  --flow-cover-angle: 45deg;
+  --flow-cover-gold-1: var(--cover-color-1);
+  --flow-cover-gold-2: var(--cover-color-2);
+  --flow-cover-black-1: #111318;
+  --flow-cover-black-2: #303640;
+  --flow-cover-stripe-width: 22px;
+  --flow-cover-transition-width: 1px;
+}
+
+/* ============================================================
+   COVER REVEAL — ANIMATION / MOTION CONTROLS
+   The spacer reserves only the original header's layout footprint.
+   The cover itself is absolute and never participates in measurement.
+   ============================================================ */
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] {
+  --cover-reveal-duration: 340ms;
+  /* Shared state for optional cover artwork: skins consume this value instead
+     of duplicating hover/selection/drag trigger selectors. */
+  --cover-reveal-progress: 0;
+  --cover-reveal-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --cover-reveal-open-header-height: 56px;
+  --cover-reveal-header-footprint: 43px;
+  --cover-reveal-closed-icon-size: 64px;
+  --cover-reveal-open-icon-size: 32px;
+  --cover-reveal-closed-title-size: 1.35rem;
+  --cover-reveal-open-title-size: 0.95rem;
+  --cover-reveal-gap: 10px;
+  --cover-reveal-cover-padding: 10px;
+  --cover-reveal-open-cover-padding: 6px;
+  --cover-reveal-body-fade-duration: 180ms;
+}
+/* Structure and state. No theme-ID selectors or geometry compensation. */
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] {
+  isolation: isolate;
+  background: var(--cover-reveal-body-surface);
+  color: var(--cover-reveal-body-text);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]>.tile-node__header {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: var(--cover-reveal-cover-padding);
+  border-radius: var(--cover-reveal-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cover-reveal-gap);
+  overflow: hidden;
+  /* Above the tile surface, below unchanged handles, port labels and badges. */
+  z-index: -1;
+  pointer-events: none;
+  background: var(--cover-background, linear-gradient(var(--cover-gradient-angle),
+        var(--cover-color-1) var(--cover-gradient-stop-1),
+        var(--cover-color-2) var(--cover-gradient-stop-2),
+        var(--cover-color-3) var(--cover-gradient-stop-3)));
+  transition: height var(--cover-reveal-duration) var(--cover-reveal-easing);
+}
+
+.app-shell .tile-node--flow[data-tile-presentation="cover-reveal"]>.tile-node__header {
+  background: var(--cover-background, repeating-linear-gradient(var(--flow-cover-angle),
+        var(--flow-cover-gold-1) 0,
+        var(--flow-cover-gold-2) calc(var(--flow-cover-stripe-width) - var(--flow-cover-transition-width)),
+        var(--flow-cover-black-1) calc(var(--flow-cover-stripe-width) + var(--flow-cover-transition-width)),
+        var(--flow-cover-black-2) calc(2 * var(--flow-cover-stripe-width) - var(--flow-cover-transition-width)),
+        var(--flow-cover-gold-1) calc(2 * var(--flow-cover-stripe-width))));
+}
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__icon {
+  width: var(--cover-reveal-closed-icon-size);
+  height: auto;
+  aspect-ratio: 1;
+  min-width: var(--cover-reveal-open-icon-size);
+  /* Auto basis preserves the resolved icon size without shrinking it twice. */
+  flex: 0 1 auto;
+  background: var(--cover-reveal-icon-box-bg);
+  border: 1px solid var(--cover-reveal-icon-box-border);
+  color: var(--cover-icon-color, var(--atlas-tile-icon, var(--atlas-tile-accent, var(--tile-accent, #64748b))));
+  box-shadow: none;
+  transition: width var(--cover-reveal-duration) var(--cover-reveal-easing);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__icon :is(svg, img) {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__icon img {
+  /* Uploaded glyphs carry inline sizes; scale their box without recoloring. */
+  width: 72% !important;
+  height: 72% !important;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__title-wrap {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__title {
+  color: var(--cover-reveal-title-color);
+  text-shadow: var(--cover-reveal-title-shadow);
+  font-size: var(--cover-reveal-closed-title-size);
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-height: 2.3em;
+  overflow: hidden;
+  transition: font-size var(--cover-reveal-duration) var(--cover-reveal-easing);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__type {
+  display: var(--cover-reveal-type-display, none);
+  color: var(--cover-reveal-title-color);
+  text-shadow: var(--cover-reveal-title-shadow);
+  font-size: 0.55rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] .tile-node__lifecycle {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]>.tile-node__body {
+  display: contents;
+  visibility: hidden;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]>.tile-node__body::before {
+  content: "";
+  display: block;
+  height: var(--cover-reveal-header-footprint);
+}
+
+/* Isolation must not bring the existing offset stack sheets above the cover
+   or darken its revealed surface. Their offsets, borders and badge stay intact. */
+.app-shell .tile-node--stacked[data-tile-presentation="cover-reveal"]::before,
+.app-shell .tile-node--stacked[data-tile-presentation="cover-reveal"]::after {
+  z-index: -3;
+}
+
+.app-shell .tile-node--stacked[data-tile-presentation="cover-reveal"]>.tile-node__body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  visibility: visible;
+  border-radius: inherit;
+  background: var(--cover-reveal-body-surface);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]>.tile-node__body>* {
+  opacity: 0;
+  transition: opacity var(--cover-reveal-body-fade-duration) var(--cover-reveal-easing);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] :is(.tile-node__field strong, .tile-node__field-action, .tile-node__stack-meta strong, .tile-node__tags span) {
+  color: var(--cover-reveal-body-text);
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"] :is(.tile-node__parent, .tile-node__field, .tile-node__stack-meta span) {
+  color: var(--cover-reveal-body-muted);
+}
+
+/* Hover, application selection and dragging each reveal the tile. */
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]:is(:hover,
+  [data-tile-selected="true"], [data-tile-dragging="true"]) {
+  --cover-reveal-closed-icon-size: var(--cover-reveal-open-icon-size);
+  --cover-reveal-closed-title-size: var(--cover-reveal-open-title-size);
+  --cover-reveal-cover-padding: var(--cover-reveal-open-cover-padding);
+  --cover-reveal-type-display: block;
+  --cover-reveal-progress: 1;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]:is(:hover,
+  [data-tile-selected="true"], [data-tile-dragging="true"])>.tile-node__header {
+  height: var(--cover-reveal-open-header-height);
+  justify-content: flex-start;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]:is(:hover,
+  [data-tile-selected="true"], [data-tile-dragging="true"])>.tile-node__body {
+  visibility: visible;
+}
+
+.app-shell .tile-node[data-tile-presentation="cover-reveal"]:is(:hover,
+  [data-tile-selected="true"], [data-tile-dragging="true"])>.tile-node__body>* {
+  opacity: 1;
+}
+
+/* Preview uses the same canonical regions and presentation selectors. */
+.app-shell .cover-reveal-preview {
+  position: relative;
+  margin: 30px auto;
+  width: 248px;
+}

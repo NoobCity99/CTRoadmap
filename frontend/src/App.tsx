@@ -25,7 +25,7 @@ import { Inspector } from "./components/Inspector";
 import { LeftSidebar, type CollapsedPaletteEntry, type PaletteEntry, type SidebarSectionId, type SidebarState } from "./components/LeftSidebar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TopBar } from "./components/TopBar";
-import { useAppearancePreferences, type AppearanceDebugEvent } from "./appearance";
+import { getCanvasTheme, useAppearancePreferences, type AppearanceDebugEvent } from "./appearance";
 import {
   clearBackendDebugLog,
   downloadAtlasJson,
@@ -73,7 +73,7 @@ import {
   withAtlasDefaults
 } from "./lib/atlasMutations";
 import { buildConnectorObstacles, type ConnectorRoutingMode } from "./lib/edgeRouting";
-import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes } from "./lib/graphMapping";
+import { isEditableNodeChange, mapAtlasToEdges, mapAtlasToNodes, mergeNodeMeasurements } from "./lib/graphMapping";
 import { validateAtlasWarnings } from "./lib/validation";
 import type {
   Atlas,
@@ -171,7 +171,8 @@ function AtlasEditor() {
     (event: AppearanceDebugEvent) => appendDebugEvent(event.action, event.message, "info", event.context),
     [appendDebugEvent]
   );
-  const { resetCanvasAppearance } = useAppearancePreferences({ onDebugEvent: handleAppearanceDebugEvent });
+  const { appearance, applyCanvasStyle } = useAppearancePreferences({ onDebugEvent: handleAppearanceDebugEvent });
+  const { canvasThemeId, canvasBackgroundId } = appearance;
 
   const closeSettings = useCallback(() => {
     setSettingsOpen(false);
@@ -445,6 +446,7 @@ function AtlasEditor() {
   const derivedNodes: Node[] = useMemo(
     () =>
       mapAtlasToNodes({
+        canvasThemeId,
         appMode,
         atlas,
         childrenByParent,
@@ -456,12 +458,12 @@ function AtlasEditor() {
         onFocusFamily: handleFocusFamily,
         onResizeFamily: handleResizeFamily
       }),
-    [appMode, atlas, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, selection, stackState, visibleLinks, visibleTiles]
+    [appMode, atlas, canvasThemeId, childrenByParent, handleFocusFamily, handleResizeFamily, isInteractive, selection, stackState, visibleLinks, visibleTiles]
   );
 
   useEffect(() => {
     if (isNodeDragging.current) return;
-    setFlowNodes(derivedNodes);
+    setFlowNodes((current) => mergeNodeMeasurements(derivedNodes, current));
   }, [derivedNodes]);
 
   const effectiveConnectorRoutingMode: ConnectorRoutingMode = connectorRoutingMode === "avoid_tiles" && !nodeDragInProgress ? "avoid_tiles" : "curved";
@@ -474,10 +476,11 @@ function AtlasEditor() {
   const edges: Edge[] = useMemo(
     () =>
       mapAtlasToEdges(appMode, visibleLinks, stackState, {
+        canvasThemeId,
         connectorRoutingMode: effectiveConnectorRoutingMode,
         routingObstacles
       }),
-    [appMode, effectiveConnectorRoutingMode, routingObstacles, stackState, visibleLinks]
+    [appMode, canvasThemeId, effectiveConnectorRoutingMode, routingObstacles, stackState, visibleLinks]
   );
 
   const updateAtlas = useCallback((updater: (current: Atlas) => Atlas) => {
@@ -959,8 +962,9 @@ function AtlasEditor() {
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      if (!isInteractive) return;
-      setFlowNodes((current) => applyNodeChanges(changes.filter((change) => isEditableNodeChange(change, current, appMode)), current));
+      setFlowNodes((current) => applyNodeChanges(changes.filter((change) =>
+        (isInteractive || change.type === "dimensions" || change.type === "select") && isEditableNodeChange(change, current, appMode)
+      ), current));
     },
     [appMode, isInteractive]
   );
@@ -981,7 +985,7 @@ function AtlasEditor() {
       if (!isInteractive) {
         isNodeDragging.current = false;
         setNodeDragInProgress(false);
-        setFlowNodes(derivedNodes);
+        setFlowNodes((current) => mergeNodeMeasurements(derivedNodes, current));
         return;
       }
       isNodeDragging.current = false;
@@ -998,7 +1002,7 @@ function AtlasEditor() {
           .filter((entry): entry is [string, { x: number; y: number }] => Boolean(entry[0]))
       );
       if (!tilePositionsById.size && !familyPositionsById.size) {
-        setFlowNodes(derivedNodes);
+        setFlowNodes((current) => mergeNodeMeasurements(derivedNodes, current));
         return;
       }
       updateAtlas((current) => ({
@@ -1045,7 +1049,7 @@ function AtlasEditor() {
       setIsInteractive(interactiveStatus);
       isNodeDragging.current = false;
       if (!interactiveStatus) {
-        setFlowNodes(derivedNodes);
+        setFlowNodes((current) => mergeNodeMeasurements(derivedNodes, current));
       }
       appendDebugEvent("canvas.interactivity", interactiveStatus ? "Canvas interactivity unlocked" : "Canvas interactivity locked", "info", getCanvasDebugContext({ interactive: interactiveStatus }));
     },
@@ -1636,7 +1640,7 @@ function AtlasEditor() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-canvas-theme={canvasThemeId} data-canvas-theme-variant={getCanvasTheme(canvasThemeId).variant}>
       <TopBar
         appMode={appMode}
         exportMenuOpen={exportMenuOpen}
@@ -1705,6 +1709,8 @@ function AtlasEditor() {
         />
 
         <CanvasFrame
+          canvasThemeId={canvasThemeId}
+          canvasBackgroundId={canvasBackgroundId}
           activeViewId={activeViewId}
           appMode={appMode}
           brokenLinkCount={brokenLinkCount}
@@ -1786,9 +1792,10 @@ function AtlasEditor() {
           onClearDebugLog={handleClearDebugLog}
           onClose={closeSettings}
           onExportDebugLog={handleExportDebugLog}
-          onResetCanvasAppearance={() => {
-            resetCanvasAppearance();
-            setStatus("Canvas appearance reset to CYBER · HEX");
+          activeStyle={appearance}
+          onApplyCanvasStyle={(selection) => {
+            applyCanvasStyle(selection);
+            setStatus("Canvas style applied");
           }}
         />
       ) : null}

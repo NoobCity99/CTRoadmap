@@ -6,6 +6,7 @@ frontend/dist/
 *.pyc
 data/*.backup.json
 data/atlas.json
+data/assets/icons/
 data/demo.json
 exports/*
 !exports/.gitkeep

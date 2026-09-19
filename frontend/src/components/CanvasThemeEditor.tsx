@@ -1,37 +1,89 @@
 import { ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  CANVAS_BACKGROUNDS,
+  CANVAS_THEMES,
+  getCanvasBackground,
+  getCanvasTheme,
+  DEFAULT_PUBLIC_CANVAS_APPEARANCE,
+  type CanvasBackgroundId,
+  type CanvasStyleSelection,
+  type CanvasThemeId
+} from "../appearance";
 import { CanvasStylePreview } from "./CanvasStylePreview";
 
 interface CanvasThemeEditorProps {
-  onReset: () => void;
+  activeStyle: CanvasStyleSelection;
+  onApply: (selection: CanvasStyleSelection) => void;
 }
 
-export function CanvasThemeEditor({ onReset }: CanvasThemeEditorProps) {
+export function CanvasThemeEditor({ activeStyle, onApply }: CanvasThemeEditorProps) {
   const [expanded, setExpanded] = useState(false);
+  const [draft, setDraft] = useState<CanvasStyleSelection>(activeStyle);
+
+  useEffect(() => {
+    setDraft(activeStyle);
+  }, [activeStyle]);
+
+  const changed = draft.canvasThemeId !== activeStyle.canvasThemeId || draft.canvasBackgroundId !== activeStyle.canvasBackgroundId;
+  const activeTheme = getCanvasTheme(activeStyle.canvasThemeId);
+  const activeBackground = getCanvasBackground(activeStyle.canvasBackgroundId);
 
   return (
     <div className={expanded ? "settings-section canvas-theme-editor canvas-theme-editor--expanded" : "settings-section canvas-theme-editor"}>
       <div className="canvas-theme-editor__summary">
         <div>
-          <div className="settings-section__title">Canvas Base</div>
-          <span>CYBER · HEX</span>
+          <div className="settings-section__title">Customize Canvas</div>
+          <span>{activeTheme.label} · {activeBackground.label}</span>
         </div>
         <button className="toolbar-button" type="button" aria-expanded={expanded} aria-controls="canvas-theme-editor-content" onClick={() => setExpanded((value) => !value)}>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           {expanded ? "Collapse" : "Preview"}
         </button>
       </div>
-      {expanded ? (
-        <div id="canvas-theme-editor-content" className="canvas-theme-editor__content">
-          <CanvasStylePreview />
-          <div className="settings-note">This fork intentionally uses CYBER with HEX as its fixed Canvas base.</div>
-          <div className="canvas-theme-editor__actions">
-            <button className="toolbar-button" type="button" onClick={onReset}>
-              <RotateCcw size={16} /> Reset to CYBER / HEX
-            </button>
-          </div>
+      {expanded ? <div id="canvas-theme-editor-content" className="canvas-theme-editor__content">
+        <CanvasStylePreview selection={draft} />
+        <label className="settings-select-field" htmlFor="canvas-theme-select">
+          <span>Canvas Theme</span>
+          <select
+            id="canvas-theme-select"
+            value={draft.canvasThemeId}
+            onChange={(event) => {
+              const canvasThemeId = event.currentTarget.value as CanvasThemeId;
+              setDraft((current) => ({ ...current, canvasThemeId }));
+            }}
+          >
+            {CANVAS_THEMES.map((theme) => <option key={theme.id} value={theme.id}>{theme.label}</option>)}
+          </select>
+        </label>
+        <div className="settings-note">{getCanvasTheme(draft.canvasThemeId).description}</div>
+        <label className="settings-select-field" htmlFor="canvas-background-select">
+          <span>Canvas Background</span>
+          <select
+            id="canvas-background-select"
+            value={draft.canvasBackgroundId}
+            onChange={(event) => {
+              const canvasBackgroundId = event.currentTarget.value as CanvasBackgroundId;
+              setDraft((current) => ({ ...current, canvasBackgroundId }));
+            }}
+          >
+            {CANVAS_BACKGROUNDS.map((background) => <option key={background.id} value={background.id}>{background.label}</option>)}
+          </select>
+        </label>
+        <div className="settings-note">{getCanvasBackground(draft.canvasBackgroundId).description}</div>
+        <div className={changed ? "canvas-theme-editor__status canvas-theme-editor__status--changed" : "canvas-theme-editor__status"} aria-live="polite">
+          {changed ? "Unapplied changes" : "Preview matches the active Canvas Style"}
         </div>
-      ) : null}
+        <div className="canvas-theme-editor__actions">
+          <button className="toolbar-button" type="button" onClick={() => setDraft({ ...DEFAULT_PUBLIC_CANVAS_APPEARANCE })}>
+            <RotateCcw size={16} /> Reset to Default
+          </button>
+          <button className="toolbar-button" type="button" onClick={() => setDraft(activeStyle)}>Cancel</button>
+          <button className="toolbar-button canvas-theme-editor__apply" type="button" disabled={!changed} onClick={() => onApply(draft)}>
+            Apply Canvas Style
+          </button>
+        </div>
+      </div> : null}
     </div>
   );
 }

@@ -1,0 +1,123 @@
+/* PCB TRACE — PULSE TUNING
+   Static green shades / line colors: PCBTraceArtwork.tsx.
+   Approved route geometry / pulse duration / idle gaps: pcbTraceRoutes.ts. */
+.app-shell .canvas-frame[data-background="pcb_trace"] {
+  background: #040c0b;
+}
+
+.canvas-frame[data-background="pcb_trace"] .react-flow,
+.canvas-style-preview[data-background="pcb_trace"] {
+  isolation: isolate;
+  --xy-background-color: transparent;
+}
+
+.pcb-trace-background,
+.pcb-trace-background * {
+  pointer-events: none;
+}
+
+.pcb-trace-background {
+  --pcb-pulse-color: #9de4b9;
+  --pcb-pulse-core: #d8f5df;
+  --pcb-pulse-length: 0.12;
+  --pcb-pulse-glow-width: 7px;
+  --pcb-pulse-core-width: 2px;
+  /* CPU GLOW TUNING — peak intensity is 50% above the original 0.22.
+     The 2.5s cycle uses 40% rise / 40% hold / 20% fade keyframes below. */
+  --pcb-cpu-glow-opacity: 1.25;
+  --pcb-cpu-glow-color: #f5cd64;
+  --pcb-cpu-glow-duration: 2700ms;
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: #040c0b;
+}
+
+.pcb-trace-board {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pcb-trace-pulse {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--pcb-pulse-length) 1;
+  stroke-dashoffset: var(--pcb-pulse-length);
+  animation: pcb-trace-travel var(--pcb-route-duration) linear both;
+}
+
+.pcb-trace-pulse--glow {
+  stroke: var(--pcb-pulse-color);
+  stroke-width: var(--pcb-pulse-glow-width);
+  opacity: 0.45;
+  filter: blur(3px);
+}
+
+.pcb-trace-pulse--core {
+  stroke: var(--pcb-pulse-core);
+  stroke-width: var(--pcb-pulse-core-width);
+  filter: drop-shadow(0 0 4px var(--pcb-pulse-color));
+}
+
+.pcb-trace-cpu-glow {
+  fill: none;
+  stroke: var(--pcb-cpu-glow-color);
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 7px var(--pcb-cpu-glow-color));
+  opacity: 0;
+  animation: pcb-cpu-glow var(--pcb-cpu-glow-duration) ease-in-out both;
+}
+
+/* Arrivals begin when the packet head reaches the CPU pin (~89% with a 12%
+   tail); departures begin with the outgoing packet. No additional timer. */
+.pcb-trace-cpu-glow--into-cpu {
+  animation-delay: calc(var(--pcb-route-duration) / (1 + var(--pcb-pulse-length)));
+}
+
+@keyframes pcb-trace-travel {
+  from {
+    stroke-dashoffset: var(--pcb-pulse-length);
+  }
+
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@keyframes pcb-cpu-glow {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  40%,
+  80% {
+    opacity: var(--pcb-cpu-glow-opacity);
+  }
+}
+
+/* Preview, PNG and reduced motion are a clean static board. */
+.pcb-trace-background[data-export] .pcb-trace-active,
+.pcb-trace-background[data-export] .pcb-trace-cpu-glow {
+  display: none;
+}
+
+.pcb-trace-background[data-export] * {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .pcb-trace-active,
+  .pcb-trace-cpu-glow {
+    display: none;
+  }
+
+  .pcb-trace-background * {
+    animation: none;
+  }
+}

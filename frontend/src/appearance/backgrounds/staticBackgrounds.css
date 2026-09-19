@@ -1,0 +1,205 @@
+.canvas-frame[data-background="grid"] {
+  background:
+    linear-gradient(var(--canvas-pattern-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-pattern-color) 1px, transparent 1px),
+    radial-gradient(circle at center, var(--canvas-glow-color), transparent 38rem),
+    var(--canvas-surface);
+  background-size: 20px 20px, 20px 20px, auto, auto;
+}.canvas-frame[data-background="hex"] {
+  background:
+    radial-gradient(circle at center, var(--canvas-glow-color), transparent 40rem),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 60deg at 56.25% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from 180deg at 43.75% calc(425% / 6), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    conic-gradient(from -60deg at 50% calc(175% / 12), transparent 0deg, transparent 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 0.5deg, color-mix(in srgb, var(--canvas-pattern-color) 86%, transparent) 119.5deg, transparent 119.5deg, transparent 120deg),
+    var(--canvas-surface);
+  background-position: center, 0 0, 10px 17px, 0 0, 10px 17px, 10px 0, 0 17px, center;
+  background-size: auto, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, 20px 34px, auto;
+}.canvas-frame[data-background="tron_dark"],
+.canvas-frame[data-background="tron_lite"] {
+  --tron-bg: #070718;
+  --tron-horizon: rgba(124, 142, 255, 0.22);
+  --tron-line: rgba(214, 221, 255, 0.46);
+  --tron-line-bright: rgba(244, 247, 255, 0.78);
+  --tron-plane-shadow: rgba(9, 8, 31, 0.72);
+  --tron-plane-fade: rgba(7, 7, 24, 0.94);
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--tron-bg);
+  background-image:
+    radial-gradient(ellipse at 50% 50%, var(--tron-horizon) 0 4%, transparent 30%),
+    radial-gradient(ellipse at 50% 74%, rgba(124, 142, 255, 0.14) 0 8%, transparent 42%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent 12%, transparent 43%, var(--tron-horizon) 50%, rgba(124, 142, 255, 0.08) 66%, transparent 90%),
+    linear-gradient(to bottom, #10102c 0%, #09091d 43%, #040413 50%, #09091d 57%, #10102c 100%);
+}
+
+.canvas-frame[data-background="tron_lite"] {
+  --tron-bg: #f7fbff;
+  --tron-horizon: rgba(120, 196, 255, 0.28);
+  --tron-line: rgba(91, 183, 249, 0.42);
+  --tron-line-bright: rgba(69, 168, 240, 0.66);
+  --tron-plane-shadow: rgba(195, 228, 251, 0.34);
+  --tron-plane-fade: rgba(250, 253, 255, 0.9);
+  background-image:
+    radial-gradient(ellipse at 50% 50%, var(--tron-horizon) 0 5%, transparent 32%),
+    radial-gradient(ellipse at 50% 74%, rgba(120, 196, 255, 0.18) 0 10%, transparent 44%),
+    linear-gradient(to bottom, #ffffff 0%, #f8fcff 38%, #e8f6ff 50%, #f8fcff 62%, #ffffff 100%);
+}
+
+.canvas-frame[data-background="tron_dark"]::before,
+.canvas-frame[data-background="tron_lite"]::before {
+  content: "";
+  position: absolute;
+  left: -28%;
+  z-index: 0;
+  width: 156%;
+  height: 56%;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, transparent calc(50% - 1px), var(--tron-line-bright) 50%, transparent calc(50% + 1px)),
+    repeating-linear-gradient(to right, var(--tron-line) 0 2px, transparent 2px 104px),
+    repeating-linear-gradient(to bottom, var(--tron-line) 0 2px, transparent 2px 50px),
+    radial-gradient(ellipse at 50% 0%, transparent 0 42%, var(--tron-plane-shadow) 70%, var(--tron-plane-fade) 100%);
+  background-size: auto, 104px 100%, 100% 50px, auto;
+  filter: drop-shadow(0 0 6px var(--tron-line)) drop-shadow(0 0 18px var(--tron-horizon));
+  opacity: 0.82;
+}
+
+.canvas-frame[data-background="tron_dark"]::after,
+.canvas-frame[data-background="tron_lite"]::after {
+  content: "";
+  position: absolute;
+  left: -28%;
+  z-index: 0;
+  width: 156%;
+  height: 56%;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, transparent calc(50% - 1px), color-mix(in srgb, var(--tron-line-bright) 34%, transparent) 50%, transparent calc(50% + 1px)),
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--tron-line) 28%, transparent) 0 1px, transparent 1px 104px),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--tron-line) 22%, transparent) 0 1px, transparent 1px 50px),
+    radial-gradient(ellipse at 50% 0%, transparent 0 34%, color-mix(in srgb, var(--tron-plane-shadow) 52%, transparent) 70%, var(--tron-plane-fade) 100%);
+  background-size: auto, 104px 100%, 100% 50px, auto;
+  filter: blur(0.3px) drop-shadow(0 0 8px var(--tron-horizon));
+  opacity: 0.52;
+}
+
+.canvas-frame[data-background="tron_dark"]::before,
+.canvas-frame[data-background="tron_lite"]::before {
+  bottom: 50%;
+  transform: perspective(520px) rotateX(-68deg) scaleY(1.34);
+  transform-origin: 50% 100%;
+}
+
+.canvas-frame[data-background="tron_dark"]::after,
+.canvas-frame[data-background="tron_lite"]::after {
+  top: 50%;
+  transform: perspective(520px) rotateX(68deg) scaleY(1.34);
+  transform-origin: 50% 0;
+}
+
+.canvas-frame[data-background="tron_lite"]::before,
+.canvas-frame[data-background="tron_lite"]::after {
+  filter: drop-shadow(0 0 5px var(--tron-line)) drop-shadow(0 0 15px rgba(120, 196, 255, 0.26));
+  opacity: 0.74;
+}
+
+.canvas-frame[data-background="tron_lite"]::after {
+  filter: blur(0.3px) drop-shadow(0 0 8px rgba(120, 196, 255, 0.24));
+  opacity: 0.42;
+}
+
+.canvas-frame[data-background="tron_dark"] .react-flow,
+.canvas-frame[data-background="tron_lite"] .react-flow {
+  position: relative;
+  z-index: 1;
+}
+
+/* BLUEPRINT COMPOSITION — identical geometry for both color variants. */
+.canvas-frame[data-background="blueprint"],
+.canvas-frame[data-background="blueprint_ii"] {
+  --blueprint-bg: #0041ba;
+  --blueprint-border: 16px;
+  --blueprint-gap: 12px;
+  --blueprint-major-gap: 60px;
+  --blueprint-minor-line: rgba(255, 255, 255, 0.045);
+  --blueprint-major-line: rgba(255, 255, 255, 0.13);
+  --blueprint-cross-line: rgba(255, 255, 255, 0.28);
+  --blueprint-center-glow: rgba(255, 255, 255, 0.08);
+  --blueprint-mid-glow: rgba(0, 65, 186, 0.04);
+  --blueprint-edge-glow: rgba(0, 21, 82, 0.24);
+  --blueprint-layered-wash: rgba(255, 255, 255, 0.06);
+  background-color: var(--blueprint-bg);
+  background-image:
+    linear-gradient(var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(to right, var(--blueprint-minor-line) 0 1px, transparent 1px var(--blueprint-gap)),
+    linear-gradient(var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-major-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at center, transparent 0 6px, var(--blueprint-bg) 6px 100%),
+    linear-gradient(var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    linear-gradient(to right, var(--blueprint-cross-line) 0 1px, transparent 1px var(--blueprint-major-gap)),
+    radial-gradient(circle at 50% 44%, var(--blueprint-center-glow), var(--blueprint-mid-glow) 46rem, var(--blueprint-edge-glow) 86rem);
+  background-position:
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    calc(var(--blueprint-border) - 30px) calc(var(--blueprint-border) - 30px),
+    var(--blueprint-border) var(--blueprint-border),
+    var(--blueprint-border) var(--blueprint-border),
+    center;
+  background-size:
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-gap) var(--blueprint-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    var(--blueprint-major-gap) var(--blueprint-major-gap),
+    auto;
+  box-shadow:
+    inset 0 0 0 var(--blueprint-border) var(--blueprint-bg),
+    inset 0 0 0 calc(var(--blueprint-border) + 1px) var(--blueprint-cross-line);
+}/* BLUEPRINT II — MANUAL COLOR CONTROLS
+   Palette swap: original Blueprint blue #0041ba (RGB 0, 65, 186) becomes
+   the line color; its white #ffffff becomes the paper/background color.
+   Alpha values retain the original contrast hierarchy. Dot color is labeled
+   separately on the blueprint_ii entry in appearance/registry.ts. */
+.canvas-frame[data-background="blueprint_ii"] {
+  --blueprint-bg: #ffffff;
+  /* Paper / border */
+  --blueprint-minor-line: rgba(0, 65, 186, 0.045);
+  /* Fine grid */
+  --blueprint-major-line: rgba(0, 65, 186, 0.13);
+  /* Major grid */
+  --blueprint-cross-line: rgba(0, 65, 186, 0.28);
+  /* Crosses / inner border */
+  --blueprint-center-glow: rgba(0, 65, 186, 0.08);
+  /* Center tint */
+  --blueprint-mid-glow: rgba(255, 255, 255, 0.04);
+  /* Paper fade */
+  --blueprint-edge-glow: rgba(255, 255, 255, 0.24);
+  /* White outer fade */
+  --blueprint-layered-wash: rgba(0, 65, 186, 0.06);
+  /* Layered-layout tint */
+}
+
+.canvas-frame[data-background="nes_grid"] {
+  background-image:
+    linear-gradient(rgba(214, 17, 30, 0.07) 3px, transparent 3px),
+    linear-gradient(to right, rgba(214, 17, 30, 0.07) 3px, transparent 3px);
+  background-size: 40px 40px;
+  background-color: #e7ebf0;
+}
+.canvas-frame[data-background="lt_draft_grid"] {
+  background-image: linear-gradient(rgba(71, 74, 255, 0.09) 1px, transparent 1px), linear-gradient(to right, rgba(71, 74, 255, 0.09) 1px, transparent 1px);
+  background-size: 49px 49px;
+  background-color: #f0effb;
+}
+
+.canvas-frame[data-background="zima_carbon"] {
+  background: #fafaff url("/assets/backgrounds/zima-carbon.svg") repeat;
+  background-size: 128px 128px;
+}

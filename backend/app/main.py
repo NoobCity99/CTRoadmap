@@ -14,11 +14,13 @@ from .config import DEMO_PATH, FRONTEND_DIST
 from .debug import clear_debug_events, get_debug_events, record_debug_event
 from .exports import EXPORT_FILES, EXPORT_MEDIA_TYPES, ExportFormat, export_path, write_export
 from .models import Atlas
+from .icon_assets import router as icon_assets_router
 from .storage import read_atlas, read_demo_atlas, write_atlas
 from .version import AppVersion, get_app_version
 
 
 app = FastAPI(title="CTRoadmap", version="0.7.0-beta")
+app.include_router(icon_assets_router)
 
 
 class ExportResult(BaseModel):

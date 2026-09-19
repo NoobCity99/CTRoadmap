@@ -1,0 +1,113 @@
+/* Static picker preview / fallback surface. Only this background ID is styled. */
+.canvas-frame[data-background="nebula_dive"] {
+  background: url("/assets/backgrounds/nebula-dive/nebula.svg") center / cover, #030714;
+}
+
+/* EXPORT SURFACE — replace the static fallback and contain the single deep
+   starfield below both map and title, without changing either area's layout. */
+.canvas-frame.canvas-export-surface[data-background="nebula_dive"] {
+  background: #020611;
+  isolation: isolate;
+}
+
+/* LAYERING — local stacking context keeps artwork (-2) below the existing
+   React Flow orientation overlay (-1), edges, Families, tiles and controls. */
+.canvas-frame[data-background="nebula_dive"] .react-flow {
+  isolation: isolate;
+  --xy-background-color: transparent;
+}
+
+.zoom-canvas-background,
+.zoom-canvas-background * {
+  pointer-events: none;
+}
+
+.zoom-canvas-background {
+  /* MOTION TUNING — durations control upward speed; all distances repeat exactly.
+     Lower duration = faster. Near artwork repeats every --zoom-cloud-repeat. */
+  --zoom-small-duration: 220s;
+  --zoom-medium-duration: 140s;
+  --zoom-large-duration: 90s;
+  --zoom-near-stars-duration: 160s;
+  --zoom-nebula-duration: 200s;
+  --zoom-cloud-duration: 300s;
+  --zoom-cloud-repeat: 1024px;
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: #020611;
+  contain: paint;
+}
+
+.zoom-bg__deep,
+.zoom-bg__near,
+.zoom-bg__space-base,
+.zoom-bg__nebula,
+.zoom-bg__clouds {
+  position: absolute;
+  inset: 0;
+}
+
+.zoom-bg__deep { opacity: var(--zoom-deep-opacity); }
+.zoom-bg__near {
+  opacity: var(--zoom-near-opacity);
+  transform: scale(var(--zoom-near-scale));
+  transform-origin: center;
+  filter: blur(var(--zoom-near-blur));
+}
+.zoom-bg__space-base {
+  background: radial-gradient(ellipse at 65% 35%, #0b1f38, transparent 65%), #030714;
+}
+.zoom-bg__stars {
+  position: absolute;
+  inset: 0 0 calc(-1 * var(--zoom-star-map-size));
+  background-size: var(--zoom-star-map-size) var(--zoom-star-map-size);
+  background-repeat: repeat;
+  animation: zoom-stars-up var(--zoom-small-duration) linear infinite;
+}
+.zoom-bg__stars--small { background-image: var(--zoom-stars-small); }
+.zoom-bg__stars--medium {
+  background-image: var(--zoom-stars-medium);
+  animation-duration: var(--zoom-medium-duration);
+}
+.zoom-bg__stars--large {
+  background-image: var(--zoom-stars-large);
+  animation-duration: var(--zoom-large-duration);
+}
+.zoom-bg__near-stars {
+  background-image: var(--zoom-stars-small), var(--zoom-stars-medium);
+  animation-duration: var(--zoom-near-stars-duration);
+}
+.zoom-bg__nebula,
+.zoom-bg__clouds {
+  background-repeat: repeat;
+  background-size: 1600px var(--zoom-cloud-repeat);
+  animation: zoom-nebula-up var(--zoom-nebula-duration) linear infinite;
+}
+.zoom-bg__nebula { background-image: url("/assets/backgrounds/nebula-dive/nebula.svg"); }
+.zoom-bg__clouds {
+  background-image: url("/assets/backgrounds/nebula-dive/clouds.svg");
+  opacity: var(--zoom-cloud-opacity);
+  animation-duration: var(--zoom-cloud-duration);
+}
+.zoom-bg__asset { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+@keyframes zoom-stars-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-1 * var(--zoom-star-map-size))); }
+}
+@keyframes zoom-nebula-up {
+  from { background-position: 0 0; }
+  to { background-position: 0 calc(-1 * var(--zoom-cloud-repeat)); }
+}
+
+/* EXPORT POLICY — the component renders only full-opacity deep stars during
+   export. Disable animations from mount so the entire surface uses frame 0. */
+.zoom-canvas-background[data-export] *,
+.canvas-export-surface .zoom-canvas-background * { animation: none; }
+
+/* ACCESSIBILITY — zoom still controls the scene; only continuous motion stops. */
+@media (prefers-reduced-motion: reduce) {
+  .zoom-canvas-background * { animation: none; }
+}

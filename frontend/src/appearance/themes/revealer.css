@@ -1,0 +1,135 @@
+/* ============================================================
+   REVEALER — GLOBAL DESIGN CONTROLS
+   Visual variables only. Draft previews use their own theme selection;
+   exclude them from the active Canvas skin to prevent theme bleed.
+   ============================================================ */
+.app-shell[data-canvas-theme="revealer"] .tile-node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node[data-tile-presentation="cover-reveal"] {
+  --cover-reveal-body-surface: #efeeef;
+  --cover-reveal-body-text: #111318;
+  --cover-reveal-body-muted: #4b5563;
+  --cover-reveal-title-color: #ffffff;
+  --cover-reveal-title-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
+  --cover-reveal-icon-box-bg: #0b0d10;
+  --cover-reveal-icon-box-border: #ffffff;
+  --cover-reveal-radius: 7px;
+  --cover-gradient-angle: 30deg;
+  --cover-gradient-stop-1: 35%;
+  --cover-gradient-stop-2: 70%;
+  --cover-gradient-stop-3: 100%;
+}
+
+/* ============================================================
+   REVEALER — TILE TYPE GRADIENT CONTROLS
+   Tune background triplets and independent icon colors here.
+   ============================================================ */
+.app-shell[data-canvas-theme="revealer"] .tile-node--node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--node[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #031a26;
+  --cover-color-2: #043385;
+  --cover-icon-color: #0980b8;
+  --cover-color-3: #031e2f;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--service[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--service[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #020727;
+  --cover-color-2: rgb(136, 70, 5);
+  --cover-icon-color: #c96f16;
+  --cover-color-3: #570303;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--container[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--container[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #170309;
+  --cover-color-2: #74380e;
+  --cover-icon-color: #f97316;
+  --cover-color-3: #52320d;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--drive[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--drive[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #0d1403;
+  --cover-color-2: #920a0a;
+  --cover-icon-color: #a3e635;
+  --cover-color-3: #714b05;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--mount[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--mount[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #130c02;
+  --cover-color-2: #7a640a;
+  --cover-icon-color: #facc15;
+  --cover-color-3: #6a460d;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--script[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--script[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #031310;
+  --cover-color-2: #09ba91;
+  --cover-icon-color: #09ba91;
+  --cover-color-3: #4b2e5a;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--config[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--config[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #160a01;
+  --cover-color-2: #7d630d;
+  --cover-icon-color: #fcd34d;
+  --cover-color-3: #520606;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #021101;
+  --cover-color-2: #0e5c0e;
+  --cover-icon-color: #038703;
+  --cover-color-3: #195610;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--iot_device[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--iot_device[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #021316;
+  --cover-color-2: #158e97;
+  --cover-icon-color: #3ceefb;
+  --cover-color-3: #0f0462;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--url[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--url[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #041b22;
+  --cover-color-2: #849496;
+  --cover-icon-color: #cfe9ed;
+  --cover-color-3: #183361;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--check[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--check[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #166534;
+  --cover-color-2: #84cc16;
+  --cover-icon-color: #84cc16;
+  --cover-color-3: #fde047;
+}
+
+.app-shell[data-canvas-theme="revealer"] .tile-node--note[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--note[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #051933;
+  --cover-color-2: #9fb1d4;
+  --cover-icon-color: #e5e7eb;
+  --cover-color-3: #656279;
+}
+
+/* ============================================================
+   REVEALER — FLOW HAZARD COVER CONTROLS
+   Flow tiles use this treatment in this presentation.
+   ============================================================ */
+.app-shell[data-canvas-theme="revealer"] .tile-node--flow[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer"] .tile-node--flow[data-tile-presentation="cover-reveal"] {
+  --flow-cover-gold-1: #886a11;
+  --flow-cover-gold-2: #b59520;
+  --flow-cover-black-1: #0b0d10;
+  --flow-cover-black-2: #202126;
+  --cover-reveal-icon-box-bg: #ffffff;
+  --cover-reveal-icon-box-border: #000000;
+  --cover-icon-color: #000000;
+}

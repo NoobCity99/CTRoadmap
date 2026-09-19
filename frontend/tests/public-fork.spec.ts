@@ -38,7 +38,7 @@ async function mockApi(page: Page, demo: "missing" | "valid" | "invalid" = "miss
   return { requests, saveCount: () => saves };
 }
 
-test("boots directly into the fixed Canvas fork and retains core controls", async ({ page }) => {
+test("boots directly into the Canvas fork and retains core controls", async ({ page }) => {
   const api = await mockApi(page);
   await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
   await expect(page.locator(".canvas-frame")).toBeVisible();
@@ -50,11 +50,11 @@ test("boots directly into the fixed Canvas fork and retains core controls", asyn
   expect(api.requests.some((request) => /\/api\/(auth|app\/update|assets\/icons)/.test(request))).toBeFalsy();
 
   await page.getByRole("button", { name: "Settings" }).click();
-  await expect(page.getByText("CYBER · HEX", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cyber · Hex", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Preview" }).click();
   const savesBeforeReset = api.saveCount();
-  await page.getByRole("button", { name: /Reset to CYBER/ }).click();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("ctroadmap.public.canvasAppearance.v1"))).toBe('{"version":1,"canvasTheme":"cyber","canvasBackground":"hex"}');
+  await page.getByRole("button", { name: "Reset to Default" }).click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ctroadmap.public.canvasAppearance.v2"))).toBe('{"version":2,"canvasThemeId":"cyber","canvasBackgroundId":"hex"}');
   expect(api.saveCount()).toBe(savesBeforeReset);
 
   await page.getByRole("dialog", { name: "Settings" }).getByLabel("Close settings").click();

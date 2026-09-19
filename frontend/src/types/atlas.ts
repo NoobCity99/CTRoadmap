@@ -68,6 +68,38 @@ export interface Size {
   height: number;
 }
 
+export interface UploadedTileIconRef {
+  kind: "uploaded";
+  id?: string;
+  filename: string;
+  url: string;
+  media_type?: string;
+}
+
+export interface LucideTileIconRef {
+  kind: "lucide";
+  id: string;
+  name: string;
+}
+
+export type TileIconRef = UploadedTileIconRef | LucideTileIconRef;
+
+export interface UploadedIconAsset extends UploadedTileIconRef {
+  id: string;
+}
+
+/** API responses do not contain the serialized tile reference's kind field. */
+export interface IconUploadResult {
+  id: string;
+  filename: string;
+  url: string;
+  media_type: string;
+}
+
+export interface IconAssetListResult {
+  icons: UploadedIconAsset[];
+}
+
 export interface Tile {
   id: string;
   type: TileType;

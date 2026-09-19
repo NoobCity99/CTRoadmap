@@ -1,5 +1,6 @@
 import { Download, ServerCog, Trash2, X } from "lucide-react";
 import { CanvasThemeEditor } from "./CanvasThemeEditor";
+import type { CanvasStyleSelection } from "../appearance";
 import type { AppVersion, Atlas, DebugEvent, View } from "../types/atlas";
 
 interface SettingsPanelProps {
@@ -11,10 +12,11 @@ interface SettingsPanelProps {
   onClearDebugLog: () => void;
   onClose: () => void;
   onExportDebugLog: () => void;
-  onResetCanvasAppearance: () => void;
+  activeStyle: CanvasStyleSelection;
+  onApplyCanvasStyle: (selection: CanvasStyleSelection) => void;
 }
 
-export function SettingsPanel({ atlas, activeView, appVersion, backendHealth, debugEvents, onClearDebugLog, onClose, onExportDebugLog, onResetCanvasAppearance }: SettingsPanelProps) {
+export function SettingsPanel({ atlas, activeView, appVersion, backendHealth, debugEvents, onClearDebugLog, onClose, onExportDebugLog, activeStyle, onApplyCanvasStyle }: SettingsPanelProps) {
   const recentEvents = debugEvents.slice(-8).reverse();
   return (
     <div className="settings-backdrop" role="presentation" onMouseDown={onClose}>
@@ -24,7 +26,7 @@ export function SettingsPanel({ atlas, activeView, appVersion, backendHealth, de
           <button className="mini-icon-button" onClick={onClose} aria-label="Close settings"><X size={17} /></button>
         </header>
 
-        <CanvasThemeEditor onReset={onResetCanvasAppearance} />
+        <CanvasThemeEditor activeStyle={activeStyle} onApply={onApplyCanvasStyle} />
 
         <div className="settings-section">
           <div className="settings-section__title">App Metadata</div>

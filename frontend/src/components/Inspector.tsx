@@ -1,5 +1,7 @@
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
+import { TileIconEditor } from "./TileIconEditor";
+import { normalizeTileIconRef, TileIconGlyph } from "../lib/icons";
 import { getFamilyMembershipState } from "../lib/atlasSelectors";
 import { LINK_TYPES, TILE_TYPES, TILE_TYPE_CONFIG } from "../lib/constants";
 import type { AppMode, Atlas, Family, FlowStep, Link, LinkSourcePort, LinkTargetPort, LinkType, Selection, Tile, TileStack, TileType } from "../types/atlas";
@@ -166,7 +168,7 @@ export function Inspector({
     const tags = selectedTile.tags ?? [];
     const descendantIds = getDescendantIds(atlas.tiles, selectedTile.id);
     const fieldEntries = Object.entries(selectedTile.fields ?? {}).filter(
-      ([key]) => !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node")
+      ([key]) => key !== "icon_ref" && !(selectedTile.type === "flow" && key === "steps") && !(selectedTile.type === "node" && key === "primary_node")
     );
     const lifecycle = resolveLifecycle(selectedTile);
     const editable = isLifecycleEditable(lifecycle, mode);
@@ -176,7 +178,7 @@ export function Inspector({
       <aside className="inspector">
         <div className="panel-title">Inspector</div>
         <div className="inspector__hero" style={{ "--tile-accent": config.color } as CSSProperties}>
-          <Icon size={28} />
+          <TileIconGlyph fallback={Icon} iconRef={normalizeTileIconRef(selectedTile)} size={28} />
           <div>
             <input
               className="title-input"
@@ -191,6 +193,7 @@ export function Inspector({
           <ReadOnlyModeNotice lifecycle={lifecycle} mode={mode} kind="tile" onGoLive={lifecycle === "planned" && mode === "live" ? () => onPromoteTile(selectedTile.id) : undefined} />
         ) : null}
         <fieldset disabled={!editable} className="inspector__fieldset">
+        <TileIconEditor key={selectedTile.id} defaultIcon={Icon} defaultLabel={config.label} accentColor={config.color} tile={selectedTile} editable={editable} onUpdateTile={onUpdateTile} />
         <label>
           Type
           <select

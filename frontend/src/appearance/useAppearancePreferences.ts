@@ -1,28 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_PUBLIC_CANVAS_APPEARANCE, readCanvasAppearance, writeCanvasAppearance } from "./preferences";
-import type { AppearanceDebugEvent, PublicCanvasAppearanceV1 } from "./types";
+import { readCanvasAppearance, writeCanvasAppearance } from "./preferences";
+import { isCanvasBackgroundId, isCanvasThemeId } from "./registry";
+import type { AppearanceDebugEvent, CanvasStyleSelection, PublicCanvasAppearanceV2 } from "./types";
 
 interface UseAppearancePreferencesOptions {
   onDebugEvent?: (event: AppearanceDebugEvent) => void;
 }
 
 export function useAppearancePreferences({ onDebugEvent }: UseAppearancePreferencesOptions = {}) {
-  const [appearance, setAppearance] = useState<PublicCanvasAppearanceV1>(() => readCanvasAppearance());
+  const [appearance, setAppearance] = useState<PublicCanvasAppearanceV2>(() => readCanvasAppearance());
 
   useEffect(() => {
     writeCanvasAppearance(appearance);
   }, [appearance]);
 
-  const resetCanvasAppearance = useCallback(() => {
-    const next = { ...DEFAULT_PUBLIC_CANVAS_APPEARANCE };
+  const applyCanvasStyle = useCallback((selection: CanvasStyleSelection) => {
+    if (!isCanvasThemeId(selection.canvasThemeId) || !isCanvasBackgroundId(selection.canvasBackgroundId)) return;
+    const next: PublicCanvasAppearanceV2 = { version: 2, canvasThemeId: selection.canvasThemeId, canvasBackgroundId: selection.canvasBackgroundId };
     setAppearance(next);
-    writeCanvasAppearance(next);
     onDebugEvent?.({
       action: "settings.canvas_style",
-      message: "Canvas appearance reset to CYBER / HEX",
-      context: { canvasTheme: "cyber", canvasBackground: "hex" }
+      message: "Canvas style applied",
+      context: { canvasThemeId: next.canvasThemeId, canvasBackgroundId: next.canvasBackgroundId }
     });
   }, [onDebugEvent]);
 
-  return { appearance, resetCanvasAppearance };
+  return { appearance, applyCanvasStyle };
 }

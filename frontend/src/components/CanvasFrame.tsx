@@ -18,7 +18,8 @@ import { FamilyNode } from "./FamilyNode";
 import { TileNode } from "./TileNode";
 import { TILE_TYPE_CONFIG } from "../lib/constants";
 import type { ConnectorRoutingMode } from "../lib/edgeRouting";
-import { HEX_BACKGROUND, getTileVisualTokens } from "../appearance";
+import { getCanvasBackground, getTileVisualTokens, type CanvasBackgroundId, type CanvasThemeId } from "../appearance";
+import { CanvasBackgroundLayer } from "../appearance/backgrounds/CanvasBackgroundLayer";
 import type { AppMode, ExportFormat, Family, Link, Tile, View } from "../types/atlas";
 import { LayerBar } from "./LayerBar";
 
@@ -36,6 +37,8 @@ export interface StackContextMenuView {
 }
 
 interface CanvasFrameProps {
+  canvasThemeId: CanvasThemeId;
+  canvasBackgroundId: CanvasBackgroundId;
   activeViewId: string;
   appMode: AppMode;
   brokenLinkCount: number;
@@ -78,6 +81,8 @@ interface CanvasFrameProps {
 }
 
 export function CanvasFrame({
+  canvasThemeId,
+  canvasBackgroundId,
   activeViewId,
   appMode,
   brokenLinkCount,
@@ -118,15 +123,18 @@ export function CanvasFrame({
   onToggleViewBar,
   onUnstack
 }: CanvasFrameProps) {
-  const overlay = HEX_BACKGROUND.reactFlowOverlay;
+  const background = getCanvasBackground(canvasBackgroundId);
+  const overlay = background.reactFlowOverlay;
   return (
     <section
       ref={canvasRef}
       className="canvas-frame"
+      data-background={background.id}
       onDragOver={onCanvasDragOver}
       onDrop={onCanvasDrop}
       onDoubleClick={onCanvasDoubleClick}
     >
+      <CanvasBackgroundLayer background={background} />
       <LayerBar activeViewId={activeViewId} viewBarOpen={viewBarOpen} views={views} onSelectView={onSelectView} onToggleViewBar={onToggleViewBar} />
       <ReactFlow
         nodes={flowNodes}
@@ -164,7 +172,7 @@ export function CanvasFrame({
           nodeColor={(node) => {
             const family = node.data.family as Family | undefined;
             if (family) return family.color || "#38a3ff";
-            return getTileVisualTokens((node.data.tile as Tile).type).accentColor;
+            return getTileVisualTokens((node.data.tile as Tile).type, canvasThemeId).accentColor;
           }}
         />
         <Controls fitViewOptions={fitViewOptions} onInteractiveChange={onInteractiveChange} />

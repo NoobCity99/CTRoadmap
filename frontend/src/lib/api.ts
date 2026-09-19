@@ -1,8 +1,10 @@
-import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult } from "../types/atlas";
+import type { AppVersion, Atlas, AtlasImportPreview, DebugEvent, ExportFormat, ExportResult, HealthResult, IconUploadResult, IconAssetListResult } from "../types/atlas";
+import { uploadedResultToIconRef } from "./icons";
 
 interface ApiRequestOptions {
   method?: string;
   json?: unknown;
+  formData?: FormData;
 }
 
 interface ApiErrorOptions {
@@ -24,6 +26,21 @@ export class ApiError extends Error {
     this.statusText = statusText;
     this.url = url;
   }
+}
+
+export async function uploadTileIcon(file: File): Promise<IconUploadResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return requestJson<IconUploadResult>("/api/assets/icons", { method: "POST", formData });
+}
+
+export async function listTileIcons(): Promise<IconAssetListResult> {
+  const result = await requestJson<{ icons: IconUploadResult[] }>("/api/assets/icons");
+  return { icons: result.icons.map(uploadedResultToIconRef) };
+}
+
+export async function deleteTileIcon(filename: string): Promise<void> {
+  await request(`/api/assets/icons/${encodeURIComponent(filename)}`, { method: "DELETE" });
 }
 
 export async function loadAtlas(): Promise<Atlas> {
@@ -89,11 +106,13 @@ async function requestJson<T>(url: string, options: ApiRequestOptions = {}): Pro
   return response.json() as Promise<T>;
 }
 
-async function request(url: string, { method = "GET", json }: ApiRequestOptions = {}): Promise<Response> {
+async function request(url: string, { method = "GET", json, formData }: ApiRequestOptions = {}): Promise<Response> {
+  if (json !== undefined && formData !== undefined) throw new Error("API requests cannot send both JSON and FormData.");
   let response: Response;
   try {
     response = await fetch(url, {
       method,
+      ...(formData === undefined ? {} : { body: formData }),
       ...(json === undefined
         ? {}
         : {

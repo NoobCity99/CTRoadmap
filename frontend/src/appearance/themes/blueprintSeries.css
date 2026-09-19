@@ -1,0 +1,197 @@
+/* Blueprint TILE themes only. Canvas backgrounds keep their existing styles.
+   Preview controls are set locally so an unapplied draft stays independent. */
+
+/* BLUEPRINT SERIES — FONT CONTROLS */
+@font-face {
+  font-family: "Blueprinter";
+  src: url("/assets/fonts/Blueprinter.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  size-adjust: 125%;
+  font-display: swap;
+}
+
+.app-shell:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .tile-node:not(.cover-reveal-preview) .tile-node__title,
+.canvas-style-preview:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .canvas-style-preview__copy strong {
+  font-family: "Blueprinter", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.06em;
+}
+
+/* BLUEPRINT I — MANUAL COLOR CONTROLS */
+.app-shell[data-canvas-theme="blueprint"] .tile-node:not(.cover-reveal-preview),
+.canvas-style-preview[data-canvas-theme="blueprint"] {
+  --bp1-title-color: #061d4d;
+  /* Original Blueprint title ink. */
+}
+
+/* BLUEPRINT I — FIELD GRADIENT CONTROLS */
+.app-shell[data-canvas-theme="blueprint"] .tile-node:not(.cover-reveal-preview),
+.canvas-style-preview[data-canvas-theme="blueprint"] {
+  --bp1-field-gradient-angle: 90deg;
+  --bp1-field-gradient-start: #ffffff;
+  --bp1-field-gradient-mid: #9eb8f6;
+  --bp1-field-gradient-end: #0041ba;
+  --bp1-field-gradient-stop-1: 0%;
+  --bp1-field-gradient-stop-2: 35%;
+  --bp1-field-gradient-stop-3: 100%;
+  --bp1-field-label-color: #061d4d;
+  --bp1-field-value-color: #ffffff;
+  --bp1-field-strip-radius: 2px;
+  --bp1-field-strip-padding-y: .5px;
+  --bp1-field-strip-padding-x: 5px;
+
+  --bp-field-gradient: linear-gradient(var(--bp1-field-gradient-angle), var(--bp1-field-gradient-start) var(--bp1-field-gradient-stop-1), var(--bp1-field-gradient-mid) var(--bp1-field-gradient-stop-2), var(--bp1-field-gradient-end) var(--bp1-field-gradient-stop-3));
+  --bp-field-label: var(--bp1-field-label-color);
+  --bp-field-value: var(--bp1-field-value-color);
+  --bp-field-radius: var(--bp1-field-strip-radius);
+  --bp-field-padding-y: var(--bp1-field-strip-padding-y);
+  --bp-field-padding-x: var(--bp1-field-strip-padding-x);
+}
+
+/* BLUEPRINT II — MANUAL COLOR CONTROLS */
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview),
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] {
+  --bp2-tile-surface: #0041ba;
+  --bp2-title-color: #ffffff;
+  --bp2-body-text: #ffffff;
+  --bp2-muted-text: #d9e8ff;
+  --bp2-border-color: rgba(255, 255, 255, 0.88);
+}
+
+/* BLUEPRINT II — FIELD GRADIENT CONTROLS */
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview),
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] {
+  --bp2-field-gradient-angle: 90deg;
+  --bp2-field-gradient-start: #0041ba;
+  --bp2-field-gradient-mid: #8db8ff;
+  --bp2-field-gradient-end: #ffffff;
+  --bp2-field-gradient-stop-1: 0%;
+  --bp2-field-gradient-stop-2: 48%;
+  --bp2-field-gradient-stop-3: 100%;
+  --bp2-field-label-color: #ffffff;
+  --bp2-field-value-color: #111318;
+  --bp2-field-strip-radius: 2px;
+  --bp2-field-strip-padding-y: .5px;
+  --bp2-field-strip-padding-x: 5px;
+
+  --bp-field-gradient: linear-gradient(var(--bp2-field-gradient-angle), var(--bp2-field-gradient-start) var(--bp2-field-gradient-stop-1), var(--bp2-field-gradient-mid) var(--bp2-field-gradient-stop-2), var(--bp2-field-gradient-end) var(--bp2-field-gradient-stop-3));
+  --bp-field-label: var(--bp2-field-label-color);
+  --bp-field-value: var(--bp2-field-value-color);
+  --bp-field-radius: var(--bp2-field-strip-radius);
+  --bp-field-padding-y: var(--bp2-field-strip-padding-y);
+  --bp-field-padding-x: var(--bp2-field-strip-padding-x);
+}
+
+/* Shared field treatment: only ordinary field rows, including URL/IP/path actions.
+   Compensating margins paint the strip padding without growing/reflowing tiles.
+   :where keeps the exclusions from increasing selector specificity. */
+.app-shell:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .tile-node:not(.cover-reveal-preview) .tile-node__field:where(:not([data-field-key="location"], [data-field-key="relationship"], [data-field-key="relationships"])),
+.canvas-style-preview:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .tile-node__field {
+  background: var(--bp-field-gradient);
+  border-radius: var(--bp-field-radius);
+  padding: var(--bp-field-padding-y) var(--bp-field-padding-x);
+  margin: calc(-1 * var(--bp-field-padding-y)) calc(-1 * var(--bp-field-padding-x));
+  color: var(--bp-field-label);
+}
+
+.app-shell:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .tile-node:not(.cover-reveal-preview) .tile-node__field:where(:not([data-field-key="location"], [data-field-key="relationship"], [data-field-key="relationships"]))> :is(strong, .tile-node__field-action),
+.canvas-style-preview:is([data-canvas-theme="blueprint"], [data-canvas-theme="blueprint-ii"]) .tile-node__field>strong {
+  color: var(--bp-field-value);
+  text-decoration-color: currentColor;
+}
+
+/* Preserve Blueprint I's existing surfaces, state styling and specialized FLOW title. */
+.app-shell[data-canvas-theme="blueprint"] .tile-node:not(.cover-reveal-preview) .tile-node__title,
+.canvas-style-preview[data-canvas-theme="blueprint"] .canvas-style-preview__copy strong {
+  color: var(--bp1-title-color);
+}
+
+/* Blueprint II uses the existing tile geometry and Cyber-derived icon tokens. */
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) {
+  border-color: var(--bp2-border-color);
+  background: var(--bp2-tile-surface);
+  color: var(--bp2-body-text);
+  box-shadow: 0 14px 26px rgba(0, 19, 72, 0.43), 0 0 24px color-mix(in srgb, var(--tile-accent) 34%, rgba(0, 24, 94, 0.6));
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--parent {
+  outline-color: var(--bp2-border-color);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--primary-node {
+  box-shadow: 0 0 0 1px rgba(0, 65, 186, 0.52), 0 16px 32px rgba(0, 19, 72, 0.55), 0 0 34px rgba(255, 255, 255, 0.42);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--stacked {
+  box-shadow: 0 16px 32px rgba(0, 19, 72, 0.53), 0 0 26px rgba(255, 255, 255, 0.22);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--stacked::before,
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--stacked::after {
+  border-color: var(--bp2-border-color);
+  background: var(--bp2-tile-surface);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node--selected {
+  box-shadow: 0 0 0 2px var(--bp2-border-color), 0 18px 34px rgba(0, 19, 72, 0.6), 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) .tile-node__icon {
+  border-color: var(--bp2-border-color);
+  background: rgba(2, 8, 18, 0.82);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:where(:not(.cover-reveal-preview)) .tile-node__title {
+  color: var(--bp2-title-color);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) :is(.tile-node__field, .tile-node__type, .tile-node__parent, .tile-node__stack-meta span) {
+  color: var(--bp2-muted-text);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) :is(.tile-node__stack-meta strong, .tile-node__field strong, .tile-node__field-action, .tile-node__tags span) {
+  color: var(--bp2-body-text);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) :is(.tile-node__lifecycle, .tile-node__stack-meta, .tile-node__tags span, .tile-node__port-label) {
+  border-color: var(--bp2-border-color);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) .tile-node__stack-count {
+  border-color: var(--bp2-tile-surface);
+  color: var(--bp2-tile-surface);
+  background: var(--bp2-body-text);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) .tile-node__handle {
+  border-color: var(--bp2-border-color);
+  background: var(--bp2-tile-surface);
+}
+
+.app-shell[data-canvas-theme="blueprint-ii"] .tile-node:not(.cover-reveal-preview) .tile-node__port-label {
+  color: var(--bp2-body-text);
+  background: var(--bp2-tile-surface);
+}
+/* Existing standard preview, with one example field row. */
+.canvas-style-preview__field {
+  grid-column: 1 / -1;
+}
+
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] .canvas-style-preview__tile {
+  color: var(--bp2-body-text);
+  border-color: var(--bp2-border-color);
+  background: var(--bp2-tile-surface);
+}
+
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] .canvas-style-preview__copy strong {
+  color: var(--bp2-title-color);
+}
+
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] .canvas-style-preview__copy small {
+  color: var(--bp2-muted-text);
+}
+
+.canvas-style-preview[data-canvas-theme="blueprint-ii"] .canvas-style-preview__icon {
+  border-color: var(--bp2-border-color);
+  background: rgba(2, 8, 18, 0.82);
+}

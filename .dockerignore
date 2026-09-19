@@ -6,5 +6,6 @@ backend/.pytest_cache
 frontend/node_modules
 frontend/dist
 data/*.backup.json
+data/assets/icons/
 exports/*
 !exports/.gitkeep

@@ -18,6 +18,7 @@ def configured_path(env_name: str, default: Path) -> Path:
 
 
 DATA_DIR = configured_path("CTR_DATA_DIR", ROOT_DIR / "data")
+ICONS_DIR = DATA_DIR / "assets" / "icons"
 EXPORTS_DIR = configured_path("CTR_EXPORTS_DIR", ROOT_DIR / "exports")
 ATLAS_PATH = DATA_DIR / "atlas.json"
 DEMO_PATH = DATA_DIR / "demo.json"

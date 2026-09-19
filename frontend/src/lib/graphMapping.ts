@@ -1,10 +1,11 @@
 import { MarkerType, type Edge, type Node, type NodeChange } from "@xyflow/react";
-import { getLinkVisualTokens, getTileVisualTokens } from "../appearance";
+import { getLinkVisualTokens, getTileVisualTokens, type CanvasThemeId } from "../appearance";
 import { isLifecycleEditable, resolveLifecycle, resolveSourcePort, resolveTargetPort, type StackState } from "./atlasSelectors";
 import type { ConnectorRoutingMode, RoutingRect } from "./edgeRouting";
 import type { AppMode, Atlas, Family, Link, Tile } from "../types/atlas";
 
 export interface GraphMappingOptions {
+  canvasThemeId: CanvasThemeId;
   appMode: AppMode;
   atlas: Atlas | null;
   childrenByParent: Map<string, Tile[]>;
@@ -18,11 +19,13 @@ export interface GraphMappingOptions {
 }
 
 export interface EdgeMappingOptions {
+  canvasThemeId?: CanvasThemeId;
   connectorRoutingMode?: ConnectorRoutingMode;
   routingObstacles?: RoutingRect[];
 }
 
 export function mapAtlasToNodes({
+  canvasThemeId,
   appMode,
   atlas,
   childrenByParent,
@@ -64,7 +67,7 @@ export function mapAtlasToNodes({
     const lifecycle = resolveLifecycle(tile);
     const editable = isLifecycleEditable(lifecycle, appMode);
     const stack = stackState.stackByRepresentative.get(tile.id);
-    const tileVisuals = getTileVisualTokens(tile.type);
+    const tileVisuals = getTileVisualTokens(tile.type, canvasThemeId);
     return {
       id: tile.id,
       type: "tileNode",
@@ -73,6 +76,7 @@ export function mapAtlasToNodes({
       draggable: isInteractive && editable && !stack,
       data: {
         tile,
+        isSelected: selection?.kind === "tile" && selection.id === tile.id || selection?.kind === "stack" && selection.id === stack?.id,
         parentTitle,
         accentColor: tileVisuals.accentColor,
         iconAccentColor: tileVisuals.iconColor,
@@ -92,7 +96,7 @@ export function mapAtlasToEdges(appMode: AppMode, visibleLinks: Link[], stackSta
   return visibleLinks.map((link) => {
     const lifecycle = resolveLifecycle(link);
     const editable = isLifecycleEditable(lifecycle, appMode);
-    const linkVisuals = getLinkVisualTokens(link.type);
+    const linkVisuals = getLinkVisualTokens(link.type, options.canvasThemeId ?? "cyber");
     const label = `${link.label || link.type}${lifecycle === "planned" ? " [planned]" : ""}`;
     return {
       id: link.id,
@@ -125,10 +129,18 @@ export function mapAtlasToEdges(appMode: AppMode, visibleLinks: Link[], stackSta
 }
 
 export function isEditableNodeChange(change: NodeChange, nodes: Node[], mode: AppMode): boolean {
+  // Measurement and selection are display state, including for read-only tiles.
+  if (change.type === "dimensions" || change.type === "select") return true;
   if (!("id" in change)) return true;
   const node = nodes.find((candidate) => candidate.id === change.id);
   if (node?.type === "familyNode") return true;
   return isLifecycleEditable(resolveLifecycle(node?.data?.tile as Tile | undefined), mode);
+}
+
+/** Keep React Flow's measurements when only derived appearance/selection changes. */
+export function mergeNodeMeasurements(nextNodes: Node[], currentNodes: Node[]): Node[] {
+  const currentById = new Map(currentNodes.map((node) => [node.id, node]));
+  return nextNodes.map((node) => ({ ...node, measured: currentById.get(node.id)?.measured }));
 }
 
 export function familyNodeId(familyId: string): string {

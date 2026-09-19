@@ -1,11 +1,12 @@
-import type { PublicCanvasAppearanceV1 } from "./types";
+import { isCanvasBackgroundId, isCanvasThemeId } from "./registry";
+import type { PublicCanvasAppearanceV2 } from "./types";
 
-export const PUBLIC_CANVAS_APPEARANCE_STORAGE_KEY = "ctroadmap.public.canvasAppearance.v1";
+export const PUBLIC_CANVAS_APPEARANCE_STORAGE_KEY = "ctroadmap.public.canvasAppearance.v2";
 
-export const DEFAULT_PUBLIC_CANVAS_APPEARANCE: PublicCanvasAppearanceV1 = {
-  version: 1,
-  canvasTheme: "cyber",
-  canvasBackground: "hex"
+export const DEFAULT_PUBLIC_CANVAS_APPEARANCE: PublicCanvasAppearanceV2 = {
+  version: 2,
+  canvasThemeId: "cyber",
+  canvasBackgroundId: "hex"
 };
 
 export interface AppearanceStorage {
@@ -13,13 +14,13 @@ export interface AppearanceStorage {
   setItem(key: string, value: string): void;
 }
 
-export function readCanvasAppearance(storage: AppearanceStorage | null = getBrowserStorage()): PublicCanvasAppearanceV1 {
+export function readCanvasAppearance(storage: AppearanceStorage | null = getBrowserStorage()): PublicCanvasAppearanceV2 {
   try {
     const value = storage?.getItem(PUBLIC_CANVAS_APPEARANCE_STORAGE_KEY);
     if (!value) return { ...DEFAULT_PUBLIC_CANVAS_APPEARANCE };
-    const parsed = JSON.parse(value) as Partial<PublicCanvasAppearanceV1>;
-    if (parsed.version === 1 && parsed.canvasTheme === "cyber" && parsed.canvasBackground === "hex") {
-      return { ...DEFAULT_PUBLIC_CANVAS_APPEARANCE };
+    const parsed = JSON.parse(value) as Partial<PublicCanvasAppearanceV2> | null;
+    if (parsed?.version === 2 && isCanvasThemeId(parsed.canvasThemeId) && isCanvasBackgroundId(parsed.canvasBackgroundId)) {
+      return { version: 2, canvasThemeId: parsed.canvasThemeId, canvasBackgroundId: parsed.canvasBackgroundId };
     }
   } catch {
     // Browser-local appearance state is optional.
@@ -28,7 +29,7 @@ export function readCanvasAppearance(storage: AppearanceStorage | null = getBrow
 }
 
 export function writeCanvasAppearance(
-  appearance: PublicCanvasAppearanceV1 = DEFAULT_PUBLIC_CANVAS_APPEARANCE,
+  appearance: PublicCanvasAppearanceV2 = DEFAULT_PUBLIC_CANVAS_APPEARANCE,
   storage: AppearanceStorage | null = getBrowserStorage()
 ): void {
   try {

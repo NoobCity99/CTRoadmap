@@ -1,0 +1,132 @@
+/* Revealer Lite visual values only; draft previews own their theme selection. */
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node[data-tile-presentation="cover-reveal"] {
+  --cover-reveal-body-surface: #090b0e;
+  --cover-reveal-body-text: #ffffff;
+  --cover-reveal-body-muted: #b8bec8;
+  --cover-reveal-title-color: #000000;
+  --cover-reveal-title-shadow: none;
+  --cover-reveal-icon-box-bg: #0b0d10;
+  --cover-reveal-icon-box-border: #ffffff;
+  --cover-gradient-angle: 30deg;
+  --cover-gradient-stop-1: 35%;
+  --cover-gradient-stop-2: 75%;
+  --cover-gradient-stop-3: 100%;
+}
+
+/* ============================================================
+   REVEALER LITE — TILE TYPE GRADIENT CONTROLS
+   Tune background triplets and independent icon colors here.
+   ============================================================ */
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--node[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #8480bd;
+  --cover-color-3: #b5d9e6;
+  --cover-icon-color: #38a3ff;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--service[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--service[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #80b178;
+  --cover-color-3: #e1efee;
+  --cover-icon-color: #03a509;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--container[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--container[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #78a9a1;
+  --cover-color-3: #e5f6ff;
+  --cover-icon-color: #05a48a;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--drive[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--drive[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #9cb379;
+  --cover-color-3: #effbef;
+  --cover-icon-color: #a4d406;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--mount[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--mount[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #8b739f;
+  --cover-color-3: #f2fcf6;
+  --cover-icon-color: #067ddf;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--script[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--script[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #975a7e;
+  --cover-color-3: #f4efff;
+  --cover-icon-color: #d2115e;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--config[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--config[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #bf92ba;
+  --cover-color-3: #f4f6ff;
+  --cover-icon-color: #bb39ea;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #ac8073;
+  --cover-color-3: #f6ddd3;
+  --cover-icon-color: #e50707;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--iot_device[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--iot_device[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #f2f0eb;
+  --cover-color-2: #a1876a;
+  --cover-color-3: #faeee1;
+  --cover-icon-color: #e37e0b;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--url[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--url[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #94b7c0;
+  --cover-color-3: #eafbff;
+  --cover-icon-color: #0dade8;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--check[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--check[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #b0d0ad;
+  --cover-color-3: #effbee;
+  --cover-icon-color: #33f824;
+}
+
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--note[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--note[data-tile-presentation="cover-reveal"] {
+  --cover-color-1: #ffffff;
+  --cover-color-2: #7686a1;
+  --cover-color-3: #f9fafb;
+  --cover-icon-color: #cbd5e1;
+}
+
+/* FLOW is intentionally identical to Revealer, including its revealed body. */
+.app-shell[data-canvas-theme="revealer-lite"] .tile-node--flow[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="revealer-lite"] .tile-node--flow[data-tile-presentation="cover-reveal"] {
+  --flow-cover-gold-1: #886a11;
+  --flow-cover-gold-2: #b59520;
+  --flow-cover-black-1: #0b0d10;
+  --flow-cover-black-2: #202126;
+  --cover-reveal-icon-box-bg: #ffffff;
+  --cover-reveal-icon-box-border: #000000;
+  --cover-icon-color: #000000;
+  --cover-reveal-title-color: #ffffff;
+  --cover-reveal-title-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
+  --cover-reveal-body-surface: #efeeef;
+  --cover-reveal-body-text: #111318;
+  --cover-reveal-body-muted: #4b5563;
+}

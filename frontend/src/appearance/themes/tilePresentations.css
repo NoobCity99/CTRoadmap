@@ -1,0 +1,6 @@
+/* Presentation rules belong here and are selected by resolved presentation,
+   independently of Canvas palette/style variants. Standard adds no layout box,
+   preserving existing content spacing and tile measurements. */
+.tile-node[data-tile-presentation="standard"] > .tile-node__body {
+  display: contents;
+}

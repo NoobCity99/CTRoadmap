@@ -1,24 +1,29 @@
 import type { LinkType, TileType } from "../types/atlas";
-import { CYBER_THEME } from "./registry";
-import type { LinkVisualTokens, TileVisualTokens } from "./types";
+import { getCanvasTheme } from "./registry";
+import type { CanvasThemeId, LinkVisualTokens, TileVisualTokens } from "./types";
 
-export function getTileVisualTokens(tileType: TileType): TileVisualTokens {
-  const accentColor = CYBER_THEME.tileColors[tileType];
+export function getTileVisualTokens(tileType: TileType, canvasThemeId: CanvasThemeId = "cyber"): TileVisualTokens {
+  const theme = getCanvasTheme(canvasThemeId);
+  const accentColor = theme.tileColors[tileType];
+  const iconColor = theme.variant === "blueprint" ? getCanvasTheme("cyber").tileColors[tileType] : accentColor;
   return {
+    tilePresentation: theme.tilePresentation,
     accentColor,
-    iconColor: accentColor,
-    surfaceColor: CYBER_THEME.visuals.tileSurface,
-    textColor: CYBER_THEME.visuals.tileText,
-    mutedTextColor: CYBER_THEME.visuals.tileMutedText,
+    iconColor,
+    surfaceTone: theme.visuals.tileSurfaceTone,
+    surfaceColor: theme.visuals.tileSurface,
+    textColor: theme.visuals.tileText,
+    mutedTextColor: theme.visuals.tileMutedText,
     borderColor: accentColor,
     glowColor: accentColor
   };
 }
 
-export function getLinkVisualTokens(linkType: LinkType): LinkVisualTokens {
+export function getLinkVisualTokens(linkType: LinkType, canvasThemeId: CanvasThemeId): LinkVisualTokens {
+  const theme = getCanvasTheme(canvasThemeId);
   return {
-    strokeColor: CYBER_THEME.linkColors[linkType],
-    labelSurfaceColor: CYBER_THEME.visuals.edgeLabelSurface,
-    labelTextColor: CYBER_THEME.visuals.edgeLabelText
+    strokeColor: theme.linkColors[linkType],
+    labelSurfaceColor: theme.visuals.edgeLabelSurface,
+    labelTextColor: theme.visuals.edgeLabelText
   };
 }

@@ -1,0 +1,318 @@
+/* ============================================================
+   STELLAR COVER THEME — MANUAL DESIGN CONTROLS
+   Each type: center/edge colors, independent icon color, sprite cell,
+   closed X/Y/scale and revealed X/Y/scale. All artwork uses one WebP.
+   X is relative to the sprite box; Y offsets its vertical center.
+   The open X shifts art 14px left to clear the smaller header title.
+   Shared state/timing comes from coverReveal.css; no Stellar state machine.
+   ============================================================ */
+
+/* STELLAR — GLOBAL DEFAULTS */
+.app-shell[data-canvas-theme="stellar"] .tile-node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node[data-tile-presentation="cover-reveal"] {
+  --stellar-body-size: 120px;
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #ffffff;
+  --stellar-sprite-x: 0%;
+  --stellar-sprite-y: 0%;
+  --stellar-body-flip-x: 1;
+  --stellar-body-x-closed: -40%;
+  --stellar-body-y-closed: 0px;
+  --stellar-body-scale-closed: 1;
+  --stellar-body-x-open: -52%;
+  --stellar-body-y-open: 0px;
+  --stellar-body-scale-open: 0.90;
+  --cover-background: radial-gradient(ellipse at center, var(--stellar-bg-center) 0%, var(--stellar-bg-edge) 100%);
+  --cover-icon-color: var(--stellar-icon-color);
+  --cover-reveal-body-surface: #efeeef;
+  --cover-reveal-body-text: #111318;
+  --cover-reveal-body-muted: #4b5563;
+  --cover-reveal-title-color: #ffffff;
+  --cover-reveal-title-shadow: 2px 2px 3px rgba(0, 0, 0, 0.99);
+  --cover-reveal-icon-box-bg: #0b0d10;
+  --cover-reveal-icon-box-border: #ffffff;
+}
+
+/* ============================================================
+   STELLAR — NODE
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--node[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--node[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #2f2b1b;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #0980b8;
+  --stellar-sprite-x: 0%;
+  --stellar-sprite-y: 0%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -30px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — SERVICE
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--service[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--service[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #1a1802;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #c96f16;
+  --stellar-sprite-x: 33.333333%;
+  --stellar-sprite-y: 0%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -30px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — CONTAINER
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--container[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--container[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #f97316;
+  --stellar-sprite-x: 66.666667%;
+  --stellar-sprite-y: 0%;
+  --stellar-body-x-closed: 125%;
+  --stellar-body-y-closed: -30px;
+  --stellar-body-scale-closed: 1.3;
+  --stellar-body-x-open: 130%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — DRIVE
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--drive[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--drive[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #3b0a33;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #a3e635;
+  --stellar-sprite-x: 100%;
+  --stellar-sprite-y: 0%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -30px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 130%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — MOUNT
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--mount[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--mount[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #facc15;
+  --stellar-sprite-x: 0%;
+  --stellar-sprite-y: 33.333333%;
+  --stellar-body-x-closed: 130%;
+  --stellar-body-y-closed: -10px;
+  --stellar-body-scale-closed: 1.2;
+  --stellar-body-x-open: 130%;
+  --stellar-body-y-open: -5px;
+  --stellar-body-scale-open: .5;
+}
+
+/* ============================================================
+   STELLAR — SCRIPT
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--script[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--script[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #09ba91;
+  --stellar-sprite-x: 35.555%;
+  --stellar-sprite-y: 33.333333%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -40px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — CONFIG
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--config[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--config[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #fcd34d;
+  --stellar-sprite-x: 66.666667%;
+  --stellar-sprite-y: 33.333333%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -40px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — SECRET_REF
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--secret_ref[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #301435;
+  --stellar-icon-color: #038703;
+  --stellar-sprite-x: 100%;
+  --stellar-sprite-y: 33.333333%;
+  --stellar-body-flip-x: -1;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -40px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — FLOW
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--flow[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--flow[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #2d250d;
+  --stellar-icon-color: #000000;
+  --stellar-sprite-x: 0%;
+  --stellar-sprite-y: 66.666667%;
+  --stellar-body-x-closed: 140%;
+  --stellar-body-y-closed: -40px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+  --cover-reveal-icon-box-bg: #d0d708;
+  --cover-reveal-icon-box-border: #c8c809;
+}
+
+/* ============================================================
+   STELLAR — IOT_DEVICE
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--iot_device[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--iot_device[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #041c07;
+  --stellar-bg-edge: #050505;
+  --stellar-icon-color: #3ceefb;
+  --stellar-sprite-x: 33.333333%;
+  --stellar-sprite-y: 66.666667%;
+  --stellar-body-x-closed: 110%;
+  --stellar-body-y-closed: -40px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — URL
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--url[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--url[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #0a253a;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #cfe9ed;
+  --stellar-sprite-x: 66.666667%;
+  --stellar-sprite-y: 66.666667%;
+  --stellar-body-x-closed: 125%;
+  --stellar-body-y-closed: -30px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 135%;
+  --stellar-body-y-open: -5px;
+  --stellar-body-scale-open: .6;
+}
+
+/* ============================================================
+   STELLAR — CHECK
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--check[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--check[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #05242f;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #84cc16;
+  --stellar-sprite-x: 100%;
+  --stellar-sprite-y: 66.666667%;
+  --stellar-body-x-closed: 120%;
+  --stellar-body-y-closed: -20px;
+  --stellar-body-scale-closed: 1.1;
+  --stellar-body-x-open: 140%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* ============================================================
+   STELLAR — NOTE
+   ============================================================ */
+.app-shell[data-canvas-theme="stellar"] .tile-node--note[data-tile-presentation="cover-reveal"]:not(.cover-reveal-preview),
+.app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node--note[data-tile-presentation="cover-reveal"] {
+  --stellar-bg-center: #000000;
+  --stellar-bg-edge: #000000;
+  --stellar-icon-color: #e5e7eb;
+  --stellar-sprite-x: 0%;
+  --stellar-sprite-y: 100%;
+  --stellar-body-x-closed: 120%;
+  --stellar-body-y-closed: -20px;
+  --stellar-body-scale-closed: 1.6;
+  --stellar-body-x-open: 130%;
+  --stellar-body-y-open: -10px;
+  --stellar-body-scale-open: .8;
+}
+
+/* STELLAR — ART LAYER (normally tune the controls above).
+   The real cells contain ~90% body diameter. A -40% sprite offset shows
+   roughly 60% of the body; a fixed cell size keeps tall stacks bounded.
+   The cover clips this art element and keeps it behind icon/title. */
+:is(.app-shell[data-canvas-theme="stellar"] .tile-node:not(.cover-reveal-preview),
+  .app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node)[data-tile-presentation="cover-reveal"]>.tile-node__header>.cover-reveal-art {
+  display: block;
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  left: 0;
+  top: 50%;
+  width: var(--stellar-body-size);
+  height: var(--stellar-body-size);
+  background-image: url("/assets/tile-covers/stellar/StellarBodies.webp");
+  background-repeat: no-repeat;
+  background-size: 400% 400%;
+  background-position: var(--stellar-sprite-x) var(--stellar-sprite-y);
+  /* Trim the cell boundary so neighboring glow pixels cannot bleed in. */
+  clip-path: inset(1px);
+  transform:
+    translate(calc(var(--stellar-body-x-closed) * (1 - var(--cover-reveal-progress)) + var(--stellar-body-x-open) * var(--cover-reveal-progress)),
+      calc(-50% + var(--stellar-body-y-closed) * (1 - var(--cover-reveal-progress)) + var(--stellar-body-y-open) * var(--cover-reveal-progress))) scale(calc(var(--stellar-body-scale-closed) * (1 - var(--cover-reveal-progress)) + var(--stellar-body-scale-open) * var(--cover-reveal-progress))) scaleX(var(--stellar-body-flip-x));
+  transition: transform var(--cover-reveal-duration) var(--cover-reveal-easing);
+}
+
+:is(.app-shell[data-canvas-theme="stellar"] .tile-node:not(.cover-reveal-preview),
+  .app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node)[data-tile-presentation="cover-reveal"]>.tile-node__header> :is(.tile-node__icon, .tile-node__title-wrap) {
+  position: relative;
+  z-index: 1;
+}
+
+:is(.app-shell[data-canvas-theme="stellar"] .tile-node:not(.cover-reveal-preview),
+  .app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node)[data-tile-presentation="cover-reveal"] .tile-node__lifecycle {
+  z-index: 2;
+}
+
+/* Shared cover behavior is retained; decorative recession may be immediate. */
+@media (prefers-reduced-motion: reduce) {
+
+  :is(.app-shell[data-canvas-theme="stellar"] .tile-node:not(.cover-reveal-preview),
+    .app-shell .canvas-style-preview[data-canvas-theme="stellar"] .tile-node)[data-tile-presentation="cover-reveal"]>.tile-node__header>.cover-reveal-art {
+    transition: none;
+  }
+}

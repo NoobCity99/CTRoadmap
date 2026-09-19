@@ -1,0 +1,140 @@
+/* TRON LEGACY — VISUAL TUNING
+   Opposing perspective planes inspired by wheatup's Matrix Grid reference:
+   https://codepen.io/wheatup/pen/KKZRjaZ
+   All CSS is local; no reference typography, runtime assets or dependencies.
+   Grid coordinates, travel time and tracer timing: tronLegacyRoutes.ts. */
+.app-shell .canvas-frame[data-background="tron_legacy"] { background: #020407; }
+.canvas-frame[data-background="tron_legacy"] .react-flow,
+.canvas-style-preview[data-background="tron_legacy"] {
+  isolation: isolate;
+  --xy-background-color: transparent;
+}
+
+.tron-legacy-background, .tron-legacy-background * { pointer-events: none; }
+.tron-legacy-background {
+  --tron-legacy-grid: #cfe5ff;
+  --tron-legacy-grid-rgb: 207, 229, 255;
+  --tron-perspective: 100rem;
+  --tron-plane-angle: 85deg;
+  --tron-plane-width: 300%;
+  --tron-plane-height: 150%;
+  --tron-grid-opacity: 0.32;
+  --tron-glow-opacity: 0.35;
+  --tron-grid-glow-blur: 1rem;
+  --tron-grid-line: 4px;
+  /* HORIZON FADE — solid for one logical cell, then fade toward the viewer. */
+  --tron-mask-stop: var(--tron-grid-y);
+  --tron-trail-length: 0.12;
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: #020407;
+  perspective: var(--tron-perspective);
+  perspective-origin: center;
+}
+.tron-legacy-plane {
+  position: absolute;
+  left: 50%;
+  width: var(--tron-plane-width);
+  height: var(--tron-plane-height);
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+.tron-legacy-plane--lower {
+  --tron-grid-direction: 1;
+  --tron-mask-direction: to bottom;
+  bottom: 0;
+  transform-origin: bottom center;
+  transform: translateX(-50%) rotateX(var(--tron-plane-angle));
+}
+.tron-legacy-plane--upper {
+  --tron-grid-direction: -1;
+  --tron-mask-direction: to top;
+  top: 0;
+  transform-origin: top center;
+  transform: translateX(-50%) rotateX(calc(-1 * var(--tron-plane-angle)));
+}
+.tron-legacy-grid-motion {
+  position: absolute;
+  inset: 0;
+  /* MOTION TUNING — one full logical cell per period, never ease or reverse.
+     Only this periodic texture resets. The unique tracer drifts separately. */
+  animation: tron-legacy-grid-scroll var(--tron-grid-period) linear infinite;
+  will-change: transform;
+}
+.tron-legacy-routes, .tron-legacy-plane__mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.tron-legacy-grid {
+  position: absolute;
+  inset: calc(-1 * var(--tron-grid-y)) 0;
+  opacity: var(--tron-grid-opacity);
+  /* Center every line on the exact SVG coordinate, including x/y = 0. */
+  background-image:
+    linear-gradient(90deg, var(--tron-legacy-grid) var(--tron-grid-line), transparent var(--tron-grid-line)),
+    linear-gradient(0deg, var(--tron-legacy-grid) var(--tron-grid-line), transparent var(--tron-grid-line));
+  background-size: var(--tron-grid-x) var(--tron-grid-paint-y);
+  background-position: calc(-0.5 * var(--tron-grid-line)) calc(0.5 * var(--tron-grid-line));
+}
+.tron-legacy-grid--glow {
+  opacity: var(--tron-glow-opacity);
+  filter: blur(var(--tron-grid-glow-blur));
+}
+@supports (mix-blend-mode: plus-lighter) {
+  .tron-legacy-grid--glow { mix-blend-mode: plus-lighter; }
+}
+.tron-legacy-routes { overflow: hidden; }
+.tron-legacy-plane__mask {
+  background: linear-gradient(var(--tron-mask-direction), #020407 var(--tron-mask-stop), transparent);
+}
+.tron-legacy-tracer-drift {
+  visibility: hidden;
+  transform-box: view-box;
+  will-change: transform;
+}
+/* TRACER APPEARANCE — unchanged packet length, glow, core and dash motion. */
+.tron-legacy-tracer {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* A full-path gap keeps a second dash from appearing at the opposite end. */
+  stroke-dasharray: var(--tron-trail-length) 1;
+  stroke-dashoffset: var(--tron-trail-length);
+  animation: tron-route-travel var(--tron-route-duration) linear both;
+}
+.tron-legacy-tracer--glow {
+  stroke: var(--tron-legacy-grid);
+  stroke-width: 8;
+  opacity: 0.45;
+  filter: blur(5px);
+}
+.tron-legacy-tracer--core {
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 3px var(--tron-legacy-grid)) drop-shadow(0 0 8px var(--tron-legacy-grid));
+}
+.tron-legacy-horizon {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(var(--tron-legacy-grid-rgb), 0.14), transparent 60%);
+}
+@keyframes tron-legacy-grid-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(var(--tron-grid-y) * var(--tron-grid-direction))); }
+}
+@keyframes tron-route-travel {
+  from { stroke-dashoffset: var(--tron-trail-length); }
+  to { stroke-dashoffset: -1; }
+}
+
+/* Preview and PNG always use the same static frame, with no tracer. */
+.tron-legacy-background[data-export] * { animation: none; will-change: auto; }
+.canvas-style-preview .tron-legacy-background { --tron-perspective: 300px; }
+@media (prefers-reduced-motion: reduce) {
+  .tron-legacy-background * { animation: none; will-change: auto; }
+  .tron-legacy-tracer { display: none; }
+}

@@ -1,0 +1,227 @@
+.icon-editor {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 6px;
+  border: 1px solid rgba(91, 142, 196, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 15, 30, 0.55);
+  padding: 10px;
+}
+
+.icon-editor__summary {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-editor__preview {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--tile-accent, #38a3ff) 45%, transparent);
+  border-radius: 8px;
+  color: var(--tile-accent, #38a3ff);
+  background: rgba(7, 15, 30, 0.9);
+}
+
+.icon-editor__preview img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.icon-editor__meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.icon-editor__meta .field-editor__title {
+  margin: 0;
+}
+
+.icon-editor__meta strong,
+.icon-editor__meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-editor__meta strong {
+  color: #e5eefb;
+  font-size: 0.9rem;
+}
+
+.icon-editor__meta span {
+  color: #91a4bf;
+  font-size: 0.76rem;
+}
+
+.icon-editor__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.icon-editor__actions .ghost-button {
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.icon-library {
+  display: grid;
+  gap: 8px;
+}
+
+.icon-library__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #91a4bf;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inspector .icon-library__upload {
+  margin: 0;
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.76rem;
+  text-transform: none;
+  letter-spacing: 0;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  justify-content: normal;
+  text-align: right;
+}
+
+.inspector .icon-library__upload svg {
+  justify-self: start;
+}
+
+.inspector .icon-library__upload span {
+  justify-self: end;
+}
+
+.inspector .icon-library__edit {
+  min-height: 34px;
+  min-width: 72px;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 0.76rem;
+}
+
+.icon-library__upload input {
+  display: none;
+}
+
+.icon-library__upload--busy {
+  opacity: 0.72;
+}
+
+.icon-library__pool {
+  max-height: min(360px, 48vh);
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(91, 142, 196, 0.2);
+  border-radius: 8px;
+  background: rgba(2, 8, 18, 0.45);
+}
+
+.icon-library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: 7px;
+}
+
+.icon-library__option-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.icon-library__option {
+  width: 100%;
+  min-width: 0;
+  min-height: 66px;
+  border: 1px solid rgba(91, 142, 196, 0.22);
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.68);
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  padding: 7px 5px;
+}
+
+.icon-library__option img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.icon-library__option span {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #91a4bf;
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.icon-library__option--selected {
+  border-color: color-mix(in srgb, var(--tile-accent, #38a3ff) 86%, white);
+  color: #f8fafc;
+  background: color-mix(in srgb, var(--tile-accent, #38a3ff) 20%, rgba(15, 23, 42, 0.86));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tile-accent, #38a3ff) 48%, transparent);
+}
+
+.icon-library__option--selected span {
+  color: #f8fafc;
+}
+
+.icon-library__delete {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(254, 202, 202, 0.78);
+  border-radius: 999px;
+  color: #ffffff;
+  background: #dc2626;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 0 0 2px rgba(2, 8, 18, 0.92);
+}
+
+.icon-library__delete:disabled {
+  opacity: 0.6;
+}
+
+.icon-library__divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.42), transparent);
+}
+
+.icon-library__empty {
+  border: 1px dashed rgba(91, 142, 196, 0.24);
+  border-radius: 7px;
+  color: #91a4bf;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.76rem;
+}
+
+.icon-library__empty--error {
+  border-color: rgba(248, 113, 113, 0.34);
+  color: #fca5a5;
+}

@@ -1,11 +1,23 @@
 {
-  "latest_version": "0.7.0-beta",
+  "manifest_schema": 2,
+  "latest_version": "0.8.0-beta",
   "channel": "beta",
   "targets": {
     "docker": {
-      "update_command": "cd ~/ctroadmap-beta && docker compose pull && docker compose up -d",
+      "update_method": "ctr_update_v1",
+      "update_command": "bash -c 'set -euo pipefail\nctr_updater_file=\"$(mktemp)\"\ntrap '\"'\"'rm -f -- \"$ctr_updater_file\"'\"'\"' EXIT\ncurl --proto =https --tlsv1.2 -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/9ba3c494a6a8a64c52a555c74d69af9014958cc9/ctr_update.sh -o \"$ctr_updater_file\"\nprintf '\"'\"'%s  %s\\n'\"'\"' 8ba879f54a9d35fb8ef515076dc4ad18c23ad837991c4b07f138d336500c86b0 \"$ctr_updater_file\" | sha256sum --check --status\nchmod +x \"$ctr_updater_file\"\nbash \"$ctr_updater_file\"'",
       "release_notes_url": "https://github.com/NoobCity99/CTRoadmap/releases",
-      "notes": "v0.7.0 beta is available. Pull the latest beta image and restart the Docker Compose service."
+      "notes": "Standard Linux release installs: copy this one-time host updater bootstrap command. NAS/Portainer: keep using your platform's native update workflow.",
+      "summary": [
+        "CTR Host Updater Integration",
+        "Settings Panel Redesign",
+        "Animated Tile & Canvas Themes"
+      ],
+      "updater": {
+        "version": "0.1.1",
+        "url": "https://raw.githubusercontent.com/NoobCity99/CTRoadmap/9ba3c494a6a8a64c52a555c74d69af9014958cc9/ctr_update.sh",
+        "sha256": "8ba879f54a9d35fb8ef515076dc4ad18c23ad837991c4b07f138d336500c86b0"
+      }
     },
     "linux_desktop": {
       "download_url": "",
@@ -16,6 +28,13 @@
       "download_url": "",
       "sha256": "",
       "notes": "Windows desktop installers are not published yet."
+    }
+  },
+  "migration": {
+    "host_updater": {
+      "bridge_version": "0.8.0-beta",
+      "required_from": "0.9.0-beta",
+      "minimum_updater_version": "0.1.1"
     }
   }
 }

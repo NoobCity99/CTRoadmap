@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import type { AppMode, ExportFormat } from "../types/atlas";
 import { ExportMenu } from "./ExportMenu";
 import { SearchBox } from "./SearchBox";
+import { SplitSourceNotice } from "./SplitSourceNotice";
 
 interface TopBarProps {
   appMode: AppMode;
@@ -100,6 +101,7 @@ export function TopBar({
         <button ref={settingsButtonRef} className="icon-button" onClick={onToggleSettings} title={settingsOpen ? "Close settings" : "Settings"} aria-label={settingsOpen ? "Close settings" : "Settings"} aria-expanded={settingsOpen}>
           <Settings size={19} />
         </button>
+        <SplitSourceNotice returnFocusRef={settingsButtonRef} />
       </div>
     </header>
   );

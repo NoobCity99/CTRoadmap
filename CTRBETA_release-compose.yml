@@ -8,4 +8,5 @@ services:
       # Persistent atlas data and generated exports live beside this compose file.
       - ./data:/app/data
       - ./exports:/app/exports
+      - ./imports:/app/imports:ro
     restart: unless-stopped

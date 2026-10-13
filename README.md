@@ -11,10 +11,22 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Compatible-Synology-green?style=for-the-badge&logo=sega">
-  <img src="https://img.shields.io/badge/🍎%20MOBILE VIEW-READY-8A2BE2?style=for-the-badge&logo=android">
+  <img src="https://img.shields.io/badge/ARM64-READY-yellow?style=for-the-badge">
+
+
 </p>
 
-CTRoadmap is a self-hosted Diagram & Documentation tool for your **HOMELAB** via nodes, services, storage, scripts, configs, URLs, and operational relationships. Meant to be a step up from PowerPoint or other *diagram* apps, CTR intentionally a NON-INTEGRATED, stand-alone repository of your system. It does not montior, control, or interface with your homelab at all. Just Document.  It is a Docker-served browser webapp that saves your system documentation to the `data/atlas.json` file.
+<p align="center">
+  <a href="#beta-docker-install"><strong>INSTALL</strong></a>
+  &nbsp;&nbsp; | &nbsp;&nbsp;
+  <a href="#features"><strong>FEATURES</strong></a>
+  &nbsp;&nbsp; | &nbsp;&nbsp;
+  <a href="#development"><strong>DEVELOPMENT</strong></a>
+</p>
+
+CTRoadmap is a self-hosted Diagram & Documentation tool for your **HOMELAB** via nodes, services, storage, scripts, configs, URLs, and operational relationships. Meant to be a step up from PowerPoint or other *diagram* apps, CTR intentionally a NON-INTEGRATED, stand-alone repository of your system. It does not montior or control your homelab. Just Document.  It is a Docker-served browser webapp that saves your system documentation to an atlas.json file.
+
+CTRoadmap remains a local-first documentation application, not a monitoring or remote-control platform. Its **NEW** optional **System Snapshot** tool collects read-only infrastructure information only when you choose to run it on your Linux host. The web app does not initiate scans or automatically add discoveries to your Atlas; you review and approve proposed changes before they are saved.
 
 
 <table>
@@ -30,13 +42,7 @@ CTRoadmap is a self-hosted Diagram & Documentation tool for your **HOMELAB** via
 
 ## Beta Docker Install
 
-The recommended beta release path is the published Docker image:
-
-```text
-ghcr.io/noobcity99/ctroadmap:beta
-```
-
-Beta users do not need to clone this repository or install Python, Node, or npm.
+For standard Linux installations, **use the CTRoadmap installer below**. It sets up both the Docker application and the host-side components needed for updates and System Snapshot.
 
 ### Standard Linux / Docker install
 
@@ -57,7 +63,7 @@ chmod +x CTR_install.sh
 ./CTR_install.sh
 ```
 
-The installer creates the CTRoadmap installation, starts the Docker container, and installs/registers the host-side `ctr_update.sh` updater used by standard Linux installations.
+The installer downloads and verifies the trusted host-side `ctr_update.sh` updater, then lets it handle the installation. The updater prepares the application directories, installs the Snapshot utilities, configures Docker Compose, starts CTRoadmap, and checks that the app is healthy. **No network scan is performed during installation.**
 
 One-liner install:
 
@@ -83,11 +89,27 @@ The default installation directory is:
 ~/ctroadmap-beta
 ```
 
+**Behind the scenes:** The installer deploys the official CTRoadmap beta Docker image:
+
+```text
+ghcr.io/noobcity99/ctroadmap:beta
+```
+
+You do **not** need to clone this repository or install Python, Node.js, npm, or WhosThere yourself for a standard Linux installation. The installer and host updater handle the required application and Snapshot components.
+
+### AMD64 & ARM64 Support (New in v0.9)
+
+Starting with **v0.9.0-beta**, CTRoadmap supports both **AMD64 (x86-64)** and **ARM64 (64-bit ARM)** Linux systems, expanding compatibility to ARM-based home servers, single-board computers, and compatible NAS devices.
+
+The official Docker image supports both architectures under the same `:beta` tag. Docker automatically selects the correct version for your system, so **no separate download, image tag, or installation procedure is required**.
+
+For standard Linux installations, the CTRoadmap installer and Host Updater also provision the appropriate architecture-specific Snapshot utilities. NAS and Portainer users should continue following their platform's normal deployment and update procedures.
+
 ### Synology / NAS / Portainer installs
 
 CTRoadmap can also be deployed through NAS and Portainer-managed Docker environments.
 
-Those platforms have their own install and container-management workflows, so this README does not duplicate platform-specific setup instructions.
+Those platforms have their own install and container-management workflows, so this README does not duplicate platform-specific setup instructions. Pulling or updating the Docker image through NAS/Portainer does **not** install or register CTRoadmap's Linux host updater or Snapshot tools. In this beta, System Snapshot is unavailable under the Platform / NAS Managed update workflow.
 
 For NAS / Portainer installation guidance, see:
 
@@ -142,14 +164,19 @@ Full deletion removes only the matched CTRoadmap installation and exact unused C
 
 </details>
 
-Persistent data for the default installation lives in:
+The default installation keeps its application data, generated exports, and Snapshot handoff in:
 
 ```text
 ~/ctroadmap-beta/data
 ~/ctroadmap-beta/exports
+~/ctroadmap-beta/imports
 ```
 
+The updater also provisions `~/ctroadmap-beta/tools/` for host-side Snapshot utilities.
+
 ## Run With Docker
+
+Use the following Docker Compose commands to manage an **already installed** CTRoadmap instance. For a complete new Linux installation, use the installer above: a standalone image pull or `docker compose up` does not register the Host Updater or provision Snapshot tools. The source repository's `docker-compose.yml` is intended for development builds.
 
 ```bash
 docker compose up -d
@@ -173,13 +200,13 @@ Logs:
 docker compose logs -f
 ```
 
-CTRoadmap's update system is advisory only. The web application does not execute shell commands, Docker commands, or the host updater, and it does not mount the Docker socket.
+CTRoadmap's **web application** only advises you about updates and Snapshot readiness. It never runs host shell commands, Docker commands, the host updater, or a Snapshot scan, and it does not mount the Docker socket. You explicitly run host commands in your own terminal.
 
 ## Updating CTRoadmap
 
-v0.8 introduces the CTRoadmap host updater for standard Linux installations.
+For standard Linux installations, the **Host Updater** (`ctr_update.sh`) handles application updates and maintains the host-side integration used by System Snapshot. Starting with updater v0.2.0, it can also securely refresh its own executable during a normal update run.
 
-The goal is simple: CTRoadmap tells you when an update is available, but **you remain in control of when anything runs on the host**.
+CTRoadmap tells you when an update is available, but **you remain in control of when anything runs on the host**. The web app never performs the update for you.
 
 Open the animated TopBar update button or:
 
@@ -206,40 +233,36 @@ When an update is available, CTRoadmap can provide a **BACKUP ATLAS + COPY UPDAT
 
 `ctr_update.sh` handles the host-side update work:
 
-- validates the CTRoadmap installation;
-- checks Docker and Docker Compose;
-- prevents two updater runs from colliding;
-- pulls the current CTRoadmap release image;
-- recreates the CTRoadmap container;
-- checks `/api/health` to make sure CTRoadmap came back successfully;
-- records the updater result so the application can report it next time.
+- validates the installation, Docker/Compose configuration, and supported host architecture;
+- checks for a compatible, verified updater release and can update itself before performing the normal update;
+- prevents overlapping updater runs;
+- prepares and verifies the read-only `imports/` mount without discarding supported custom data and export mounts;
+- installs or repairs the verified System Snapshot utilities under `tools/` (including WhosThere, local inventory, and normalization tools);
+- pulls the current CTRoadmap release image, recreates the container when needed, and verifies `/api/health`;
+- records updater and integration status so the application can report readiness and past results.
 
-The updater does **not** modify Atlas content, prune Docker resources, install packages, silently use `sudo`, or migrate the installation directory.
+The same normal updater command can repair missing Snapshot integration even when the app image is already current. The updater does **not** edit your Atlas, prune Docker resources, install system packages, silently use `sudo`, or relocate your installation.
 
-There is currently no automatic rollback. If an update fails, the updater leaves your persistent Atlas and exports alone and reports diagnostics so the problem can be corrected before retrying.
+There is no automatic rollback of an application-container update. If an update fails, the updater preserves persistent Atlas data and exports and reports diagnostics before you retry. Verify important backups before updating.
 
-### If CTRoadmap asks you to finish updater setup
+### Existing users: one-time updater transition
 
-Existing users moving through the v0.8 transition may occasionally see a setup or recovery message instead of a normal update command.
-
-Possible states include:
+A standard Linux installation using the older **Host Updater v0.1.1** needs a one-time setup/refresh to move to the v0.9-compatible **v0.2.0** updater. The older updater cannot update itself. CTRoadmap may show one of these states instead of the normal update action:
 
 - **FINISH UPDATE SETUP**
 - **REPAIR REQUIRED**
 - **UPDATER REFRESH REQUIRED**
 - **LEGACY UPDATE METHOD DETECTED**
 
-These are not requests to reinstall CTRoadmap.
+**You do not need to reinstall CTRoadmap.** Follow the verified setup/repair/refresh command supplied by the update screen. That command uses `--register-only` to install/register the compatible updater; it **does not** pull a new application image, restart the app, change Compose, or provision the Snapshot tools yet.
 
-The setup / repair / refresh command registers or repairs the host updater using `--register-only`. It does **not** install the CTRoadmap application update at the same time.
+After that one-time setup:
 
-After the setup command finishes:
+1. Return to **Settings → Updates & App Data → Updates** and choose **Check Now**.
+2. Run the normal Host Updater command shown by CTRoadmap (or run `./ctr_update.sh` from your installation directory).
+3. Let the updater complete the application update and verify/install the `imports/` integration and Snapshot tools. Future supported updater patches are handled through the normal update command.
 
-1. Return to **Settings → Updates & App Data → Updates**.
-2. Choose **Check Now**.
-3. If an application update is still available, run the normal update command separately.
-
-This provides a non-destructive recovery path for users who skipped a transition release or updated the Docker container using an older method.
+This also provides a recovery path for users who skipped a transition release or previously updated only their Docker container. **Updating the Docker image alone does not upgrade the host updater or enable System Snapshot.** Snapshot remains disabled until the app can verify completed host integration.
 
 ### NAS / Portainer-managed installations
 
@@ -251,7 +274,7 @@ For platform-specific guidance, see:
 
 **https://mariushosting.com/?s=ctroadmap**
 
-The CTRoadmap update modal will not offer the Linux host-updater command when the installation is set to Platform / NAS Managed.
+The CTRoadmap update modal will not offer the Linux host-updater command when the installation is set to Platform / NAS Managed. The v0.9 System Snapshot menu is also disabled for this workflow; updating the NAS container alone does not provision the required host-side tools and mount.
 
 ### Update checks and reminders
 
@@ -281,21 +304,20 @@ Use **Download Your Atlas** or **BACKUP ATLAS** from the update screen to save a
 
 ### Full CTRoadmap backup
 
-If you want to preserve the complete installation state, back up both:
+To restore your Atlas, uploaded assets, settings, and generated files, preserve **`data/` and `exports/`**. For a more complete installation backup, also keep any important Snapshot file in `imports/`, your Compose configuration, and a custom `.env` if you use one. The `tools/` utilities can normally be reinstalled by the Host Updater.
 
-```text
-data/
-exports/
-```
-
-For example:
+From the default installation directory, this example puts a timestamped backup **outside** CTRoadmap's installation folder:
 
 ```bash
-cp -a data data.backup
-cp -a exports exports.backup
+cd ~/ctroadmap-beta
+backup_dir="$HOME/ctroadmap-backups/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+cp -a data exports docker-compose.yml "$backup_dir/"
+[ ! -d imports ] || cp -a imports "$backup_dir/"
+[ ! -f .env ] || cp -a .env "$backup_dir/"
 ```
 
-Keep important backups outside the CTRoadmap installation directory before uninstalling or making destructive host changes.
+For custom installations, adjust the initial `cd`. Protect backups containing local passcode or other private configuration. Keep important backups outside the CTRoadmap installation directory before uninstalling or making destructive host changes.
 
 Persistent data includes:
 
@@ -305,10 +327,12 @@ Persistent data includes:
 - `data/assets/handbook/` — Handbook logo assets.
 - `data/auth.json` — Local Access Passcode configuration and session state when enabled.
 - `data/update_state.json` — update settings and cached advisory state.
-- `data/host_updater_state.json` — administrative state written by `ctr_update.sh`.
+- `data/host_updater_state.json` — Host Updater registration, last result, and Snapshot integration state.
 - `exports/` — generated Markdown, YAML, Mermaid, PDF, and other exported files.
+- `imports/ctr-system-snapshot.json` — the latest System Snapshot, if you have run the host command; optional to retain for later review.
+- `tools/` — verified host-side Snapshot utilities supplied by the updater, which can normally be re-provisioned.
 
-An Atlas JSON download is intentionally portable, but it is not a complete archive of uploaded images, authentication settings, history, update state, or generated exports.
+An Atlas JSON download is intentionally portable, but it is not a complete archive of uploaded images, authentication settings, history, update state, Snapshot files, or generated exports.
 
 The toolbar provides persistent Undo and Redo for canonical Atlas edits. History survives browser and container restarts, while `data/atlas.json` remains a normal standalone Atlas that can be copied or imported independently.
 
@@ -337,6 +361,7 @@ The Canvas is the main visual workspace for documenting how your homelab fits to
 - Model nodes, services, containers, drives, mounts, scripts, configs, secret references, flows, IoT devices, URLs, checks, and notes.
 - Designate primary nodes and arrange child tiles beneath the systems they belong to.
 - Create typed relationships and edit labels, notes, endpoints, ports, and directionality.
+- Drag a connection between Tiles to open **Create Relationship**; choose how the Tiles relate structurally (such as parent/child or no parent link) and select the connector type. Only eligible structural choices are offered, helping prevent invalid hierarchy or Family changes.
 - Choose connector routing that may pass through tiles or route around them.
 - Lock the canvas to prevent accidental changes while navigating.
 - Document checks with command and expected-result fields without executing them.
@@ -368,10 +393,15 @@ The Handbook turns the same Atlas into structured, readable infrastructure docum
 - Use the **ADDRESS BOOK** to collect URL and IP information found throughout the Atlas.
 - Include Flow / Swimlane documentation inside the Handbook.
 - Add supporting notes and reference information to tiles and relationships.
+- Create **NotePages** for individual Tiles: multiple titled pages with Plain Text or Markdown content, reorderable tabs, and controls to rename, edit, or delete pages. New manual NotePages start in Markdown mode; the existing `NOTES` field remains available.
+- Use **HyperNotes** to link directly to other Atlas Tiles from Markdown NotePages. Type `@@` (or use the `@@` toolbar action), search for a Tile, and insert a navigable reference. References follow Tile renames; the Handbook provides a Back action, and PDF exports can include clickable Tile references.
+- View and edit Snapshot-generated Handbook notes after an approved ingest; these are ordinary editable pages, not live monitoring records.
 - Add a custom Handbook logo.
-- Export the Handbook as a formatted PDF with a cover page and table of contents.
+- Export the Handbook as a formatted PDF with a cover page, navigation, and configurable content options.
 
-The Handbook is another view of the same Atlas, not a separate copy of your documentation.
+**Handbook PDF options:** Choose whether to include the Address Book and Swimlane diagrams, exclude generated Snapshot data, and show a Full Table of Contents with nested Tiles and PDF bookmarks. **Exclude Snapshot Data** and **Show Full Table of Contents** are enabled by default; excluding Snapshot data keeps the Tiles and ordinary notes in the document.
+
+The Handbook is another view of the same Atlas, not a separate copy of your documentation. NotePages can also be read in Mobile View, where editing is disabled.
 
 ### Rack View Builder
 
@@ -420,6 +450,19 @@ Stacks help reduce clutter when a Node contains many related child items.
 - Expand, focus, and unstack items without deleting or rewriting the underlying Atlas objects.
 - Keep dense systems readable while preserving their actual relationships.
 
+### System Snapshot & INGEST
+
+**System Snapshot** is an optional, user-initiated way to discover and document your existing infrastructure. Its host-side tools combine a single **WhosThere** LAN discovery scan with CTRoadmap's **local Linux inventory** (such as services, containers, networks, storage, and mounts), then validate and combine the findings into one Snapshot. The process is read-only: it does not alter host services or make changes to your Atlas.
+
+1. **Collect:** In **Import → System Snapshot**, select **COPY COMMAND**, then run the provided command yourself on the Linux host in a terminal or SSH session. The web application does not launch it.
+2. **Prepare:** The host tools produce `imports/ctr-system-snapshot.json`. CTRoadmap reads this file through a read-only Docker mount; the Snapshot dialog waits for a newer valid file and offers **REVIEW SNAPSHOT** when one arrives. You can also review the existing Snapshot later.
+3. **Review in INGEST:** Examine discovered items, select what to include, adjust proposed types and hierarchy, and resolve possible matches with existing Tiles. Information can also be inspected in the INGEST panel before approving it.
+4. **Import:** Choose **IMPORT SELECTIONS** to add approved items to the current Atlas, or explicitly select **Replace the current Atlas with this ingest** if you want replacement. Nothing is added just by running a scan; import is an intentional, reviewable Atlas edit.
+
+Snapshot uses one fixed handoff filename: **`ctr-system-snapshot.json`**. It does not automatically select copies such as `ctr-system-snapshot (1).json`, maintain a scan history, or watch your network continuously. A newly generated Snapshot replaces the previous file only when it is newer; keep renamed copies elsewhere if you want an archive. Generated Snapshot documentation can be viewed and edited in Handbook NotePages after ingest.
+
+**Availability:** On standard Linux installs, the Host Updater provisions the Snapshot tools and read-only imports mount. If that setup has not been verified (for example, after a manual Docker image-only update), **Import → System Snapshot** remains disabled and points you to the Update instructions. This v0.9 beta does not enable Snapshot in the Platform / NAS Managed workflow.
+
 ### Import And Export
 
 CTRoadmap supports several ways to back up, move, publish, or share your documentation.
@@ -429,10 +472,20 @@ CTRoadmap supports several ways to back up, move, publish, or share your documen
 - Download the current Atlas as a portable JSON file.
 - Import an Atlas JSON file through validation and preview before replacing the current Atlas.
 
+**System Snapshot / INGEST**
+
+- Run the opt-in host scan, review the collected items, then add selected infrastructure or replace the Atlas. See [System Snapshot & INGEST](#system-snapshot--ingest) above.
+
+**LLM Assisted Import**
+
+- Select **Import → LLM Assisted Import** to download CTRoadmap's **LLM Ingest Guide**.
+- Supply the guide and your existing inventory or documentation to an external LLM of your choice. Ask it to prepare an import-ready `atlas.json`, then return to **Import → Import Atlas JSON** to validate and import the result.
+- CTRoadmap does not run or contact an LLM for you. Unlike Snapshot's default Add workflow, **Atlas JSON import replaces the current Atlas** after confirmation.
+
 **Documentation exports**
 
 - Generate Markdown, YAML, and Mermaid exports.
-- Export the complete Handbook as a formatted PDF.
+- Export the complete Handbook as a formatted PDF, with options for the Address Book, Swimlanes, Snapshot documentation, and Table of Contents.
 
 **Image exports**
 
@@ -478,6 +531,34 @@ Settings also provides quick links to CTRoadmap tutorial/community resources.
 
 Flow steps, check commands, and expected results are documentation only. CTRoadmap does not execute them.
 
+## Development
+
+### Split-Source Model
+
+CTRoadmap follows an intentional **split-source / open-core development model**. The publicly available source focuses on the Canvas and diagramming functionality, while the full application—including Handbook, Rack View, and Mobile View—is developed in a private repository and distributed through the public Docker image.
+
+The public repository is not currently a source-complete representation of the distributed application, and its diagramming code may lag behind the latest release. My goal is to progressively bring the public Canvas implementation into alignment with the shipping version while retaining flexibility around the development of additional features.
+
+**Contributors:** Because the public and private codebases differ, please open an issue or discussion before undertaking substantial development intended for upstream integration.
+
+### Development Method — RailCoding
+
+CTRoadmap is built with substantial assistance from the CODEX coding agent using a structured development methodology I call **RailCoding**. All planning and design is done in a ChatGPT project, and finalized buildspec instructions are provided to CODEX, followed by extensive testing.
+
+Rather than delegating entire features to an agent without direction, I approach development as a series of defined, reviewable engineering tasks. My role is to establish product requirements, make design and architectural decisions, define constraints, and validate the resulting implementation.
+
+The process generally follows:
+
+1. **Plan & Specify** — Define feature behavior, scope, constraints, and acceptance criteria in written build specifications.
+2. **Establish Guardrails** — Use project documentation, architectural references, and `AGENTS.md` instructions to guide implementation and protect existing functionality.
+3. **Implement Incrementally** — Break work into focused stages, reviewing code changes and architectural implications rather than attempting large, uncontrolled revisions.
+4. **Validate & Test** — Check data schemas, interfaces, and compatibility; run relevant automated tests, builds, and hands-on functional testing.
+5. **Review & Refine** — Investigate failures, correct regressions, verify behavior, and document completed changes before progressing.
+
+CODEX does 99% code writing, but **the design decisions, development direction, testing priorities, and release acceptance remain human-directed**.
+
+This approach does not eliminate bugs or replace conventional software engineering practices, but increases the odds of catching bugs before anything is shipped.  It provides a repeatable framework for applying AI-assisted development while maintaining technical accountability as the project evolves.
+
 ## Keyboard Shortcuts
 
 | Shortcut             | Action                               |
@@ -511,26 +592,33 @@ POST /api/auth/logout-all
 GET  /api/atlas
 PUT  /api/atlas
 POST /api/atlas/preview
+GET  /api/atlas/history
+POST /api/atlas/history/undo
+POST /api/atlas/history/redo
+
+GET  /api/system-snapshot/status
+POST /api/system-snapshot/review
 
 POST   /api/assets/icons
 GET    /api/assets/icons
 GET    /api/assets/icons/{filename}
 DELETE /api/assets/icons/{filename}
+POST   /api/assets/handbook/logo
+GET    /api/assets/handbook/logo/{filename}
 
 POST /api/export/{format}
 GET  /api/export/{format}/download
+POST /api/export/handbook/pdf
+GET  /api/export/handbook/pdf/download
 
 GET  /api/debug/log
 POST /api/debug/log/clear
 ```
 
-Supported server export formats are `markdown`, `yaml`, and `mermaid`. Canvas and Flow PNG exports are generated in the browser and do not use the server export endpoint.
+Supported server export formats are `markdown`, `yaml`, and `mermaid`; Handbook PDF uses its dedicated endpoints. Canvas and Flow PNG exports are generated in the browser and do not use the server export endpoint. The Snapshot endpoints read or review local evidence; they do **not** initiate host scans.
 
 </details>
 
-## Project Log
-
-Planning decisions, questions and answers, bugs, and fixes are tracked in `PROJECT_LOG.md`.
 
 ## License
 
@@ -538,3 +626,4 @@ CTRoadmap is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
 
 ## Contributors
 - NoobCity99
+- OpenAi CODEX

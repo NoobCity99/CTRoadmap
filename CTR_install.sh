@@ -1,128 +1,91 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Trusted bootstrap only. ctr_update.sh owns installation and integration.
+set -Eeuo pipefail
 
-IMAGE_NAME="ghcr.io/noobcity99/ctroadmap:beta"
+# Retained legacy pins. Only verified public preparation changes these.
+# Private kits pin a separate installer copy.
+UPDATER_URL="https://raw.githubusercontent.com/NoobCity99/CTRoadmap/2ea382b5f1ea982c6c7ed6b90d9b4f8acce30d0e/ctr_update.sh"
+UPDATER_SHA256="015ba16f3c42d114da94f9f6b4b5b855f69d9117a893c030871f25cf6b909a75"
 INSTALL_DIR="${CTR_INSTALL_DIR:-$HOME/ctroadmap-beta}"
-COMPOSE_FILE=""
-# Filled only by scripts/prepare_update_release.py after committed/public byte verification.
-UPDATER_URL="https://raw.githubusercontent.com/NoobCity99/CTRoadmap/9ba3c494a6a8a64c52a555c74d69af9014958cc9/ctr_update.sh"
-UPDATER_SHA256="8ba879f54a9d35fb8ef515076dc4ad18c23ad837991c4b07f138d336500c86b0"
-UPDATER_TEMP=""
+ASSETS_DIR=""
+HEALTH_TIMEOUT="${CTR_UPDATE_HEALTH_TIMEOUT:-90}"
+TEMP=""
 
-cleanup_updater_download() {
-  if [[ -n "$UPDATER_TEMP" ]]; then rm -f -- "$UPDATER_TEMP"; fi
-}
-trap cleanup_updater_download EXIT
+fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+cleanup() { if [[ -n "$TEMP" ]]; then rm -rf -- "$TEMP"; fi; }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-fail() {
-  echo "ERROR: $*" >&2
-  exit 1
-}
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --install-dir|--release-assets-dir|--health-timeout)
+      [[ $# -ge 2 ]] || fail "$1 requires a value."
+      case "$1" in
+        --install-dir) INSTALL_DIR="$2" ;;
+        --release-assets-dir) ASSETS_DIR="$2" ;;
+        --health-timeout) HEALTH_TIMEOUT="$2" ;;
+      esac
+      shift 2 ;;
+    -h|--help)
+      printf '%s\n' 'Usage: CTR_install.sh [--install-dir PATH] [--health-timeout SECONDS] [--release-assets-dir PATH]'
+      exit 0 ;;
+    *) fail "Unknown option: $1" ;;
+  esac
+done
 
-check_command() {
-  command -v "$1" >/dev/null 2>&1 || fail "$1 is required but was not found."
-}
-
-check_prerequisites() {
-  [[ "$UPDATER_URL" =~ ^https://raw\.githubusercontent\.com/NoobCity99/CTRoadmap/[0-9a-f]{40}/ctr_update\.sh$ ]] ||
-    fail "This installer has no verified updater release. Use a published installer after release asset preparation."
-  [[ "$UPDATER_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail "The updater checksum has not been finalized."
-  check_command docker
-  check_command curl
-  check_command sha256sum
-  check_command mktemp
-
-  if ! docker compose version >/dev/null 2>&1; then
-    fail "Docker Compose v2 is required. Install the Docker Compose plugin and retry."
-  fi
-
-  if ! docker info >/dev/null 2>&1; then
-    fail "Docker is installed, but the daemon is not reachable by this user."
-  fi
-}
-
-register_host_updater() {
-  UPDATER_TEMP="$(mktemp)" || return 1
-  curl --proto =https --tlsv1.2 -fsSL "$UPDATER_URL" -o "$UPDATER_TEMP" || return 1
-  printf '%s  %s\n' "$UPDATER_SHA256" "$UPDATER_TEMP" | sha256sum --check --status || return 1
-  chmod +x "$UPDATER_TEMP" || return 1
-  bash "$UPDATER_TEMP" --register-only --install-dir "$INSTALL_DIR" || return 1
-}
-
-write_compose_file() {
-  if [[ -f "$COMPOSE_FILE" ]]; then
-    local timestamp
-    timestamp="$(date +%Y%m%d%H%M%S)"
-    cp "$COMPOSE_FILE" "$COMPOSE_FILE.backup-$timestamp"
-    echo "Backed up existing docker-compose.yml to docker-compose.yml.backup-$timestamp"
-  fi
-
-  cat > "$COMPOSE_FILE" <<COMPOSE
-services:
-  ctroadmap:
-    image: $IMAGE_NAME
-    container_name: ctroadmap-beta
-    ports:
-      - "8088:8088"
-    volumes:
-      - ./data:/app/data
-      - ./exports:/app/exports
-    restart: unless-stopped
-COMPOSE
-}
-
-print_final_instructions() {
-  local quoted_install_dir
-  printf -v quoted_install_dir '%q' "$INSTALL_DIR"
-  cat <<EOF
-
-CTRoadmap beta is installed.
-
-Install directory:
-  $INSTALL_DIR
-
-Open the app:
-  Local:      http://localhost:8088
-  Server/LAN: http://SERVER-IP:8088
-
-Manage CTRoadmap:
-  cd $quoted_install_dir
-  docker compose logs -f
-  docker compose down
-  docker compose up -d
-  ./ctr_update.sh
-
-Uninstall:
-  curl -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/main/CTR_uninstall.sh -o CTR_uninstall.sh
-  chmod +x CTR_uninstall.sh
-  ./CTR_uninstall.sh
-
-Persistent files:
-  $INSTALL_DIR/data
-  $INSTALL_DIR/exports
-EOF
-}
-
-main() {
-  echo "Installing CTRoadmap beta from $IMAGE_NAME"
-  echo "Install directory: $INSTALL_DIR"
-
-  check_prerequisites
-
-  mkdir -p "$INSTALL_DIR/data" "$INSTALL_DIR/exports"
-  INSTALL_DIR="$(cd "$INSTALL_DIR" && pwd -P)"
-  COMPOSE_FILE="$INSTALL_DIR/docker-compose.yml"
-  write_compose_file
-
-  cd "$INSTALL_DIR"
-  docker compose pull
-  docker compose up -d
-
-  if ! register_host_updater; then
-    fail "CTRoadmap was installed, but host updater setup failed. The application has not been stopped or deleted. Review the error and use the registration-only recovery instructions in README.md."
-  fi
-
-  print_final_instructions
-}
-
-main "$@"
+[[ "$HEALTH_TIMEOUT" =~ ^[1-9][0-9]*$ ]] || fail "Health timeout must be positive."
+[[ "$(uname -s)" == Linux ]] || fail "The standard installer supports Linux."
+case "$(uname -m)" in x86_64|amd64|aarch64|arm64) ;; *) fail "Unsupported host architecture." ;; esac
+for command in docker curl sha256sum mktemp timeout head wc bash; do
+  command -v "$command" >/dev/null || fail "$command is required."
+done
+docker compose version >/dev/null || fail "Docker Compose v2 is required."
+docker info >/dev/null || fail "Docker is not accessible to this user."
+[[ -z "${COMPOSE_FILE:-}" ]] || fail "COMPOSE_FILE overrides are unsupported."
+[[ -z "${COMPOSE_ENV_FILES:-}" ]] || fail "COMPOSE_ENV_FILES is unsupported; use the installation's .env file."
+[[ "$INSTALL_DIR" != *$'\n'* && "$INSTALL_DIR" != *$'\r'* ]] || fail "Invalid installation path."
+if [[ -d "$INSTALL_DIR" ]]; then
+  INSTALL_DIR="$(cd -P -- "$INSTALL_DIR" && pwd)"
+else
+  parent="$(cd -P -- "$(dirname -- "$INSTALL_DIR")" && pwd)" || fail "Create the parent installation directory first."
+  INSTALL_DIR="$parent/$(basename -- "$INSTALL_DIR")"
+fi
+[[ "$INSTALL_DIR" != / ]] || fail "The filesystem root cannot be an installation destination."
+[[ ! -e "$INSTALL_DIR" || ( -d "$INSTALL_DIR" && -w "$INSTALL_DIR" ) ]] || fail "Installation destination must be a writable directory."
+for file in docker-compose.yml docker-compose.yaml compose.yml compose.yaml docker-compose.override.yml docker-compose.override.yaml compose.override.yml compose.override.yaml .env; do
+  [[ ! -e "$INSTALL_DIR/$file" && ! -L "$INSTALL_DIR/$file" ]] || fail "Existing Compose installation: use ctr_update.sh --install-dir PATH."
+done
+if [[ -e "$INSTALL_DIR/.ctr-install.json" || -L "$INSTALL_DIR/.ctr-install.json" ]]; then
+  [[ -f "$INSTALL_DIR/.ctr-install.json" && ! -L "$INSTALL_DIR/.ctr-install.json" ]] || fail "Installation recovery record must be a regular file."
+  # The verified updater checks the structured record and exact path identities.
+else
+  for file in data exports imports tools ctr_update.sh; do
+    [[ ! -e "$INSTALL_DIR/$file" && ! -L "$INSTALL_DIR/$file" ]] || fail "Fresh destination conflicts with managed path: $file"
+  done
+fi
+[[ "$UPDATER_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail "This installer has no verified updater release."
+umask 077
+TEMP="$(mktemp -d)"
+candidate="$TEMP/ctr_update.sh"
+if [[ -n "$ASSETS_DIR" ]]; then
+  ASSETS_DIR="$(cd -P -- "$ASSETS_DIR" && pwd)" || fail "Local asset directory does not exist."
+  [[ "${CTR_RELEASE_DESCRIPTOR_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] || fail "Use the reviewed private-kit launcher."
+  [[ -f "$ASSETS_DIR/ctr_update.sh" && ! -L "$ASSETS_DIR/ctr_update.sh" ]] || fail "Missing/unsafe local updater."
+  head -c 1048577 -- "$ASSETS_DIR/ctr_update.sh" > "$candidate"
+  [[ "$(wc -c < "$candidate")" -le 1048576 ]] || fail "Updater exceeds size limit."
+else
+  [[ "$UPDATER_URL" =~ ^https://raw\.githubusercontent\.com/NoobCity99/CTRoadmap/[0-9a-f]{40}/ctr_update\.sh$ ]] || fail "This installer has no verified updater release."
+  curl --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 --max-redirs 3 -fsSL "$UPDATER_URL" |
+    head -c 1048577 > "$candidate" || fail "Updater download failed; no application was started."
+  [[ "$(wc -c < "$candidate")" -le 1048576 ]] || fail "Updater exceeds size limit."
+fi
+printf '%s  %s\n' "$UPDATER_SHA256" "$candidate" | sha256sum --check --status || fail "Updater checksum mismatch; no application was started."
+bash -n "$candidate" || fail "Updater syntax validation failed."
+version="$(timeout -k 2 10 bash "$candidate" --version | head -c 257)" || fail "Updater version probe failed."
+[[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Invalid updater version."
+[[ "${BASH_REMATCH[1]}" -gt 0 || "${BASH_REMATCH[2]}" -ge 2 ]] || fail "Pinned legacy updater is below 0.2.0; use a finalized release installer or reviewed private test kit."
+operation=(--install --install-dir "$INSTALL_DIR" --health-timeout "$HEALTH_TIMEOUT")
+[[ -z "$ASSETS_DIR" ]] || operation+=(--release-assets-dir "$ASSETS_DIR")
+bash "$candidate" "${operation[@]}"
+printf 'Installation verified. Run updates with: %q --install-dir %q\n' "$INSTALL_DIR/ctr_update.sh" "$INSTALL_DIR"

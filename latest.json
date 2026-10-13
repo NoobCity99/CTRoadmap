@@ -1,22 +1,43 @@
 {
   "manifest_schema": 2,
-  "latest_version": "0.8.0-beta",
+  "latest_version": "0.9.0-beta",
   "channel": "beta",
   "targets": {
     "docker": {
       "update_method": "ctr_update_v1",
-      "update_command": "bash -c 'set -euo pipefail\nctr_updater_file=\"$(mktemp)\"\ntrap '\"'\"'rm -f -- \"$ctr_updater_file\"'\"'\"' EXIT\ncurl --proto =https --tlsv1.2 -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/9ba3c494a6a8a64c52a555c74d69af9014958cc9/ctr_update.sh -o \"$ctr_updater_file\"\nprintf '\"'\"'%s  %s\\n'\"'\"' 8ba879f54a9d35fb8ef515076dc4ad18c23ad837991c4b07f138d336500c86b0 \"$ctr_updater_file\" | sha256sum --check --status\nchmod +x \"$ctr_updater_file\"\nbash \"$ctr_updater_file\"'",
+      "update_command": "bash -c 'set -euo pipefail\nctr_updater_file=\"$(mktemp)\"\ntrap '\"'\"'rm -f -- \"$ctr_updater_file\"'\"'\"' EXIT\ncurl --proto =https --tlsv1.2 -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/2ea382b5f1ea982c6c7ed6b90d9b4f8acce30d0e/ctr_update.sh -o \"$ctr_updater_file\"\nprintf '\"'\"'%s  %s\\n'\"'\"' 015ba16f3c42d114da94f9f6b4b5b855f69d9117a893c030871f25cf6b909a75 \"$ctr_updater_file\" | sha256sum --check --status\nchmod +x \"$ctr_updater_file\"\nbash \"$ctr_updater_file\"'",
       "release_notes_url": "https://github.com/NoobCity99/CTRoadmap/releases",
-      "notes": "Standard Linux release installs: copy this one-time host updater bootstrap command. NAS/Portainer: keep using your platform's native update workflow.",
+      "notes": "v0.9.0-beta adds Snapshot review and INGEST, Handbook NotePages and Tile references, PDF export controls, and relationship creation improvements. Standard Linux installs require a verified compatible host updater before update commands become available. NAS/Portainer: keep using your platform's native update workflow.",
       "summary": [
-        "CTR Host Updater Integration",
-        "Settings Panel Redesign",
-        "Animated Tile & Canvas Themes"
+        "System Snapshot + Review and INGEST",
+        "Handbook .md NotePages and HyperNotes",
+        "ARM64 Support",
+        "Canvas relationship creation improvements"
       ],
       "updater": {
-        "version": "0.1.1",
-        "url": "https://raw.githubusercontent.com/NoobCity99/CTRoadmap/9ba3c494a6a8a64c52a555c74d69af9014958cc9/ctr_update.sh",
-        "sha256": "8ba879f54a9d35fb8ef515076dc4ad18c23ad837991c4b07f138d336500c86b0"
+        "version": "0.2.0",
+        "url": "https://raw.githubusercontent.com/NoobCity99/CTRoadmap/2ea382b5f1ea982c6c7ed6b90d9b4f8acce30d0e/ctr_update.sh",
+        "sha256": "015ba16f3c42d114da94f9f6b4b5b855f69d9117a893c030871f25cf6b909a75"
+      },
+      "snapshot_tools": {
+        "architectures": {
+          "amd64": {
+            "filename": "ctr-snapshot-tools-0.1.0-linux-amd64.tar.gz",
+            "manifest_sha256": "de033727208637234aaa2bbc7d82acc72f7739755b971a358785f60b639436f8",
+            "sha256": "084b44322f1e6313c9a341ec2a0d9856c683ce8c2bf3cf4cd2d48dd94ee6f98a",
+            "size": 14962438,
+            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.0/ctr-snapshot-tools-0.1.0-linux-amd64.tar.gz"
+          },
+          "arm64": {
+            "filename": "ctr-snapshot-tools-0.1.0-linux-arm64.tar.gz",
+            "manifest_sha256": "c7041ded3cf81f1d4a5b07465b0e712b8f5cf4700842a768f17ad549f8282256",
+            "sha256": "e4f5b508e7c5bfbd5e116df5a452300a2f7e7fa9b76c0ccecbb8ccc6d9c8e608",
+            "size": 13686781,
+            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.0/ctr-snapshot-tools-0.1.0-linux-arm64.tar.gz"
+          }
+        },
+        "source_commit": "185ac224f47c28aa6d1650baa1282231a53deb57",
+        "version": "0.1.0"
       }
     },
     "linux_desktop": {
@@ -34,7 +55,7 @@
     "host_updater": {
       "bridge_version": "0.8.0-beta",
       "required_from": "0.9.0-beta",
-      "minimum_updater_version": "0.1.1"
+      "minimum_updater_version": "0.2.0"
     }
   }
 }

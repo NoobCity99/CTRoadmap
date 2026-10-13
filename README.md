@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/🍎%20MOBILE VIEW-READY-8A2BE2?style=for-the-badge&logo=android">
 </p>
 
-CTRoadmap is a self-hosted Diagram & Documentation tool for your **HOMELAB** via nodes, services, storage, scripts, configs, URLs, and operational relationships. Meant to be a step up from PowerPoint or other *diagram* apps, CTR intentionally a NON-INTEGRATED, stand-alone repository of your system. It does not montior, control, or interface with your homelab at all. Just Document.  It is a Docker-served brower webapp that saves your system documentation to the `data/atlas.json` file.
+CTRoadmap is a self-hosted Diagram & Documentation tool for your **HOMELAB** via nodes, services, storage, scripts, configs, URLs, and operational relationships. Meant to be a step up from PowerPoint or other *diagram* apps, CTR intentionally a NON-INTEGRATED, stand-alone repository of your system. It does not montior, control, or interface with your homelab at all. Just Document.  It is a Docker-served browser webapp that saves your system documentation to the `data/atlas.json` file.
 
 
 <table>

@@ -1,18 +1,19 @@
 {
   "manifest_schema": 2,
-  "latest_version": "0.9.0-beta",
+  "latest_version": "0.10.0-beta",
   "channel": "beta",
   "targets": {
     "docker": {
       "update_method": "ctr_update_v1",
       "update_command": "bash -c 'set -euo pipefail\nctr_updater_file=\"$(mktemp)\"\ntrap '\"'\"'rm -f -- \"$ctr_updater_file\"'\"'\"' EXIT\ncurl --proto =https --tlsv1.2 -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/2ea382b5f1ea982c6c7ed6b90d9b4f8acce30d0e/ctr_update.sh -o \"$ctr_updater_file\"\nprintf '\"'\"'%s  %s\\n'\"'\"' 015ba16f3c42d114da94f9f6b4b5b855f69d9117a893c030871f25cf6b909a75 \"$ctr_updater_file\" | sha256sum --check --status\nchmod +x \"$ctr_updater_file\"\nbash \"$ctr_updater_file\"'",
       "release_notes_url": "https://github.com/NoobCity99/CTRoadmap/releases",
-      "notes": "v0.9.0-beta adds Snapshot review and INGEST, Handbook NotePages and Tile references, PDF export controls, and relationship creation improvements. Standard Linux installs require a verified compatible host updater before update commands become available. NAS/Portainer: keep using your platform's native update workflow.",
+      "notes": "v0.10.0-beta expands Rack Builder with physical ports and cables, equipment and Rack finishes, top-mounted equipment, Direct/Backplane Drive Bays and Server Drive slots with matching Handbook documentation. Handbook notes gain code editing and language detection; Snapshot INGEST recognizes relationships assigned to previously imported tiles. Universal @@ field insertion, automatic IP/URL links and a dedicated Canvas / Diagrams preferences tab improve everyday editing. Host Updater 0.2.0 remains compatible. Snapshot bundles are pinned to published version 0.1.1, rebuilt with Go 1.27.3 and golang.org/x/text 0.41.0; Snapshot schema v1 and WhosThere 0.8.3 are unchanged. Standard Linux installs require a verified compatible host updater before update commands become available. NAS/Portainer: keep using your platform's native update workflow.",
       "summary": [
-        "System Snapshot + Review and INGEST",
-        "Handbook .md NotePages and HyperNotes",
-        "ARM64 Support",
-        "Canvas relationship creation improvements"
+        "Rack Builder ports, cables, finishes and top-mounted equipment",
+        "Drive Bay modes and Server Drive slots with Handbook documentation",
+        "Code editing and language detection in Handbook notes",
+        "Relationship-aware Snapshot INGEST review",
+        "Right Click any NOTES TAB to export individualy"
       ],
       "updater": {
         "version": "0.2.0",
@@ -22,22 +23,22 @@
       "snapshot_tools": {
         "architectures": {
           "amd64": {
-            "filename": "ctr-snapshot-tools-0.1.0-linux-amd64.tar.gz",
-            "manifest_sha256": "de033727208637234aaa2bbc7d82acc72f7739755b971a358785f60b639436f8",
-            "sha256": "084b44322f1e6313c9a341ec2a0d9856c683ce8c2bf3cf4cd2d48dd94ee6f98a",
-            "size": 14962438,
-            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.0/ctr-snapshot-tools-0.1.0-linux-amd64.tar.gz"
+            "filename": "ctr-snapshot-tools-0.1.1-linux-amd64.tar.gz",
+            "manifest_sha256": "f4442975018cad2aba56506014571bc411aeeacf7ac36561e58a04093ccd93df",
+            "sha256": "4d46837e298337aa55a8a66e0aaea417b991e6fe1da75d015d2d1e50aff9234d",
+            "size": 16153295,
+            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.1/ctr-snapshot-tools-0.1.1-linux-amd64.tar.gz"
           },
           "arm64": {
-            "filename": "ctr-snapshot-tools-0.1.0-linux-arm64.tar.gz",
-            "manifest_sha256": "c7041ded3cf81f1d4a5b07465b0e712b8f5cf4700842a768f17ad549f8282256",
-            "sha256": "e4f5b508e7c5bfbd5e116df5a452300a2f7e7fa9b76c0ccecbb8ccc6d9c8e608",
-            "size": 13686781,
-            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.0/ctr-snapshot-tools-0.1.0-linux-arm64.tar.gz"
+            "filename": "ctr-snapshot-tools-0.1.1-linux-arm64.tar.gz",
+            "manifest_sha256": "0c96caa83497ae44cb1a29248257cd916eb2c09e76e126ed61f188b809e13a93",
+            "sha256": "1330efc4cad247c99d73e99d458a5675fbdf3085981c784f25a079586ecf691c",
+            "size": 14748464,
+            "url": "https://github.com/NoobCity99/CTRoadmap/releases/download/snapshot-tools-v0.1.1/ctr-snapshot-tools-0.1.1-linux-arm64.tar.gz"
           }
         },
-        "source_commit": "185ac224f47c28aa6d1650baa1282231a53deb57",
-        "version": "0.1.0"
+        "source_commit": "39cd89e3b8b04b6caf4f1fcf93da3e0f23c4c858",
+        "version": "0.1.1"
       }
     },
     "linux_desktop": {

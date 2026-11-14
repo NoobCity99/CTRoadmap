@@ -1,4 +1,4 @@
-![alt text](readmebanner7.png)
+![alt text](ReadmeBanner7.png)
 
 <p align="center">
   <a href="https://github.com/NoobCity99/CTRoadmap/stargazers">
@@ -12,7 +12,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Compatible-Synology-green?style=for-the-badge&logo=sega">
   <img src="https://img.shields.io/badge/ARM64-READY-yellow?style=for-the-badge">
-
+  
 
 </p>
 
@@ -31,12 +31,12 @@ CTRoadmap remains a local-first documentation application, not a monitoring or r
 
 <table>
   <tr>
-    <td><img src="assets\FLOW.png" width="100%" alt="Image 1"></td>
-    <td><img src="assets\DATA.png" width="100%" alt="Image 2"></td>
+    <td><img src="assets\canvasnew.png" width="100%" alt="Image 1"></td>
+    <td><img src="assets\codenew.png" width="100%" alt="Image 2"></td>
   </tr>
   <tr>
     <td><img src="assets\PlanMode.png" width="100%" alt="Image 3"></td>
-    <td><img src="assets\Stack.png" width="100%" alt="Image 4"></td>
+    <td><img src="assets\racknew.png" width="100%" alt="Image 4"></td>
   </tr>
 </table>
 
@@ -386,33 +386,47 @@ Flow and check content are documentation only. CTRoadmap does not execute the pr
 
 ### Handbook
 
-The Handbook turns the same Atlas into structured, readable infrastructure documentation.
+The Handbook transforms your Atlas into a structured, navigable collection of technical documentation, configuration notes, network references, and physical infrastructure records.
 
-- Browse your Atlas as a technical handbook organized around primary nodes, Families, documented hierarchy, and relationships.
-- Move between Handbook entries and the corresponding Canvas items.
-- Use the **ADDRESS BOOK** to collect URL and IP information found throughout the Atlas.
-- Include Flow / Swimlane documentation inside the Handbook.
-- Add supporting notes and reference information to tiles and relationships.
-- Create **NotePages** for individual Tiles: multiple titled pages with Plain Text or Markdown content, reorderable tabs, and controls to rename, edit, or delete pages. New manual NotePages start in Markdown mode; the existing `NOTES` field remains available.
-- Use **HyperNotes** to link directly to other Atlas Tiles from Markdown NotePages. Type `@@` (or use the `@@` toolbar action), search for a Tile, and insert a navigable reference. References follow Tile renames; the Handbook provides a Back action, and PDF exports can include clickable Tile references.
-- View and edit Snapshot-generated Handbook notes after an approved ingest; these are ordinary editable pages, not live monitoring records.
-- Add a custom Handbook logo.
-- Export the Handbook as a formatted PDF with a cover page, navigation, and configurable content options.
+- **Organized infrastructure documentation:** Browse systems by primary node, Family, hierarchy, and relationship. Navigate between Handbook entries and their corresponding Canvas Tiles, with Flow / Swimlane documentation available alongside the systems involved.
 
-**Handbook PDF options:** Choose whether to include the Address Book and Swimlane diagrams, exclude generated Snapshot data, and show a Full Table of Contents with nested Tiles and PDF bookmarks. **Exclude Snapshot Data** and **Show Full Table of Contents** are enabled by default; excluding Snapshot data keeps the Tiles and ordinary notes in the document.
+- **NotePages and technical documentation:** Maintain multiple named pages for individual Tiles, using Plain Text, Markdown, or Config / Code content. Organize pages with reorderable tabs and keep Snapshot-generated documentation editable after import.
 
-The Handbook is another view of the same Atlas, not a separate copy of your documentation. NotePages can also be read in Mobile View, where editing is disabled.
+- **Integrated code and configuration editor:** Write and maintain scripts, configuration files, and other technical content in the Handbook or full-page Code Editor. Features include syntax highlighting for 30 languages, draft management, code comparison, configuration checks, and preservation of editing position and local history when switching drafts.
+
+- **Connected documentation with HyperNotes:** Use `@@` references to navigate between Atlas Tiles in Markdown notes or insert current Tile field values into notes and code. Linked Tile references support navigation within the Handbook and compatible PDF exports.
+
+- **Network references and Address Book:** Collect IP addresses, domains, and URLs from documentation throughout the Atlas. Recognized addresses can be navigated directly from supported fields, with links back to their original documentation.
+
+- **Physical infrastructure documentation:** Reference Rack equipment, physical ports, patch-panel connections, cable schedules, Drive Bays, and server storage alongside the logical systems documented in the Atlas.
+
+- **Flexible exports:** Export individual NotePages and code drafts as PDF, plain text, Markdown, or appropriate code/configuration files. Generate complete Handbook PDFs with a cover, navigation, hierarchical Table of Contents, bookmarks, and configurable volumes and sections, including Address Book, Swimlanes, Physical Wiring, and optional Snapshot documentation.
+
+- **Personalization and access:** Add a custom Handbook logo and browse documentation through the read-only Mobile View.
+
+The Handbook works directly with your Atlas rather than maintaining a separate copy of your infrastructure documentation.
 
 ### Rack View Builder
 
-Rack View documents the physical layout of rack-mounted equipment alongside the logical relationships on the Canvas.
+Rack View Builder provides a physical representation of your infrastructure, combining equipment placement, connectivity, storage configuration, and customizable Rack presentation.
 
-- Create visual racks and place equipment by rack-unit position.
-- Add devices already documented in your Atlas.
-- Add rack-local components when something belongs in the physical rack diagram without needing another Canvas tile.
-- Document physical placement without changing the logical parent or relationship structure of the Canvas.
-- View Rack layouts on desktop and mobile.
-- Switch between supported rack views and continue using the same Atlas data throughout CTRoadmap.
+- **Equipment layout and organization:** Create Racks and place equipment in specific rack-unit positions. Use Front, Rear, or Both views, with equipment linked to existing Atlas Tiles or created as Rack-local components without altering the Canvas hierarchy.
+
+- **Flexible equipment placement:** Configure supported equipment widths and depths, preview fitment when dragging, and use adaptive placement for available Rack space. Eligible equipment can also occupy top-mounted positions above supported Racks.
+
+- **Physical ports and cable connections:** Define equipment ports, connect compatible devices, and document DATA, VIDEO, and POWER connections, including PoE. Trace physical cabling through patch panels and backplanes, across Rack faces, and through multi-cable paths. Preserve cable documentation when an endpoint is temporarily disconnected.
+
+- **Connection tracing and identification:** Use the Connect Table to review documented connections and identify associated circuits. Selecting equipment or ports can highlight related connections and cable paths.
+
+- **Drive Bays and server storage:** Model Direct and Backplane Drive Bays, along with numbered server Drive slots. Storage arrangements remain connected to the equipment and can be documented in the Handbook.
+
+- **Custom equipment and faceplates:** Use schematic or image-based faceplates, create ABS blank panels, and customize decorative faceplate elements such as fans and grilles.
+
+- **Rack appearance and hardware:** Customize colors, backgrounds, material finishes, handles, casters, equipment appearance, and artwork to create a recognizable physical representation of your setup.
+
+- **Documentation and exports:** Inspect Rack layouts on desktop or mobile, generate Rack images, and reference equipment, wiring, and storage information from the Handbook and supported PDF exports.
+
+Physical Rack documentation complements the Canvas's logical relationships without requiring changes to the underlying system hierarchy.
 
 ### Layers
 
@@ -539,11 +553,11 @@ CTRoadmap follows an intentional **split-source / open-core development model**.
 
 The public repository is not currently a source-complete representation of the distributed application, and its diagramming code may lag behind the latest release. My goal is to progressively bring the public Canvas implementation into alignment with the shipping version while retaining flexibility around the development of additional features.
 
-**Contributors:** Because the public and private codebases differ, please open an issue or discussion before undertaking substantial development intended for upstream integration.
+**Contributors:** Because the public and private codebases differ, please open an issue or discussion before undertaking substantial development intended for upstream integration. 
 
 ### Development Method — RailCoding
 
-CTRoadmap is built with substantial assistance from the CODEX coding agent using a structured development methodology I call **RailCoding**. All planning and design is done in a ChatGPT project, and finalized buildspec instructions are provided to CODEX, followed by extensive testing.
+CTRoadmap is built with substantial assistance from the CODEX coding agent using a structured development methodology I call **RailCoding**. All planning and design is done in a ChatGPT project, and finalized buildspec instructions are provided to CODEX, followed by extensive testing. 
 
 Rather than delegating entire features to an agent without direction, I approach development as a series of defined, reviewable engineering tasks. My role is to establish product requirements, make design and architectural decisions, define constraints, and validate the resulting implementation.
 

@@ -1,4 +1,4 @@
-![alt text](ReadmeBanner7.png)
+![alt text](readmebanner7.png)
 
 <p align="center">
   <a href="https://github.com/NoobCity99/CTRoadmap/stargazers">

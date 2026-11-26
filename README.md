@@ -1,4 +1,4 @@
-![alt text](readmebanner7.png)
+![alt text](readmebanner8.png)
 
 <p align="center">
   <a href="https://github.com/NoobCity99/CTRoadmap/stargazers">
@@ -14,6 +14,17 @@
   <img src="https://img.shields.io/badge/ARM64-READY-yellow?style=for-the-badge">
   
 
+</p>
+
+<p align="center">
+  <strong>LANGUAGE:</strong>
+  *
+  <a href="README.md"><img src="frontend/public/assets/i18n/flags/en.svg" width="28" height="28" alt="English README" title="English README"></a>
+  *
+  <a href="README.es.md"><img src="frontend/public/assets/i18n/flags/es.svg" width="28" height="28" alt="README en español" title="README en español"></a>
+  *
+  <a href="README.it.md"><img src="frontend/public/assets/i18n/flags/it.svg" width="28" height="28" alt="README in italiano" title="README in italiano"></a>
+  *
 </p>
 
 <p align="center">

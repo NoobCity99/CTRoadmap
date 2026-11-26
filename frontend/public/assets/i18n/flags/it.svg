@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="rim" x1="0%" y1="0%" x2="65%" y2="100%">
+      <stop offset="0" stop-color="#ebeff1"/>
+      <stop offset=".24" stop-color="#616878"/>
+      <stop offset=".55" stop-color="#cbd3dc"/>
+      <stop offset=".78" stop-color="#f7f9fa"/>
+      <stop offset="1" stop-color="#515763"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="edge">
+      <stop offset=".73" stop-color="#101424" stop-opacity="0"/>
+      <stop offset="1" stop-color="#101424" stop-opacity=".46"/>
+    </radialGradient>
+    <clipPath id="face"><circle cx="48" cy="48" r="42"/></clipPath>
+  </defs>
+  <circle cx="48" cy="48" r="46" fill="url(#rim)" stroke="#49505c"/>
+  <g clip-path="url(#face)">
+    <circle cx="48" cy="48" r="42" fill="#ffffff"/>
+    <path fill="#009246" d="M6 6h28v84H6z"/>
+    <path fill="#ce2b37" d="M62 6h28v84H62z"/>
+    <circle cx="48" cy="48" r="42" fill="url(#edge)"/>
+    <path fill="url(#gloss)" d="M12 37C19 9 54 2 76 17 55 13 29 24 12 43z"/>
+  </g>
+</svg>

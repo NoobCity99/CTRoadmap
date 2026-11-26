@@ -80,3 +80,4 @@ class DemoStorageTests(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 # v0.6.0
+# v0.10.2

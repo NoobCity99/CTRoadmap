@@ -1,19 +1,18 @@
 {
   "manifest_schema": 2,
-  "latest_version": "0.10.0-beta",
+  "latest_version": "0.10.2-beta",
   "channel": "beta",
   "targets": {
     "docker": {
       "update_method": "ctr_update_v1",
       "update_command": "bash -c 'set -euo pipefail\nctr_updater_file=\"$(mktemp)\"\ntrap '\"'\"'rm -f -- \"$ctr_updater_file\"'\"'\"' EXIT\ncurl --proto =https --tlsv1.2 -fsSL https://raw.githubusercontent.com/NoobCity99/CTRoadmap/2ea382b5f1ea982c6c7ed6b90d9b4f8acce30d0e/ctr_update.sh -o \"$ctr_updater_file\"\nprintf '\"'\"'%s  %s\\n'\"'\"' 015ba16f3c42d114da94f9f6b4b5b855f69d9117a893c030871f25cf6b909a75 \"$ctr_updater_file\" | sha256sum --check --status\nchmod +x \"$ctr_updater_file\"\nbash \"$ctr_updater_file\"'",
       "release_notes_url": "https://github.com/NoobCity99/CTRoadmap/releases",
-      "notes": "v0.10.0-beta expands Rack Builder with physical ports and cables, equipment and Rack finishes, top-mounted equipment, Direct/Backplane Drive Bays and Server Drive slots with matching Handbook documentation. Handbook notes gain code editing and language detection; Snapshot INGEST recognizes relationships assigned to previously imported tiles. Universal @@ field insertion, automatic IP/URL links and a dedicated Canvas / Diagrams preferences tab improve everyday editing. Host Updater 0.2.0 remains compatible. Snapshot bundles are pinned to published version 0.1.1, rebuilt with Go 1.27.3 and golang.org/x/text 0.41.0; Snapshot schema v1 and WhosThere 0.8.3 are unchanged. Standard Linux installs require a verified compatible host updater before update commands become available. NAS/Portainer: keep using your platform's native update workflow.",
+      "notes": "In v0.10.2-beta, open Settings > Preferences > Language to try Spanish or Italian. Labels awaiting translation appear in English. Rack Builder adds 17 connector types and 13 cable types. You can mark HDMI and DisplayPort ports as audio-capable, trace audio connections in the Handbook, and see a warning when a cable and port have different connector faces. On Rack elevations and exported PNGs, equipment names appear in callouts when a faceplate or nearby hardware would obscure them. Standard Linux installations continue to use Host Updater 0.2.0 and Snapshot Tools 0.1.1. NAS and Portainer installations use their platform's native update workflow.",
       "summary": [
-        "Rack Builder ports, cables, finishes and top-mounted equipment",
-        "Drive Bay modes and Server Drive slots with Handbook documentation",
-        "Code editing and language detection in Handbook notes",
-        "Relationship-aware Snapshot INGEST review",
-        "Right Click any NOTES TAB to export individualy"
+        "Spanish and Italian language previews in Settings",
+        "17 new Rack connector types and 13 new cable types",
+        "Audio wiring in the Connect Table, cable traces and Handbook",
+        "Clearer equipment labels in Rack elevations and PNG exports"
       ],
       "updater": {
         "version": "0.2.0",

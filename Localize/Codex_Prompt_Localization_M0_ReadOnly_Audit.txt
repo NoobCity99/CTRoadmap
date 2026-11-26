@@ -1,0 +1,26 @@
+CTRoadmap localization planning — M0 READ-ONLY CODEBASE AUDIT
+
+Repository: NoobCity99/CTR_Dev_Core
+Branch: v0.10.1
+Reference architecture: use the attached/pasted CTRoadmap Localization Rollout Plan and Localization Research dev\Localize\CTRoadmap_Localization_Rollout_Plan_v0.10.1.md as reference and context for the larger project only. Confirm and report the current HEAD SHA; compare it with the planning baseline b4f7aa9ff2c107eccd43bc7baf676de0a9106a38, and call out material changes if branch has advanced.
+
+You are NOT authorized to implement localization in this task. Do not modify application code, install packages, generate runtime catalogs, refactor, run destructive commands, commit, push, or publish. Output a read-only research report and a proposed inventory (as response content or separately requested artifacts), not working-tree changes.
+
+Objectives:
+1. Inventory candidate user-visible text exhaustively across desktop and mobile React components, shared constants/metadata, Canvas, Handbook, NotePages/code editor UI, Rack/physical ports/cables, Swimlane, INGEST/Snapshot/LLM imports, Settings, authentication, update advisory, Experiences, tooltip/title/aria/placeholder/alt text, notifications, validation and error states, CSS-generated text, and all export/render pipelines (browser PNG, Markdown/Mermaid, Handbook PDF in Python). Consider host CLI/install/update/snapshot messages separately, classified as out-of-scope/deferred rather than silently skipped.
+2. Classify every candidate as: system interface string / system-generated export string / potential persisted default / user-authored content / machine identifier or protocol / developer-only diagnostic / uncertain. In particular, find strings that come from atlas.json, schema enums, tile fields, Layers/Families, relationship types, physical port labels, and imported Snapshot data. Do not propose translating canonical content or schema IDs.
+3. Propose phase/workspace ownership for each candidate, and recommend a semantic namespace/key. Flag shared labels in registries, factories, utilities, and status state that are not directly in JSX, and dynamic messages/plurals, interpolations, or error-code gaps.
+4. Identify exact integration seams for one i18next instance initialized before the RootApp desktop/mobile lazy shells, language preference within Settings > Preferences, catalog imports/build/Docker packaging, English master catalog + namespace template generator, typed keys, catalog CI tests, and future Python export localization.
+5. Check existing tests and file responsibilities. Identify the smallest representative pilot: approximately 20-40 messages spanning TopBar, ImportMenu, ExportMenu, WorkspaceSwitcher, and one Canvas/sidebar control; include visible labels, a tooltip, aria-label, a dynamic count, and one error/status. Check for any behavior where changing label values impacts logic or tests.
+
+Deliverables:
+A. Current branch/HEAD and brief architecture overview; note that the branch name need not match frontend/package.json version.
+B. Full candidate inventory table (or content suitable to save as CSV/JSON) with: file path, line range, English text or expression, feature/workspace owner, context/category, classification, proposed namespace.key, suggested wave, risks/dependencies, and manual-review flags. Report totals by wave and category.
+C. Explicit exclusions/ambiguities that require product decisions, with highest-risk items first.
+D. Proposed M1 foundation file-level plan and M2 pilot file-level plan, with validation gates. NO implementation.
+E. Risks for desktop/mobile preference synchronization, generated exports (especially backend/app/handbook_pdf/render.py and backend/app/exports.py), cached status strings, English defaults stored in Atlas, and long translations.
+F. Recommended small PR sequence and existing tests to run.
+
+Research principles: Use exact current code as authority; preserve English UI behavior and data contracts; stable semantic named keys; English is the master; i18next/react-i18next; per-feature catalog namespaces; bundled catalogs initially; no runtime third-party translation service; no Atlas/history mutation for language preference. Do not translate string literals mechanically just because they appear in quoted syntax. Differentiate bundled-new-language releases from a separate future runtime-drop-in language-pack feature.
+
+End with a succinct recommendation: whether architecture can move to M1 as proposed or which branch-specific changes must be resolved first. Do not begin M1.

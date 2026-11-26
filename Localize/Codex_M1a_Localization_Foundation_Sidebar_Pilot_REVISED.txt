@@ -1,0 +1,61 @@
+CTROADMAP — CODEX M1a (REVISED)
+Localization backbone + approximately 10 left-sidebar pilot targets
+
+TARGET / WORK RULES
+- Work in the private NoobCity99/CTR_Dev_Core repository, branch v0.10.1. The M0 audit baseline is b4f7aa9ff2c107eccd43bc7baf676de0a9106a38.
+- First read AGENTS.md, inspect HEAD and git status, and verify current component ownership. If the branch has advanced, inspect relevant differences and report any material conflict; do not silently overwrite unrelated work.
+- Review the M0 audit artifacts at C:\Users\mstre\CTRoadmap_Audits\M0_2026-11-18_b4f7aa9\, especially audit-report.txt, candidate-inventory.csv, reviewed-findings.csv, and pilot-plan.csv. These are evidence and proposed keys, NOT an approved bulk-conversion list. Some automatically suggested keys collide across different English expressions; choose and review stable semantic keys for this pilot only.
+- Keep all existing unrelated edits and the pre-existing dev/Localize/ directory intact. Do not commit, push, publish, or change release metadata.
+
+OBJECTIVE
+Put the full, reusable localization backbone in place, but localize ONLY the ten primary text targets listed below on the Canvas left sidebar and its shared Workspace Switcher. This supersedes the old M1a instruction to key only the boot fallback and defer the selector. M1b will EXPAND the test-key list, not rebuild the foundation.
+
+A. COMPLETE BACKBONE (SMALL, BUT REAL)
+1. Choose compatible pinned i18next + react-i18next versions and update frontend package/lock files reproducibly. No external localization vendor, remote service, CDN, or runtime download requirement.
+2. Create one shared i18next runtime, initialized before React renders in main.tsx, usable by RootApp and both lazy-loaded desktop/mobile shells. No duplicate initialization, locale-keyed remounts, or resetting editor/CodeMirror state.
+3. Establish the extensible, bundled catalog layout: English is the authoritative master; use semantic keys organized by feature namespace (initially common and canvas). Keep a versioned locale manifest with locale ID, native label, direction, enabled/development-only status, supported namespaces, and format compatibility. Do not prefill the entire M0 inventory or make empty catalogs for every feature.
+4. Add a single browser-local language preference path: explicitly saved supported language > supported browser language (exact/base match) > English. Handle corrupt/unsupported values and localStorage denial. Language changes should update the existing UI immediately; synchronize cross-tab changes when available. Set document <html lang> and dir appropriately; RTL is NOT supported in this milestone.
+5. Add a SMALL language selector at the top of Settings > Preferences, above the existing Canvas / Diagrams, Code Editor, Handbook tabs. Preserve the tabs, IDs, initial tab, keyboard navigation, and Settings visual behavior. Because English is initially the only production-approved locale, provide a DEV-only visibly different pseudolocale (for example en-XA) for verification; keep it unavailable as a public production language. Do not add Spanish/French as officially supported languages yet. Keep the selector visible in DEV for manual language testing; hide it in production until at least two production-approved languages are enabled, rather than exposing a one-option menu. The new selector's own label may have a key, but do not migrate other Settings copy.
+6. Make development validation/build support the growing master: JSON/catalog syntax, missing/duplicate/unknown keys, placeholder consistency, and a minimal typed-key contract compatible with the selected i18next version. Include a small deterministic helper or documented command to derive a new language template from English plus translation context; do not create a runtime language-pack installer. Missing/empty translations must safely fall back to English, never raw keys/TODO labels in production.
+7. Retain a small context/translator-note convention for keys (meaning, surface, placeholders) so M1b and future language files can grow without changing component code. Avoid generalized abstractions not needed for this contract.
+
+B. EXACT PILOT: TEN PRIMARY SIDEBAR TARGETS
+Use frontend/src/components/WorkspaceSwitcher.tsx and frontend/src/components/LeftSidebar.tsx as primary owners. Scope this to the actual visible sidebar, not the whole application.
+
+  1. "Workspaces" heading.
+  2. "Canvas" Workspace Switcher button label.
+  3. "Handbook" Workspace Switcher button label.
+  4. "Rack" Workspace Switcher button label.
+  5. "Node" tile type label in the Tile Palette ONLY.
+  6. "Search Results" heading.
+  7. Search result TILE detail preview; currently produced as `${resolveLifecycle(tile)} ${getTileDisplay(tile).label} tile`.
+  8. Search result LINK detail preview; currently `${resolveLifecycle(link)}: ${source} -> ${target}`.
+  9. "Layers" sidebar section/dropdown button label (NOT saved Layer names).
+ 10. "Warnings" heading (NOT the individual warning messages).
+
+Supporting copy that MUST stay in sync for these ten targets:
+- Workspace Switcher hover/title text (currently `${label} workspace` for each of Canvas, Handbook, Rack); translate each COMPLETE tooltip phrase, not just an English suffix appended to a localized label. Include the Workspace nav accessible label if touched.
+- Node palette hover/title explanation (currently `Click to create Node; drag onto the map to place it.`); translate the entire sentence for Node only. Other tile types remain as-is.
+- Search results' displayed kind label (tile/link) and lifecycle words (live/planned) ONLY to the extent needed to make the two preview templates coherent. Translate the full preview templates with interpolation; keep tile/link titles and device names as user data, unchanged. A few companion keys for tooltips, accessibility and preview variables are fine: "about ten" is a limit on UI TARGETS, not a hard ten-key cap.
+
+Everything else stays English in M1a, including Tile Palette heading, other tile-type labels, SearchBox placeholder, Search Results empty states, Layers' New/Edit/Delete actions, Filters/Relationships, individual validation warnings, top bar, Handbook/Rack content, and mobile-specific strings. The shared Workspace Switcher may of course show its localized labels when reused in another workspace.
+
+C. CRITICAL SOURCE-SPECIFIC GUARDRAILS
+- `TILE_TYPE_CONFIG[type].label` in lib/constants.ts is NOT merely display copy: atlasMutations.ts and stack behavior depend on those English labels. Do NOT translate or mutate that global constant. Resolve "Node" in the Palette's presentation ONLY; leave all persisted/generated `NEW NODE N` titles unchanged.
+- `SearchResult.kind` (tile/link), lifecycle (`live`/`planned`), source/target IDs, type IDs, search filtering, and current search matching must remain stable. `getSearchResults` currently emits an English detail string from lib/atlasSelectors.ts. Prefer a small presentation-only descriptor or formatter using structured source data; do NOT parse localized English strings, modify canonical data, or accidentally change search results/order. If a minimal UI-only SearchResult metadata addition is necessary, keep old consumers and tests compatible. User-authored tile/link titles and addresses must never be machine-translated.
+- Preserve all existing Workspace Switcher DOM structure, class names, hover effects, active state, data-experience-anchor values, button click targets and navigation IDs. No styling redesign.
+- Keep language preferences entirely outside Atlas JSON, save/history, backend settings and any stored user content. Switching language must not generate an Atlas PUT, alter generated names, refresh the Atlas, remount the editor, or change an interaction state.
+- Do NOT touch the backend/Python PDF and Markdown exporters, physical-port defaults, INGEST Manager/Engine matching, Update warning text-comparison logic, Code Note/Manual Note sentinels, or source data schemas. Do not modify vendor libraries or generated files.
+- Do not localize arbitrary English strings encountered along the way. Record further candidates for M1b instead.
+
+D. TESTING / ACCEPTANCE
+- English visible text and hover/title/aria strings in converted scope remain identical to the baseline. Preserve exact capitalization and symbols of search result details, including `->`.
+- In development, switching English <-> pseudolocale visibly updates all ten primary sidebar targets and related hover/accessibility/preview strings WITHOUT refreshing the page. Refresh preserves selection; an invalid saved locale falls back; a simulated storage failure does not crash the app.
+- Search tests: a matching Node tile and a matching relationship both produce localized preview phrases, while titles, IDs, matching/order, click-to-select, and underlying Atlas content stay unchanged. Test `live` and `planned` as applicable.
+- Node Palette: the visible Node label and its tooltip localize in expanded and collapsed forms; other tile types and their default naming behavior are unchanged.
+- Workspace Switcher buttons continue hover reactions, selection, focus and navigation; Settings existing preference tabs retain their original navigation behavior. Test narrow viewport and both appearance modes for clipping.
+- No language change triggers editor remount, mutation, history checkpoint, or save request. No changes to existing Atlas, import/export formats, or backend behavior.
+- Run focused unit/component tests, frontend production build/typecheck, relevant browser tests when available, and any new catalog-check commands. Report precisely what ran and failed; do not claim unavailable browser/full-stack checks passed.
+
+DELIVERABLE / STOP
+Report: changed files; i18next versions; catalog/manifest layout; exact ten targets and any necessary companion keys; selector and DEV-pseudo behavior; test commands/results; outstanding limitations; proposed M1b expansions. Update PROJECT_LOG.md only if normal project instructions require it, preserving prior content. STOP after this M1a. Do not begin bulk extraction, extra UI localization, translation campaigns, or M1b without review.

@@ -1,0 +1,1836 @@
+Baseline English,Proposed Translation,Literal English Translation,Stable Key
+CANVAS + TOP BAR,,,
+Tile Palette,Tavolozza delle schede,Tab Palette,canvas:palette.heading
+Node,Nodo,Node,canvas:palette.node
+Click to create Node; drag onto the map to place it.,,,canvas:palette.nodeHint
+Equipment,Apparato,Apparatus,canvas:palette.equipment
+Service,Servizio,Service,canvas:palette.service
+Container,Container,Container,canvas:palette.container
+Drive,Unità,Unit,canvas:palette.drive
+Mount,Punto di montaggio,Mounting point,canvas:palette.mount
+Script,Script,Script,canvas:palette.script
+Config,Configurazione,Configuration,canvas:palette.config
+Secret Ref,Riferimento a un segreto,Reference to a secret,canvas:palette.secret_ref
+Flow,Flusso,Flow,canvas:palette.flow
+IOT Device,Dispositivo IoT,IoT device,canvas:palette.iot_device
+URL,URL,URL,canvas:palette.url
+Check,Verifica,Verify,canvas:palette.check
+Note,Nota,Note,canvas:palette.note
+Previous tile type,,,canvas:palette.previous
+Next tile type,,,canvas:palette.next
+Family,Famiglia,Family,canvas:palette.family
+Click to create Family; drag onto the map to place it.,,,canvas:palette.familyHint
+Click to create {{typeLabel}}; drag onto the map to place it.,,,canvas:palette.createHint
+Search tiles...,,,canvas:search.placeholder
+Clear search,Cancella ricerca,Clear search,canvas:search.clear
+No matches,,,canvas:search.noMatches
+Use search to find tiles and relationships,,,canvas:search.emptyPrompt
+Search Results,Risultati della ricerca,Search results,canvas:search.heading
+{{lifecycle}} {{typeLabel}} tile,,,canvas:search.tileDetail
+{{lifecycle}}: {{source}} -> {{target}},,,canvas:search.linkDetail
+tile,scheda,form,canvas:search.kind.tile
+link,collegamento,connection,canvas:search.kind.link
+live,in uso,in use,canvas:search.lifecycle.live
+planned,pianificato,planned,canvas:search.lifecycle.planned
+Layers,Livelli,Levels,canvas:layers.heading
+New,Nuovo,New,canvas:layers.create
+Edit,Modifica,Edit,canvas:layers.edit
+Delete,Elimina,Delete,canvas:layers.delete
+Hide layers,Nascondi livelli,Hide layers,canvas:layers.hide
+Show layers,Mostra livelli,Show levels,canvas:layers.show
+Warnings,Avvisi,Notices,canvas:warnings.heading
+Atlas has no tiles yet.,,,canvas:warnings.empty
+{{tile}} references missing parent {{parent}}.,,,canvas:warnings.missingParent
+Duplicate relationship ID {{id}}.,,,canvas:warnings.duplicateLink
+{{id}} references missing source tile {{source}}.,,,canvas:warnings.missingSource
+{{id}} references missing target tile {{target}}.,,,canvas:warnings.missingTarget
+A tile is missing its required ID.,,,canvas:warnings.missingId
+{{id}} is missing a title.,,,canvas:warnings.missingTitle
+{{tile}} has an invalid tile type.,,,canvas:warnings.invalidType
+{{tile}} is missing a valid canvas position.,,,canvas:warnings.missingPosition
+{{tile}} is missing its fields object.,,,canvas:warnings.missingFields
+{{tile}} has no flow steps.,,,canvas:warnings.noSteps
+{{tile}} has an invalid flow step.,,,canvas:warnings.invalidStep
+{{tile}} step {{step}} references a missing source tile.,,,canvas:warnings.stepSource
+{{tile}} step {{step}} references a missing target tile.,,,canvas:warnings.stepTarget
+{{tile}} step {{step}} is missing an action.,,,canvas:warnings.stepAction
+{{tile}} is missing a documented check command.,,,canvas:warnings.checkCommand
+{{tile}} is missing an expected result.,,,canvas:warnings.checkExpected
+{{tile}} cannot enable command execution.,,,canvas:warnings.executionEnabled
+{{tile}} is not linked to anything yet.,,,canvas:warnings.unconnected
+No validation warnings,,,canvas:warnings.none
++{{count}} more warnings,,,canvas:warnings.more
+Inspector,Pannello proprietà,Properties panel,canvas:inspector.heading
+Family Inspector,Proprietà della famiglia,Family property,canvas:inspector.familyHeading
+Description,Descrizione,Description,canvas:inspector.description
+Tag,Tag,Tags,canvas:inspector.tag
+Color,Colore,Color,canvas:inspector.color
+Family color,Colore della famiglia,Family color,canvas:inspector.familyColor
+Order,Ordine,Order,canvas:inspector.order
+Position,Posizione,Position,canvas:inspector.position
+Size,Dimensioni,Dimensions,canvas:inspector.size
+Members,Membri,Members,canvas:inspector.members
+No member tiles,,,canvas:inspector.noMembers
+Delete Family,Elimina famiglia,Delete family,canvas:inspector.deleteFamily
+Stack Inspector,Proprietà della pila,Stack Properties,canvas:inspector.stackHeading
+Tile Type,Tipo di scheda,Card type,canvas:inspector.tileType
+Count,Quantità,Amount,canvas:inspector.count
+Unstack,Separa le schede,Separate the tabs,canvas:inspector.unstack
+Delete Tile,Elimina scheda,Delete tab,canvas:inspector.deleteTile
+Stack information,Informazioni sulla pila,Battery Information,canvas:inspector.stackInfo
+Stack,Pila,Stack,canvas:inspector.stack
+Representative,Scheda rappresentativa,Representative sheet,canvas:inspector.representative
+Type,Tipo,Type,canvas:inspector.type
+No parent,,,canvas:inspector.noParent
+Primary Node,Nodo principale,Main node,canvas:inspector.primary
+Families,Famiglie,Families,canvas:inspector.families
+Included through parent/child tree,,,canvas:inspector.inherited
+Tags,Tag,Tags,canvas:inspector.tags
+Tile details,Dettagli della scheda,Card Details,canvas:inspector.details
+Fields,Campi,Fields,canvas:inspector.fields
+Add Field,Aggiungi campo,Add field,canvas:inspector.addField
+Notes,Note,Notes,canvas:inspector.notes
+From,Da,From,canvas:inspector.from
+To,A,TO,canvas:inspector.to
+From Port,Porta di origine,Origin door,canvas:inspector.fromPort
+OUT side,Lato OUT,OUT side,canvas:inspector.outSide
+Child bottom,Parte inferiore dell’elemento figlio,Bottom of the child element,canvas:inspector.childBottom
+To Port,Porta di destinazione,Destination port,canvas:inspector.toPort
+IN side,Lato IN,IN side,canvas:inspector.inSide
+Parent top,Parte superiore dell’elemento padre,Top of the parent element,canvas:inspector.parentTop
+Label,Etichetta,Label,canvas:inspector.label
+Directional,Direzionale,Directional,canvas:inspector.directional
+Delete Link,Elimina collegamento,Delete link,canvas:inspector.deleteLink
+"Select a tile, relationship, stack, or Family",,,canvas:inspector.empty
+"Edit details, fields, tags, notes, relationships, and grouping here.",,,canvas:inspector.emptyHint
+Icon,Icona,Icon,canvas:inspector.icon
+Use Default,Usa il valore predefinito,Use default value,canvas:inspector.defaultAction
+Icon library,Raccolta di icone,Collection of icons,canvas:inspector.iconLibrary
+Loading uploaded icons...,,,canvas:inspector.iconsLoading
+No uploaded icons yet.,,,canvas:inspector.iconsEmpty
+Flow Steps,Passaggi del flusso,Flow steps,canvas:inspector.steps
+Move step up,Sposta il passaggio in alto,Move the passage up,canvas:inspector.moveUp
+Move step down,Sposta il passaggio in basso,Move the passage down,canvas:inspector.moveDown
+Delete step,Elimina passaggio,Delete step,canvas:inspector.deleteStep
+Action,Azione,Action,canvas:inspector.action
+No flow steps yet.,,,canvas:inspector.noSteps
+Add Flow Step,Aggiungi passaggio al flusso,Add step to flow,canvas:inspector.addStep
+Dependencies And Checks,Dipendenze e verifiche,Dependencies and checks,canvas:inspector.dependencies
+Failure Points,Punti di guasto,Points of failure,canvas:inspector.failures
+None linked yet.,,,canvas:inspector.noRelated
+Go Live,Metti in uso,Put into use,canvas:inspector.goLive
+Swimlane Workspace,Area di lavoro a corsie,Lane work area,canvas:inspector.workspace
+"Open lanes, workflow elements, and connectors in the dedicated Flow Workspace.",,,canvas:inspector.workspaceHint
+Open Flow Workspace,Apri l’area di lavoro Flusso,Open the Flow workspace,canvas:inspector.openWorkspace
+Disconnect physical connections and remove paired Patch Panel terminations before changing device type or classification.,,,canvas:inspector.physicalLock
+Mount,Punto di montaggio,Mounting point,canvas:inspector.mount
+Parent,Elemento padre,Parent element,canvas:inspector.parent
+Mixed mounted items,Elementi montati di tipi diversi,Mounted elements of different types,canvas:inspector.mixed
+Remove the configured Drive Bay before changing type or classification.,,,canvas:inspector.bayLock
+Remove contained Drives from all Rack placements before changing type or classification.,,,canvas:inspector.driveLock
+Promote both endpoint tiles before promoting this relationship.,,,canvas:inspector.promoteEndpoints
+Field name,Nome del campo,Field name,canvas:inspector.fieldName
+Uploaded icon,Icona caricata,Icon loaded,canvas:inspector.uploaded
+Lucide icon,Icona Lucide,Glossy Icon,canvas:inspector.lucide
+Tile type default,Icona predefinita del tipo di scheda,Default card type icon,canvas:inspector.typeDefault
+Done,Fine,End,canvas:inspector.done
+Edit,Modifica,Edit,canvas:inspector.editIcons
+Uploading,,,canvas:inspector.uploading
+Upload New Icon,Carica nuova icona,Load new icon,canvas:inspector.upload
+Icon upload failed,,,canvas:inspector.uploadFailed
+Icon delete failed,,,canvas:inspector.deleteFailed
+Ports,Porte,Doors,canvas:inspector.ports
+Could not load uploaded icons.,,,canvas:inspector.iconsFailed
+Remove {{fieldName}},Rimuovi {{fieldName}},Remove {{fieldName}},canvas:inspector.removeField
+Remove {{filename}},Rimuovi {{filename}},Remove {{filename}},canvas:inspector.removeIcon
+Remove {{filename}} from icon library,Rimuovi {{filename}} dalla raccolta di icone,Remove {{filename}} from the icon collection,canvas:inspector.removeFromLibrary
+Default {{label}},{{label}} (predefinito),{{label}} (default),canvas:inspector.defaultIcon
+Step {{number}},Passaggio {{number}},Passage {{number}},canvas:inspector.step
+{{source}} to {{target}} · {{lifecycle}},,,canvas:inspector.endpoints
+{{count}} {{typeLabel}} tiles,,,canvas:inspector.stackTiles
+{{count}} member,,,canvas:inspector.memberCount_one
+{{count}} members,,,canvas:inspector.memberCount_other
+{{count}} Mounted Item,,,canvas:inspector.mountedCount_one
+{{count}} Mounted Items,,,canvas:inspector.mountedCount_other
+This planned tile is locked in Live View.,,,canvas:inspector.planned.tile
+This planned relationship is locked in Live View.,,,canvas:inspector.planned.relationship
+This live tile is reference-only in Planning Mode.,,,canvas:inspector.live.tile
+This live relationship is reference-only in Planning Mode.,,,canvas:inspector.live.relationship
+Equipment Classification,Classificazione dell’apparato,Classification of the apparatus,canvas:inspector.classification
+Custom classification label,,,canvas:inspector.customClass
+Enter 1–25 characters. This classification is not saved yet.,,,canvas:inspector.invalidClass
+contains,contiene,contains,canvas:relationship.types.contains
+runs,esegue,performs,canvas:relationship.types.runs
+hosts,ospita,hosts,canvas:relationship.types.hosts
+calls,chiama,call,canvas:relationship.types.calls
+controls,controlla,check,canvas:relationship.types.controls
+depends{{separator}}on,dipende{{separator}}da,depends{{separator}}on,canvas:relationship.types.depends_on
+uses{{separator}}storage,usa{{separator}}lo spazio di archiviazione,uses{{separator}}storage space,canvas:relationship.types.uses_storage
+mounted{{separator}}at,montato{{separator}}in,mounted{{separator}}in,canvas:relationship.types.mounted_at
+backs{{separator}}up{{separator}}to,esegue il{{separator}}backup{{separator}}su,performs the{{separator}}backup{{separator}}on,canvas:relationship.types.backs_up_to
+requires{{separator}}key,richiede{{separator}}una chiave,requires{{separator}}a key,canvas:relationship.types.requires_key
+requires{{separator}}config,richiede{{separator}}una configurazione,requires{{separator}}configuration,canvas:relationship.types.requires_config
+exposes{{separator}}url,espone{{separator}}un URL,exposes{{separator}}a URL,canvas:relationship.types.exposes_url
+validates{{separator}}with,convalida{{separator}}con,validation{{separator}}with,canvas:relationship.types.validates_with
+fails{{separator}}if,non riesce{{separator}}se,fails{{separator}}if,canvas:relationship.types.fails_if
+documents,documenta,documents,canvas:relationship.types.documents
+related{{separator}}to,in relazione{{separator}}con,in relation{{separator}}with,canvas:relationship.types.related_to
+Create relationship,Crea relazione,Create relationship,canvas:relationship.heading
+NOT RELATED,NESSUNA RELAZIONE,NO RELATIONSHIP,canvas:relationship.modes.not_related
+PARENT → CHILD,PADRE → FIGLIO,FATHER → SON,canvas:relationship.modes.source_parent
+CHILD → PARENT,FIGLIO → PADRE,SON → FATHER,canvas:relationship.modes.target_parent
+FAMILY ONLY,SOLO FAMIGLIA,FAMILY ONLY,canvas:relationship.modes.family_only
+Source is contained by the target hierarchy.,,,canvas:relationship.help.contains
+Source runs on or through the target.,,,canvas:relationship.help.runs
+Source hosts the target.,,,canvas:relationship.help.hosts
+Source actively calls or invokes the target.,,,canvas:relationship.help.calls
+Source controls the target.,,,canvas:relationship.help.controls
+Source depends on the target.,,,canvas:relationship.help.depends_on
+Source uses storage provided by the target.,,,canvas:relationship.help.uses_storage
+Source is mounted at the target.,,,canvas:relationship.help.mounted_at
+Source backs up to the target.,,,canvas:relationship.help.backs_up_to
+Source requires the target key or secret reference.,,,canvas:relationship.help.requires_key
+Source requires the target configuration.,,,canvas:relationship.help.requires_config
+Source exposes the target URL.,,,canvas:relationship.help.exposes_url
+Source is validated by or with the target.,,,canvas:relationship.help.validates_with
+Source fails when the target condition occurs.,,,canvas:relationship.help.fails_if
+Source documents the target.,,,canvas:relationship.help.documents
+Source is generally related to the target.,,,canvas:relationship.help.related_to
+Close relationship picker,Chiudi la selezione delle relazioni,Close the selection of relationships,canvas:relationship.close
+Source tile,Scheda di origine,Origin card,canvas:relationship.source
+Target tile,Scheda di destinazione,Destination card,canvas:relationship.target
+Select Relationship,Seleziona una relazione,Select a relationship,canvas:relationship.structure
+"Different Families allow connector lines only. Parentage, Family Only and Contains are unavailable.",,,canvas:relationship.crossFamily
+Select a Connector,Seleziona un connettore,Select a connector,canvas:relationship.choose
+Earlier relationships,Relazioni precedenti,Previous relationships,canvas:relationship.earlier
+Later relationships,Relazioni successive,Subsequent reports,canvas:relationship.later
+Suggested,Suggerite,Suggested,canvas:relationship.suggested
+Different Families allow connector lines only. Contains is unavailable.,,,canvas:relationship.crossContains
+Use the parent/child connector handles to create a Contains relationship.,,,canvas:relationship.containsHandles
+Family: {{title}},,,canvas:relationship.family
+Select Relationship: {{mode}},,,canvas:relationship.current
+{{label}} [planned],{{label}} [pianificata],{{label}} [planned],canvas:relationship.plannedLabel
+Filters,Filtri,Filters,canvas:filters.heading
+Family Tiles,Schede della famiglia,Family Profiles,canvas:filters.families
+Tags,Tag,Tags,canvas:filters.tags
+Show or hide all tags,,,canvas:filters.toggleTags
+{{title}} Family,Famiglia {{title}},Family {{title}},canvas:filters.family
+Relationships,Relazioni,Relations,canvas:filters.relationships
+Switch connector routing to Curved,Passa al tracciato curvo dei connettori,Switch to the curved path of the connectors,canvas:controls.routeCurved
+Switch connector routing to Avoid Tiles,Passa al tracciato dei connettori che evita le schede,Switch to connector layout that avoids cards,canvas:controls.routeAvoid
+Connector routing: Avoid Tiles. Switch to Curved.,,,canvas:controls.curvedHint
+Connector routing: Curved. Switch to Avoid Tiles.,,,canvas:controls.avoidHint
+Live View,Vista operativa,Operational view,canvas:controls.live
+No broken links,,,canvas:controls.noBroken
+Add Subtile,Aggiungi sottoscheda,Add Subtab,canvas:controls.addSubtile
+Duplicate Tile,Duplica scheda,Duplicate card,canvas:controls.duplicate
+Stack mounted items,Raggruppa gli elementi montati in una pila,Group mounted items into a stack,canvas:controls.mounted
+No stack actions,,,canvas:controls.noStack
+{{count}} tiles,,,canvas:controls.tiles
+{{count}} links,,,canvas:controls.links
+{{tiles}} planned tiles / {{links}} planned links,,,canvas:controls.planned
+{{count}} search results,,,canvas:controls.search
+{{count}} broken links,,,canvas:controls.broken
+{{count}} warnings,,,canvas:controls.warnings
+Stack sibling {{typeLabel}} tiles,Impila le schede dello stesso livello di tipo {{typeLabel}},Stacks cards of the same level of type {{typeLabel}},canvas:controls.stack
+{{format}} ready,,,canvas:controls.exportReady
+Snap to Grid: ON,Aggancio alla griglia: ATTIVO,Grid Snap: ON,canvas:controls.snapOn
+Snap to Grid: OFF,Aggancio alla griglia: DISATTIVATO,Grid Snap: OFF,canvas:controls.snapOff
+Loading atlas...,,,canvas:status.loading
+Atlas loaded,,,canvas:status.loaded
+Unable to load atlas,,,canvas:status.loadFailed
+Undoing Atlas change...,,,canvas:status.undoing
+Redoing Atlas change...,,,canvas:status.redoing
+Save failed; history navigation canceled,,,canvas:status.historyCanceled
+Atlas change undone,,,canvas:status.undone
+Atlas change redone,,,canvas:status.redone
+Undo failed,,,canvas:status.undoFailed
+Redo failed,,,canvas:status.redoFailed
+Saving atlas...,,,canvas:status.saving
+Atlas saved,,,canvas:status.saved
+Save failed,,,canvas:status.saveFailed
+No visible tiles to export,,,canvas:status.noTiles
+Preparing PNG export...,,,canvas:status.preparePng
+PNG export failed,,,canvas:status.pngFailed
+Validating import...,,,canvas:status.validatingImport
+Import validation failed,,,canvas:status.invalidImport
+Import canceled,,,canvas:status.importCanceled
+Importing atlas...,,,canvas:status.importing
+Atlas imported,,,canvas:status.imported
+Import failed,,,canvas:status.importFailed
+Backup could not be saved. Resolve the save error before downloading.,,,canvas:status.backupFailed
+atlas.json downloaded,,,canvas:status.downloaded
+Tile topology changes are available in Canvas template,,,canvas:status.canvasTopologyOnly
+Subtile created,,,canvas:status.subtileCreated
+Tile created,,,canvas:status.tileCreated
+Families are available in Canvas template,,,canvas:status.canvasFamiliesOnly
+Family created,,,canvas:status.familyCreated
+Interactivity locked,,,canvas:status.locked
+Relationship changes are available in Canvas template,,,canvas:status.canvasLinksOnly
+Connect from planned work only,,,canvas:status.connectPlanned
+Planned items are locked in Live View,,,canvas:status.plannedLocked
+Relationship canceled: connection is no longer available,,,canvas:status.connectionLost
+Existing Contains relationship selected,,,canvas:status.existingContains
+Relationship created,,,canvas:status.linkCreated
+Selection is read-only in this mode,,,canvas:status.readOnly
+Remove contained Drives from all Rack placements before changing type or classification.,,,canvas:status.driveLock
+Tile updated,,,canvas:status.tileUpdated
+Family updated,,,canvas:status.familyUpdated
+Family deleted,,,canvas:status.familyDeleted
+Tile added to Family,,,canvas:status.memberAdded
+Tile removed from Family,,,canvas:status.memberRemoved
+Save failed; tile deletion canceled,,,canvas:status.deleteSaveCanceled
+Tile deletion canceled because the Canvas context changed,,,canvas:status.deleteContextChanged
+Rack links changed. Review the tile deletion again.,,,canvas:status.rackLinksChanged
+Tile deleted,,,canvas:status.tileDeleted
+Save failed; tile deletion is not saved,,,canvas:status.deleteUnsaved
+Tile duplicated,,,canvas:status.duplicated
+Relationship updated,,,canvas:status.linkUpdated
+Relationship deleted,,,canvas:status.linkDeleted
+Selection changed. Select the tiles again.,,,canvas:status.selectionChanged
+"Selection includes a Family or collapsed stack. Select individual tiles, or use the Inspector to delete a Family or stack member.",,,canvas:status.individualTiles
+Stack updated,,,canvas:status.stackUpdated
+Stack removed,,,canvas:status.stackRemoved
+Planned tile promoted to live,,,canvas:status.tilePromoted
+Promote endpoint tiles before promoting this relationship,,,canvas:status.promoteEndpoints
+Planned relationship promoted to live,,,canvas:status.linkPromoted
+Canvas workspace,,,canvas:status.canvasWorkspace
+Viewing Atlas tile on Canvas,,,canvas:status.viewTile
+Demo could not be loaded,,,canvas:status.demoFailed
+CTDC sample loaded,,,canvas:status.demoLoaded
+Atlas content wiped,,,canvas:status.wiped
+Live View,,,canvas:status.live
+Planning Mode,,,canvas:status.planning
+Family: {{title}},,,canvas:status.family
+Saving atlas before {{format}} export...,,,canvas:status.exportSaving
+Exporting {{format}}...,,,canvas:status.exportBusy
+Exported {{filename}},,,canvas:status.exported
+Export {{format}} failed,,,canvas:status.exportFailed
+{{count}} tiles deleted,,,canvas:status.tilesDeleted
+Layer: {{title}},,,canvas:status.layer
+Created layer: {{title}},,,canvas:status.layerCreated
+Updated layer: {{title}},,,canvas:status.layerUpdated
+Deleted layer: {{title}},,,canvas:status.layerDeleted
+Stacked {{count}} {{typeLabel}} tiles,,,canvas:status.stackedTiles
+Stacked {{count}} mounted item,,,canvas:status.stackedMount
+Stacked {{count}} mounted items,,,canvas:status.stackedMounts
+Tile is no longer available,,,canvas:status.tileMissing
+Unstack tiles before adding a subtile or duplicating,,,canvas:status.unstackFirst
+New legacy Flow tiles cannot be created,,,canvas:status.legacyCreate
+This tile has multiple Rack locations. Remove duplicate placements before deleting its Atlas tile. Nothing was deleted.,,,canvas:status.duplicateLocations
+Disconnect physical connections before deleting this device. Nothing was deleted.,,,canvas:status.disconnectFirst
+No tiles selected,,,canvas:status.noTilesSelected
+Selection contains tiles that are read-only in this mode. Nothing was deleted.,,,canvas:status.deleteReadOnly
+Cannot delete tiles referenced by legacy Flow steps in: {{titles}}. Update those steps or include the Flow tiles in the deletion.,,,canvas:status.legacyReferences
+Relationship canceled: Connection is no longer available.,,,canvas:status.connectionUnavailable
+Relationship canceled: Parentage or Family membership changed. Reconnect to review the current relationship.,,,canvas:status.structureChanged
+Relationship canceled: This structural relationship is no longer available.,,,canvas:status.structureUnavailable
+Relationship canceled: Contains is unavailable between different Families.,,,canvas:status.crossContains
+Relationship canceled: Contains requires the parent/child connector handles.,,,canvas:status.needHandles
+Family title,,,canvas:dialogs.familyTitle
+Change this Flow to another tile type? Its Flow-specific data will be removed.,,,canvas:dialogs.flowType
+Delete this Family? Member tiles will not be deleted.,,,canvas:dialogs.familyDelete
+Layer title,,,canvas:dialogs.layerTitle
+Layer description,,,canvas:dialogs.layerDescription
+At least one layer is required.,,,canvas:dialogs.lastLayer
+Replace the current Atlas with the demo? The demo has independent numbering history. You can use Undo to restore the current Atlas; downloading a backup first is recommended.,,,canvas:dialogs.demo
+"Delete layer ""{{title}}""?",,,canvas:dialogs.layerDelete
+Tile type ({{choices}}),,,canvas:dialogs.tileType
+Relationship type ({{choices}}),,,canvas:dialogs.linkType
+"Wipe all Atlas content?
+
+This will delete {{tileCount}} tiles, {{linkCount}} relationships, {{familyCount}} Families, {{stackCount}} stacks, {{addressBookEntryCount}} manual Address Book entries, and {{rackCount}} racks with {{placementCount}} placements. Handbook content derived from those tiles will also be removed. Metadata and layer definitions will be preserved. Numbering history will also be preserved; deleted port, cable and backplane numbers will not be reused.
+
+You can use Undo after the wipe, but downloading a backup Atlas JSON first is recommended.",,,canvas:dialogs.wipe
+Atlas import was not applied.{{details}},,,canvas:dialogs.invalidImport
+"Warnings:
+{{warnings}}",,,canvas:dialogs.importWarnings
+"Replace the current atlas with this validated JSON file?
+
+Tiles: {{tiles}}
+Relationships: {{links}}
+Layers: {{views}}
+Families: {{families}}
+Racks: {{racks}}{{warningText}}",,,canvas:dialogs.confirmImport
+Delete this tile and its relationships?,,,canvas:dialogs.deleteTile
+Delete these {{count}} tiles and their relationships?,,,canvas:dialogs.deleteTiles
+"Delete this tile from Atlas and Canvas?
+
+{{titles}} will be converted to Rack-only equipment. Rack placement, ports and physical cables will be preserved. You can delete the equipment separately in the Rack if you wish.
+
+Atlas-only details and relationships will be deleted.",,,canvas:dialogs.deleteRackTile
+"Delete these {{count}} tiles from Atlas and Canvas?
+
+{{titles}} will be converted to Rack-only equipment. Rack placement, ports and physical cables will be preserved. You can delete the equipment separately in the Rack if you wish.
+
+Atlas-only details and relationships will be deleted.",,,canvas:dialogs.deleteRackTiles
+Copy path,Copia percorso,Copy path,canvas:tile.copyPath
+Path Copied,,,canvas:tile.copied
+click to copy,,,canvas:tile.copyHint
+configured,configurato,configured,canvas:tile.configured
+inside {{title}},all’interno di {{title}},inside {{title}},canvas:tile.inside
+{{count}} items,,,canvas:tile.items
+Focus family,Inquadra la famiglia,Frame the family,canvas:tile.focusFamily
+{{count}} lane,,,canvas:tile.laneCount_one
+{{count}} lanes,,,canvas:tile.laneCount_other
+{{count}} node,,,canvas:tile.nodeCount_one
+{{count}} nodes,,,canvas:tile.nodeCount_other
+{{lanes}} · {{nodes}},,,canvas:tile.swimlaneSummary
+Stack browser,Esplora pila,Explore stack,canvas:stack.browser
+Stack members,Elementi della pila,Stack elements,canvas:stack.members
+Browse {{title}},Esplora {{title}},Explore {{title}},canvas:stack.browse
+Inspect {{title}},Ispeziona {{title}},Inspect {{title}},canvas:stack.inspect
+up,,,canvas:navigation.up
+down,,,canvas:navigation.down
+left,,,canvas:navigation.left
+right,,,canvas:navigation.right
+"Moved selected node {{direction}}. New position, x: {{x}}, y: {{y}}",,,canvas:navigation.moved
+Press enter or space to select a node. Press delete to remove it and escape to cancel.,,,canvas:navigation.selectNode
+Press enter or space to select a node. You can then use the arrow keys to move the node around. Press delete to remove it and escape to cancel.,,,canvas:navigation.moveNode
+Press enter or space to select an edge. You can then press delete to remove it or escape to cancel.,,,canvas:navigation.selectEdge
+Control Panel,Pannello di controllo,Control Panel,canvas:navigation.panel
+Zoom In,Ingrandisci,Enlarge,canvas:navigation.zoomIn
+Zoom Out,Riduci,Reduce,canvas:navigation.zoomOut
+Fit View,Adatta alla vista,Suitable for the view,canvas:navigation.fit
+Toggle Interactivity,Attiva o disattiva l’interattività,Turn interactivity on or off,canvas:navigation.interactive
+Mini Map,Minimappa,Minimap,canvas:navigation.map
+Handle,Maniglia,Handle,canvas:navigation.handle
+Atlas revision is unavailable. Reload before saving.,,,canvas:saveErrors.revisionForSave
+"The previous save could not be reconciled. Preserve your local work, then reload before retrying.",,,canvas:saveErrors.cannotReconcile
+The save could not be confirmed. Reload to check whether it completed before retrying.,,,canvas:saveErrors.unconfirmed
+An import is already in progress.,,,canvas:saveErrors.importing
+The save response was uncertain. Reconcile server state before retrying.,,,canvas:saveErrors.uncertain
+Pending Atlas changes could not be saved. Resolve the save error before importing.,,,canvas:saveErrors.pending
+Atlas changed. Refresh reconciliation before importing.,,,canvas:saveErrors.changed
+Atlas revision is unavailable. Reload before importing.,,,canvas:saveErrors.revisionForImport
+The save response was uncertain. Reconcile server state before retrying; the import may already be saved.,,,canvas:saveErrors.uncertainImport
+Atlas revision is unavailable. Reload before changing history.,,,canvas:saveErrors.revisionForHistory
+Unable to save current Atlas before import.,,,canvas:saveErrors.beforeImport
+Undo,Annulla,Cancel,common:history.undo
+Undo — {{count}} available,,,common:history.undoAvailable
+Redo,Ripeti,Repeat,common:history.redo
+Redo — {{count}} available,,,common:history.redoAvailable
+Save,Salva,Save,common:actions.save
+Download Atlas,Scarica l’atlante,Download the atlas,common:actions.downloadAtlas
+Reset,Reimposta,Reset,common:actions.reset
+Load Demo,Carica la demo,Load the demo,common:actions.loadDemo
+Wipe All Content,Cancella tutti i contenuti,Delete all content,common:actions.wipe
+Planning Mode,Modalità di pianificazione,Planning mode,common:actions.planning
+Settings,Impostazioni,Settings,common:settings.open
+Close settings,Chiudi le impostazioni,Close settings,common:settings.close
+Workspaces,Aree di lavoro,Work areas,common:workspace.heading
+Workspace,Area di lavoro,Work area,common:workspace.navigationLabel
+Canvas,Canvas,Canvas,common:workspace.canvas
+Canvas workspace,,,common:workspace.canvasHint
+Handbook,Manuale,Manual,common:workspace.handbook
+Handbook workspace,,,common:workspace.handbookHint
+Rack,Rack,Rack,common:workspace.rack
+Rack workspace,,,common:workspace.rackHint
+Language,Lingua,Tongue,common:preferences.language
+Homelab Diagram & Documentation,Diagrammi e documentazione per homelab,Diagrams and documentation for homelabs,common:brand.subtitle
+{{brand}} Homelab Diagram and Documentation,,,common:brand.description
+Save failed: {{detail}},,,common:saveStatus.failed
+Autosaving...,,,common:saveStatus.busy
+Unsaved changes,,,common:saveStatus.dirty
+Saved at {{time}},,,common:saveStatus.at
+Saved,,,common:saveStatus.saved
+Import,Importa,It matters,ingest:menu.open
+Import Atlas JSON,Importa atlante JSON,Import JSON Atlas,ingest:menu.atlasJson
+System Snapshot,Snapshot del sistema,System snapshot,ingest:menu.snapshot
+LLM Assisted Import,Importazione assistita da LLM,LLM-assisted import,ingest:menu.llm
+Snapshot setup is incomplete. See Update instructions to activate this feature.,,,ingest:snapshot.setupIncomplete
+Export,Esporta,Export,exports:menu.open
+Handbook PDF,PDF del manuale,PDF of the manual,exports:menu.handbookPdf
+Export the complete active canvas layer as PNG,,,exports:menu.canvasHint
+Open a rack in Rack Builder to export Rack PNG,,,exports:menu.rackUnavailable
+PNG-CANVAS,PNG del Canvas,Canvas PNG,exports:menu.canvasPng
+Rack PNG,PNG del rack,Rack PNG,exports:menu.rackPng
+Close PNG export options,Chiudi le opzioni di esportazione PNG,Close PNG export options,exports:png.close
+Include title block,Includi il cartiglio,Include the title block,exports:png.include
+Add export details in a compact blueprint-style block.,,,exports:png.includeHint
+Export with Tile Data Visible,Mostra i dati delle schede nell’esportazione,Show card data in export,exports:png.reveal
+Title,Titolo,Title,exports:png.title
+Title block style,Stile del cartiglio,Cartouche style,exports:png.style
+Cancel,Annulla,Cancel,exports:png.cancel
+Export PNG,Esporta PNG,Export PNG,exports:png.submit
+PNG Export Options,Opzioni di esportazione PNG,PNG Export Options,exports:png.heading
+The reserved label area is included even when the title block is off.,,,exports:png.reserved
+LIGHT,CHIARO,CLEAR,exports:png.light
+DARK,SCURO,DARK,exports:png.dark
+System,Sistema,System,exports:png.caption.system
+Date,Data,Date,exports:png.caption.date
+Tiles,Schede,Cards,exports:png.caption.tiles
+Relationships,Relazioni,Relations,exports:png.caption.relationships
+Untitled,Senza titolo,Untitled,exports:png.caption.untitled
+Unable to determine the PNG export dimensions.,,,exports:png.errors.dimensions
+The browser could not create the PNG image.,,,exports:png.errors.create
+The browser could not render the PNG image.,,,exports:png.errors.render
+"This canvas is too large to export as one PNG. Reduce the layer size or split it into smaller layers, then try again.",,,exports:png.errors.tooLarge
+HANDBOOK,,,
+PNG exports canvas layers; use Handbook PDF for printable Handbook output,,,canvas:status.canvasPngOnly
+Placement changes are locked in Handbook,,,canvas:status.placementLocked
+Family deletion is locked in Handbook,,,canvas:status.familyLocked
+Family membership changes are locked in Handbook,,,canvas:status.membershipLocked
+Tile deletion is locked in Handbook,,,canvas:status.deleteLocked
+Relationship topology is locked in Handbook,,,canvas:status.linkLocked
+Relationship deletion is locked in Handbook,,,canvas:status.linkDeleteLocked
+Stack changes are locked in Handbook,,,canvas:status.stackLocked
+Handbook workspace,,,canvas:status.handbookWorkspace
+Use Handbook PDF for a printable Handbook export,,,exports:menu.handbookInstead
+Address Book,,,handbook:sections.addressBook
+Swimlanes,,,handbook:sections.swimlanes
+Physical Wiring,,,handbook:sections.physicalWiring
+Reference,,,handbook:sections.reference
+Unassigned / No Family,,,handbook:sections.unassigned
+No Swimlane charts are recorded in this Atlas.,,,handbook:sections.noCharts
+CONTAINS,,,handbook:relationships.containsForward
+CONTAINED IN,,,handbook:relationships.containsInverse
+RUNS,,,handbook:relationships.runsForward
+RUN BY,,,handbook:relationships.runsInverse
+HOSTS,,,handbook:relationships.hostsForward
+HOSTED BY,,,handbook:relationships.hostsInverse
+CALLS,,,handbook:relationships.callsForward
+CALLED BY,,,handbook:relationships.callsInverse
+CONTROLS,,,handbook:relationships.controlsForward
+CONTROLLED BY,,,handbook:relationships.controlsInverse
+DEPENDS ON,,,handbook:relationships.depends_onForward
+REQUIRED BY,,,handbook:relationships.depends_onInverse
+USES STORAGE,,,handbook:relationships.uses_storageForward
+STORAGE USED BY,,,handbook:relationships.uses_storageInverse
+MOUNTED AT,,,handbook:relationships.mounted_atForward
+MOUNT POINT FOR,,,handbook:relationships.mounted_atInverse
+BACKS UP TO,,,handbook:relationships.backs_up_toForward
+BACKED UP BY,,,handbook:relationships.backs_up_toInverse
+REQUIRES KEY,,,handbook:relationships.requires_keyForward
+KEY REQUIRED BY,,,handbook:relationships.requires_keyInverse
+REQUIRES CONFIG,,,handbook:relationships.requires_configForward
+CONFIG REQUIRED BY,,,handbook:relationships.requires_configInverse
+EXPOSES URL,,,handbook:relationships.exposes_urlForward
+URL EXPOSED BY,,,handbook:relationships.exposes_urlInverse
+VALIDATES WITH,,,handbook:relationships.validates_withForward
+VALIDATES,,,handbook:relationships.validates_withInverse
+FAILS IF,,,handbook:relationships.fails_ifForward
+FAILURE CONDITION FOR,,,handbook:relationships.fails_ifInverse
+DOCUMENTS,,,handbook:relationships.documentsForward
+DOCUMENTED BY,,,handbook:relationships.documentsInverse
+RELATED TO,,,handbook:relationships.related_toForward
+RELATED TO,,,handbook:relationships.related_toInverse
+TABLE OF CONTENTS,,,handbook:toc.heading
+Move {{title}} up,,,handbook:toc.moveUp
+Move {{title}} down,,,handbook:toc.moveDown
+Move volume up,,,handbook:toc.volumeUp
+Move volume down,,,handbook:toc.volumeDown
+No entries,,,handbook:toc.empty
+System name,,,handbook:preview.systemName
+Your System's Name?,,,handbook:preview.systemPlaceholder
+← Back to {{title}},,,handbook:preview.back
+SELECT VOLUME YOU WISH TO VIEW FROM THE TABLE OF CONTENTS,,,handbook:preview.selectPrompt
+Minimap,,,handbook:preview.minimap
+Outline,,,handbook:preview.outline
+No Swimlanes,,,handbook:preview.noSwimlanes
+Select a volume,,,handbook:preview.selectVolume
+Volume {{number}},,,handbook:preview.volume
+No tiles in this volume yet.,,,handbook:preview.emptyVolume
+Epilogue: Family Members Without Parents,,,handbook:preview.epilogue
+ADDITIONAL ADDRESSES,,,handbook:preview.additionalAddresses
+{{type}} inside {{parent}},,,handbook:preview.inside
+PLANNED,,,handbook:preview.planned
+{{title}} Relationships,,,handbook:preview.relationships
+No logical relationships recorded.,,,handbook:preview.noRelationships
+Path copied,,,handbook:preview.copied
+Path to copy,,,handbook:preview.pathToCopy
+Parent reference is missing.,,,handbook:preview.missingParent
+Tile type is not recognized.,,,handbook:preview.unknownType
+Manual copy,,,handbook:copy.manual
+Clipboard copy was not confirmed. Select the text and copy it manually.,,,handbook:copy.help
+Select text,,,handbook:copy.select
+Dismiss manual copy,,,handbook:copy.dismissLabel
+Dismiss,,,handbook:copy.dismiss
+Name is required.,,,handbook:notice.nameRequired
+Address is required.,,,handbook:notice.addressRequired
+"Enter a URL, IP address, IP:port, IPv6 address, or domain.",,,handbook:notice.invalidAddress
+"Choose a PNG, JPEG, or WebP image.",,,handbook:notice.imageType
+Unable to prepare Handbook logo crop,,,handbook:notice.cropPrepare
+Unable to load the selected image,,,handbook:notice.cropLoad
+Unable to generate the Handbook logo crop,,,handbook:notice.cropGenerate
+Enter a page title.,,,handbook:notice.pageTitle
+NOTES is reserved for the original Tile notes.,,,handbook:notice.reservedTitle
+A page with this title already exists.,,,handbook:notice.duplicateTitle
+Use at most {{limit}} characters.,,,handbook:notice.longTitle
+{{title}} moved to position {{index}}.,,,handbook:notice.moved
+Tile reference inserted.,,,handbook:notice.referenceInserted
+{{field}} inserted as text.,,,handbook:notice.fieldInserted
+Preparing note PDF…,,,handbook:notice.preparingPdf
+Preparing download…,,,handbook:notice.preparingDownload
+Download started: {{filename}},,,handbook:notice.download
+Export failed: {{detail}},,,handbook:notice.failed
+Export failed. Try again or choose a text format.,,,handbook:notice.retryExport
+This note is unavailable.,,,handbook:notice.unavailable
+"Choose an extension such as .py, .yaml or .json (up to 16 letters, digits, +, _ or -).",,,handbook:notice.invalidExtension
+This draft is no longer available for export.,,,handbook:notice.missingDraft
+This Tile is no longer available for export.,,,handbook:notice.missingTile
+This note is no longer available for export.,,,handbook:notice.missingPage
+The Atlas is unavailable. Retry export.,,,handbook:notice.missingAtlas
+Could not insert: the selection changed. Reopen @@ at the intended position.,,,handbook:notice.selection-changed
+Could not insert: the Tile was changed or deleted. Go Back and select it again.,,,handbook:notice.target-changed
+Could not insert: the field changed or is no longer available. Go Back and select it again.,,,handbook:notice.field-changed
+This insertion action is not available here.,,,handbook:notice.action-unavailable
+Could not insert: the value would exceed the note's content limit.,,,handbook:notice.overflow
+Code Note saved,,,handbook:notice.codeSaved
+Save failed. Your changes remain in the editor. Retry Save.,,,handbook:notice.saveFailed
+"Code Notes allow at most 1,000,000 characters. This edit was not applied.",,,handbook:notice.editTooLong
+Code copied,,,handbook:notice.codeCopied
+Copy unavailable. Select the code and copy it manually.,,,handbook:notice.copyFailed
+This Code Note is read-only in the current mode.,,,handbook:notice.referenceReadOnly
+Field value inserted.,,,handbook:notice.valueInserted
+Comparison could not be loaded. The working code is retained.,,,handbook:notice.compareLoad
+Diff matching reached its limit. Both raw panes remain available; shorten the comparison to retry.,,,handbook:notice.diffLimit
+Diff is unavailable for this text. Both raw panes remain available.,,,handbook:notice.diffError
+"Large comparison: diff is paused above 100,000 combined characters or 6,000 lines. Both raw panes remain available.",,,handbook:notice.largeDiff
+No validator available for this format,,,handbook:notice.noValidator
+Live linting is off. Check Config remains available.,,,handbook:notice.lintOff
+Check paused: document exceeds the {{limit}}-character safety limit. Editing and saving remain available.,,,handbook:notice.checkPaused
+Automatic checking paused: document exceeds the {{limit}}-character safety limit. Editing and saving remain available.,,,handbook:notice.autoPaused
+Empty document; nothing to check.,,,handbook:notice.emptyCheck
+Check stopped at a parser/resource limit. Content is unchanged and can still be saved.,,,handbook:notice.parserLimit
+Check stopped at a resource limit. Editing and saving remain available.,,,handbook:notice.workerLimit
+{{count}} syntax/schema diagnostic(s). Saving remains available.,,,handbook:notice.diagnostics
+{{language}} syntax check passed. This does not verify deployment.,,,handbook:notice.syntaxPassed
+YAML syntax and Compose schema check passed. This does not verify deployment.,,,handbook:notice.composePassed
+{{title}} moved to position {{index}} of {{total}}.,,,handbook:notice.draftMoved
+Save failed. Your working draft is retained. Retry SAVE.,,,handbook:notice.saveDraftFailed
+Could not discard the pending save. Retry or Cancel.,,,handbook:notice.discardPending
+Deletion is awaiting confirmation. Retry Delete Draft before leaving this draft.,,,handbook:notice.deletePending
+Assignment is awaiting confirmation. Use Retry Save in Assign to Tile before leaving this draft.,,,handbook:notice.assignPending
+Delete failed. Retry after saving the Atlas.,,,handbook:notice.deleteFailed
+Delete failed. The saved draft is retained.,,,handbook:notice.deleteRetained
+Session recovery is unavailable. Save the draft to the Atlas before leaving.,,,handbook:notice.privateRecovery
+Handbook PDF export failed,,,handbook:notice.pdfFailed
+Handbook PDF download failed,,,handbook:notice.downloadFailed
+Saving Atlas before Handbook PDF export...,,,handbook:notice.savingForExport
+Handbook PDF export canceled because saving failed,,,handbook:notice.saveCanceled
+Handbook PDF Swimlane rendering failed,,,handbook:notice.captureFailed
+Handbook logo updated,,,handbook:notice.logoUpdated
+Handbook logo update failed,,,handbook:notice.logoUpdateFailed
+Handbook logo removed,,,handbook:notice.logoRemoved
+Handbook logo removal failed,,,handbook:notice.logoRemovalFailed
+Handbook volume order updated,,,handbook:notice.orderUpdated
+Manual Address Book entry added,,,handbook:notice.manualAdded
+Manual Address Book entry updated,,,handbook:notice.manualUpdated
+Manual Address Book entry deleted,,,handbook:notice.manualDeleted
+Atlas address field updated,,,handbook:notice.atlasAddressUpdated
+Viewing Atlas tile in Handbook,,,handbook:notice.viewingTile
+Handbook volume selected,,,handbook:notice.volumeSelected
+Handbook tile selected,,,handbook:notice.tileSelected
+Preparing Handbook PDF…,,,handbook:notice.pdfPrepare
+Building PDF…,,,handbook:notice.pdfBuild
+Downloading PDF…,,,handbook:notice.pdfDownload
+Saving current Atlas…,,,handbook:notice.pdfSave
+Unable to save current Atlas before export.,,,handbook:notice.pdfPresave
+The current Atlas is unavailable.,,,handbook:notice.atlasUnavailable
+Unable to save current Atlas before updating the Handbook logo,,,handbook:notice.logoPresave
+Unable to save the Handbook logo reference,,,handbook:notice.logoRef
+Unable to save current Atlas before removing the Handbook logo,,,handbook:notice.logoRemovalPresave
+Unable to save Handbook logo removal,,,handbook:notice.logoRemovalSave
+The Handbook PDF download was not a valid PDF response.,,,handbook:notice.pdfInvalid
+The server did not return a valid note PDF. Try again or choose a text format.,,,handbook:notice.notePdfInvalid
+Rendering Swimlanes {{current}} / {{total}}…,,,handbook:notice.renderProgress
+PDF request rejected: {{detail}},,,handbook:notice.pdfRejected
+Backend PDF generation failed: {{detail}},,,handbook:notice.pdfGeneration
+PDF download unavailable: {{detail}},,,handbook:notice.pdfDownloadError
+Unable to save current Atlas before export: {{detail}},,,handbook:notice.pdfSaveError
+Unable to render a Swimlane: {{detail}},,,handbook:notice.pdfCaptureError
+Returned to Handbook,,,handbook:notice.returnedHandbook
+Address Book selected,,,handbook:notice.addressSelected
+Swimlanes selected,,,handbook:notice.swimlanesSelected
+Physical Wiring selected,,,handbook:notice.wiringSelected
+Search addresses,,,handbook:address.search
+Organize By,,,handbook:address.organize
+Organize addresses by,,,handbook:address.organizeLabel
+Volume,,,handbook:address.volume
+Name,,,handbook:address.name
+IP / Address,,,handbook:address.byAddress
+Tile Type,,,handbook:address.tileType
+Address sort direction,,,handbook:address.direction
+Sort ascending,,,handbook:address.ascending
+Sort descending,,,handbook:address.descending
+Manual Entry,,,handbook:address.create
+{{title}} addresses,,,handbook:address.table
+Address,,,handbook:address.address
+Source,,,handbook:address.source
+Actions,,,handbook:address.actions
+No addresses match this search.,,,handbook:address.empty
+{{name}} field: {{field}},,,handbook:address.fieldSource
+Manual Address Book entry,,,handbook:address.manualSource
+Atlas,,,handbook:address.atlas
+Manual,,,handbook:address.manual
+Edit atlas field address,,,handbook:address.editField
+Edit manual entry,,,handbook:address.editEntry
+Delete manual entry,,,handbook:address.deleteEntry
+Delete this manual Address Book entry?,,,handbook:address.confirmDelete
+Save,,,handbook:address.save
+Cancel,,,handbook:address.cancel
+Manual entry name,,,handbook:address.manualName
+Manual entry address,,,handbook:address.manualAddress
+Save Entry,,,handbook:address.saveEntry
+Family,,,handbook:address.family
+Address Book Only / Unfiled,,,handbook:address.unfiledChoice
+Unfiled,,,handbook:address.unfiled
+All Addresses,,,handbook:address.all
+Handbook logo. Right-click for logo actions.,,,handbook:logo.preview
+Handbook logo,,,handbook:logo.alt
+Choose Handbook logo,,,handbook:logo.choose
+Handbook logo actions,,,handbook:logo.actions
+Replace logo,,,handbook:logo.replace
+Remove logo,,,handbook:logo.removeAction
+Confirm logo removal,,,handbook:logo.confirm
+Remove this logo?,,,handbook:logo.removePrompt
+Keep,,,handbook:logo.keep
+Remove,,,handbook:logo.remove
+Handbook Logo,,,handbook:logo.heading
+Crop {{filename}},,,handbook:logo.crop
+Cancel Handbook logo crop,,,handbook:logo.cancelCrop
+Zoom,,,handbook:logo.zoom
+Applying,,,handbook:logo.applying
+Apply Logo,,,handbook:logo.apply
+NOTES,,,handbook:notes.fixed
+{{title}} notes,,,handbook:notes.tabs
+"Delete ""{{title}}"" and its contents?",,,handbook:notes.deletePrompt
+{{title}} — drag or Alt+Arrow to reorder; right-click for actions,,,handbook:notes.tabHint
+MANUAL NOTE +,,,handbook:notes.addLabel
++ NOTE,,,handbook:notes.add
+Note page title,,,handbook:notes.pageTitle
+Rename,,,handbook:notes.rename
+Note page format,,,handbook:notes.format
+Plain Text,,,handbook:notes.plain
+Markdown,,,handbook:notes.markdown
+Config / Code,,,handbook:notes.code
+EDIT,,,handbook:notes.edit
+Loading code editor…,,,handbook:notes.loadingCode
+{{title}} content,,,handbook:notes.content
+No content yet.,,,handbook:notes.empty
+No notes recorded.,,,handbook:notes.emptyNotes
+Notes,,,handbook:notes.label
+Add notes for this tile...,,,handbook:notes.placeholder
+Delete,,,handbook:notes.delete
+Reference Tile,,,handbook:picker.reference
+Insert a clickable Tile reference,,,handbook:picker.referenceHint
+Insert Field,,,handbook:picker.field
+Insert a stored value as literal text,,,handbook:picker.fieldHint
+Back to actions,,,handbook:picker.backActions
+Back to Tiles,,,handbook:picker.backTiles
+Insert a Tile field value,,,handbook:picker.chooseField
+Tile insertion actions,,,handbook:picker.chooseAction
+Choose an Atlas Tile,,,handbook:picker.chooseTile
+"No eligible fields. Empty, sensitive and internal values are excluded.",,,handbook:picker.emptyFields
+No matching Tiles.,,,handbook:picker.emptyTiles
+Insert from Atlas (@@),,,handbook:picker.insert
+Search Atlas Tiles,,,handbook:picker.search
+{{count}} matches. Refine your search to see more.,,,handbook:picker.limit
+"{{list}}: {{label}}, {{index}} of {{total}}",,,handbook:picker.position
+Image,,,handbook:markdown.image
+Missing Tile ⚠,,,handbook:markdown.missing
+Missing Tile: {{id}},,,handbook:markdown.missingId
+Note page actions,,,handbook:export.actions
+Export Note ▸,,,handbook:export.open
+Plain Text ({{extension}}),,,handbook:export.plain
+Markdown ({{extension}}),,,handbook:export.markdown
+Code / Config File,,,handbook:export.code
+Code / Config File — {{filename}},,,handbook:export.codeFile
+Different extension (optional),,,handbook:export.extension
+Use proposed filename,,,handbook:export.placeholder
+Title suggests {{filenameLanguage}}; content suggests {{contentLanguage}}. The title is unchanged.,,,handbook:export.mismatch
+Export uses the title unless you choose an extension.,,,handbook:export.advisory
+Your browser may remove the leading dot from the download name. Restore it when choosing the destination.,,,handbook:export.dotfile
+The saved draft changed. Your working text is retained; review the saved draft before assigning it.,,,handbook:codeProblems.savedDraftChanged
+"Code Notes allow at most 1,000,000 characters.",,,handbook:codeProblems.codeTooLong
+The unsaved destination changed. Keep this draft and choose Save As.,,,handbook:codeProblems.destinationChanged
+Enter a NOTE Tile title of 1–2048 characters.,,,handbook:codeProblems.tileTitleLength
+The selected Family no longer exists.,,,handbook:codeProblems.familyMissing
+Choose an existing Tile.,,,handbook:codeProblems.chooseExisting
+That Tile is read-only in the current mode.,,,handbook:codeProblems.tileReadOnly
+The destination cannot accept another note with this ID.,,,handbook:codeProblems.destinationFull
+The dragged draft or destination is unavailable. Drag again.,,,handbook:codeProblems.dragUnavailable
+Saved draft order changed. Review the tabs and drag again.,,,handbook:codeProblems.orderChanged
+This draft changed in the Atlas. Keep your working text and reopen the saved draft before replacing it.,,,handbook:codeProblems.draftChanged
+The draft ID is invalid.,,,handbook:codeProblems.invalidDraftId
+Enter a draft title of 1–2048 characters.,,,handbook:codeProblems.draftTitleLength
+Choose a supported code language.,,,handbook:codeProblems.unsupported
+A saved draft already uses that title. Choose another title.,,,handbook:codeProblems.duplicateDraft
+This Atlas has 40 saved drafts. Assign or delete a draft before saving another.,,,handbook:codeProblems.fullDrafts
+An Atlas action is pending. Retry SAVE.,,,handbook:codeProblems.draftPending
+Earlier Atlas edits could not be saved. Retry SAVE.,,,handbook:codeProblems.earlierSave
+The Atlas context changed. Your working draft is retained.,,,handbook:codeProblems.contextChanged
+Atlas is unavailable.,,,handbook:codeProblems.atlasUnavailable
+An Atlas action is still pending. Retry Save.,,,handbook:codeProblems.assignmentPending
+Earlier Atlas edits could not be saved. Your draft is retained; retry Save.,,,handbook:codeProblems.assignmentPresave
+The Atlas context changed. Review the destination and retry Save.,,,handbook:codeProblems.reviewDestination
+Atlas is unavailable. Your draft is retained.,,,handbook:codeProblems.retained
+The saved destination is no longer in this Atlas. Your draft is retained.,,,handbook:codeProblems.savedDestinationMissing
+An Atlas save is pending. Retry assignment.,,,handbook:codeProblems.pendingSave
+This draft is too large for session recovery. Keep this tab open or copy the code before leaving.,,,handbook:codeProblems.cacheFull
+Session recovery is unavailable. Keep this tab open or copy the code before leaving.,,,handbook:codeProblems.cacheUnavailable
+Copy Code,,,handbook:editor.copy
+Code note content,,,handbook:editor.reader
+Code minimap,,,handbook:editor.minimapLabel
+Code Notes editor,,,handbook:editor.region
+Code editor tools,,,handbook:editor.tools
+Export,,,handbook:editor.export
+Assign to Tile,,,handbook:editor.assign
+Draft note title,,,handbook:editor.draftTitle
+Assigned Code Note,,,handbook:editor.assigned
+Save As…,,,handbook:editor.saveAs
+Return to TAB,,,handbook:editor.return
+Expand,,,handbook:editor.expand
+Close Editor,,,handbook:editor.close
+This source is read-only in the current mode or no longer exists. Copy the code or use Save As to choose another destination.,,,handbook:editor.locked
+The source note no longer exists. Your working code is protected as an unassigned draft. Save to choose a new destination; the old note will not be recreated automatically.,,,handbook:editor.missing
+Your earlier draft is also kept in memory. Discard this temporary session to return to it; keep this browser tab open.,,,handbook:editor.retained
+Reference (read-only): {{title}} · {{sourceContext}},,,handbook:editor.reference
+Working: {{title}},,,handbook:editor.working
+Diff detection,,,handbook:editor.diff
+Close comparison,,,handbook:editor.closeComparison
+Reference changed in the Atlas.,,,handbook:editor.changed
+Reference no longer exists. Its snapshot is retained.,,,handbook:editor.gone
+Refresh reference,,,handbook:editor.refresh
+Close Atlas search,,,handbook:editor.closeSearch
+Language,,,handbook:editor.language
+Code language,,,handbook:editor.codeLanguage
+Auto Detect,,,handbook:editor.auto
+Manual: {{language}},,,handbook:editor.manual
+Uncertain / unknown: {{language}},,,handbook:editor.uncertain
+Detected: {{language}},,,handbook:editor.detected
+Language suggestions,,,handbook:editor.suggestions
+Possible languages: {{languages}}. Choose a language to apply it.,,,handbook:editor.possible
+Check Config,,,handbook:editor.check
+Diagnostics,,,handbook:editor.diagnostics
+Notes are stored as ordinary Atlas text and history. Avoid pasting secrets.,,,handbook:editor.caution
+Loading syntax highlighting…,,,handbook:editor.highlightLoading
+Syntax highlighting could not be loaded. Editing and saving remain available.,,,handbook:editor.highlightFailed
+Retry highlighting,,,handbook:editor.retryHighlight
+SAVE keeps this draft in the Atlas. Unsaved edits have browser-session recovery only.,,,handbook:editor.cache
+{{title}} code editor,,,handbook:editor.contentLabel
+Comparison reference (read-only),,,handbook:editor.referenceLabel
+No eligible fields,,,handbook:editor.emptyFields
+No matching Tiles,,,handbook:editor.emptyTiles
+CODE EDITOR,,,handbook:editor.toggle
+Open the Code Editor,,,handbook:editor.toggleOpen
+Close the Code Editor,,,handbook:editor.toggleClose
+Code Editor on,,,handbook:editor.on
+Code Editor off,,,handbook:editor.off
+This draft is not assigned to a Tile. Use Assign to Tile to choose a destination.,,,handbook:editor.unassigned
+close,,,handbook:editor.lintClose
+No diagnostics,,,handbook:editor.noDiagnostics
+Completions,,,handbook:editor.completions
+Recover Code Note draft,,,handbook:drafts.recover
+A draft from {{atlas}} is available in this browser session. Restore it as an unassigned draft in the current Atlas.,,,handbook:drafts.recovery
+Restore draft,,,handbook:drafts.restore
+Discard cached draft,,,handbook:drafts.discardCache
+Keep for later,,,handbook:drafts.later
+Opening Code Notes…,,,handbook:drafts.opening
+Unsaved Code Draft,,,handbook:drafts.unsavedPrompt
+Do you want to SAVE / Discard?,,,handbook:drafts.decision
+"Save this draft to the Atlas, discard unsaved edits, or cancel to keep working.",,,handbook:drafts.decisionHelp
+Saving…,,,handbook:drafts.saving
+SAVE,,,handbook:drafts.save
+Discard,,,handbook:drafts.discard
+Drafts {{count}}/40,,,handbook:drafts.count
+New Draft,,,handbook:drafts.newDraft
+Delete Draft,,,handbook:drafts.deleteDraft
+Draft,,,handbook:drafts.draft
+Retry tab order,,,handbook:drafts.retryOrder
+"Drag saved tabs to reorder, or use Alt+Shift+Left or Right. Alt+Left or Right focuses another tab without opening it.",,,handbook:drafts.instructions
+Saved code drafts,,,handbook:drafts.tabs
+Drag or Alt+Shift+Arrow to reorder. Right-click or Shift+F10 to export. Alt+Arrow focuses without opening.,,,handbook:drafts.tabHint
+{{title}} · Unsaved,,,handbook:drafts.unsaved
+Delete saved draft “{{title}}”?,,,handbook:drafts.confirmDelete
+Tab order was not saved. {{detail}},,,handbook:drafts.orderError
+Retry tab order.,,,handbook:drafts.orderRetry
+Tab order was not saved. Retry tab order. Your working text is retained.,,,handbook:drafts.orderFailed
+Save Code Note,,,handbook:assign.heading
+Save failed. Your code and destination are retained. Retry Save.,,,handbook:assign.failed
+Note title,,,handbook:assign.noteTitle
+Save note title,,,handbook:assign.saveTitle
+Destination,,,handbook:assign.destination
+Code destination,,,handbook:assign.destinationLabel
+Existing Tile,,,handbook:assign.existing
+New NOTE Tile,,,handbook:assign.newTile
+Tile,,,handbook:assign.tile
+Destination Tile,,,handbook:assign.tileLabel
+Choose a Tile…,,,handbook:assign.chooseTile
+Suggested · {{title}} · {{type}} · {{id}},,,handbook:assign.suggested
+NOTE Tile title,,,handbook:assign.tileTitle
+Destination Family,,,handbook:assign.familyLabel
+Retry Save,,,handbook:assign.retry
+Save Note,,,handbook:assign.saveNote
+Choose comparison note,,,handbook:compare.choose
+Compare With…,,,handbook:compare.open
+Search comparison notes,,,handbook:compare.search
+Cancel comparison selection,,,handbook:compare.cancel
+First 60 matches; narrow the search to find more.,,,handbook:compare.limit
+Reference text stays read-only.,,,handbook:compare.readOnly
+No other matching notes.,,,handbook:compare.empty
+Line numbers,,,handbook:codePreferences.lineNumbers
+Word wrap,,,handbook:codePreferences.wordWrap
+Syntax highlighting,,,handbook:codePreferences.highlighting
+Live linting,,,handbook:codePreferences.liveLint
+Code folding,,,handbook:codePreferences.folding
+Bracket matching,,,handbook:codePreferences.bracketMatching
+Auto-close brackets,,,handbook:codePreferences.closeBrackets
+Handbook PDF Export Options,,,handbook:pdf.title
+Close Handbook PDF export options,,,handbook:pdf.close
+Choose what to include in your printable Handbook.,,,handbook:pdf.intro
+Include Address Book,,,handbook:pdf.addresses
+"Includes saved IP addresses, URLs, and manual entries.",,,handbook:pdf.addressesHelp
+Include Swimlane diagrams,,,handbook:pdf.swimlanes
+Renders Swimlane Flow diagrams into the PDF.,,,handbook:pdf.swimlanesHelp
+Include Physical Wiring,,,handbook:pdf.wiring
+Includes physical wiring documentation and its Table of Contents entry.,,,handbook:pdf.wiringHelp
+Volumes to include,,,handbook:pdf.volumes
+Uncheck a volume to omit its pages from this PDF.,,,handbook:pdf.volumesHelp
+No volumes in the Table of Contents.,,,handbook:pdf.empty
+Exclude Snapshot Data,,,handbook:pdf.snapshot
+Omits generated Snapshot note pages and legacy Snapshot blocks. Tiles and ordinary notes remain included.,,,handbook:pdf.snapshotHelp
+No Snapshot data in this export.,,,handbook:pdf.noSnapshot
+Show Full Table of Contents,,,handbook:pdf.fullToc
+Lists all parent and child tiles in the contents pages and PDF bookmarks.,,,handbook:pdf.fullTocHelp
+Page size :,,,handbook:pdf.pageSize
+US Letter,,,handbook:pdf.letter
+Theme :,,,handbook:pdf.theme
+Print / Light,,,handbook:pdf.light
+Export PDF,,,handbook:pdf.export
+RACK BUILDER,,,
+Rack workspace,,,canvas:status.rackWorkspace
+Use Rack PNG for a Rack elevation export,,,exports:menu.rackInstead
+Export the active Rack elevation as PNG,,,exports:menu.rackHint
+Generic Server,,,rack:component.generic-server
+Network Switch,,,rack:component.network-switch
+Router / Firewall,,,rack:component.router-firewall
+NAS / Storage,,,rack:component.nas-storage
+Drive Bay,,,rack:component.drive-bay
+UPS,,,rack:component.ups
+Patch Panel,,,rack:component.patch-panel
+Shelf,,,rack:component.shelf
+Cable Manager,,,rack:component.cable-manager
+Blank Panel,,,rack:component.blank-panel
+ABS Blank Panel,,,rack:component.abs-blank-panel
+Generic Equipment,,,rack:component.generic-equipment
+Desktop / Mini,,,rack:formFactor.desktop-mini
+Wall Mount,,,rack:formFactor.wall-mount
+2-Post Open Frame,,,rack:formFactor.2-post-frame
+4-Post Open Frame,,,rack:formFactor.4-post-frame
+Enclosed Cabinet,,,rack:formFactor.enclosed-cabinet
+Solid,,,rack:finish.solid
+Brushed Aluminum,,,rack:finish.brushed-aluminum
+Wood 1,,,rack:finish.wood
+Wood 2,,,rack:finish.wood-2
+Wood 3,,,rack:finish.wood-3
+Wood 4,,,rack:finish.wood-4
+Carbon Fiber,,,rack:finish.carbon-fiber
+Variegated Stainless Steel,,,rack:finish.variegated-stainless-steel
+Blue Steel (Diagonal),,,rack:finish.blue-steel-diagonal
+Mottled Graphite Gunmetal,,,rack:finish.mottled-graphite-gunmetal
+Graphite Gunmetal,,,rack:finish.graphite-gunmetal
+None,,,rack:handles.none
+Paired carry handles,,,rack:handles.paired
+Solid,,,rack:pattern.solid
+Honeycomb,,,rack:pattern.honeycomb
+None,,,rack:casters.none
+Compact,,,rack:casters.compact
+Industrial locking,,,rack:casters.industrial-locking
+Racks,,,rack:palette.racks
+Active rack,,,rack:palette.activeRack
+New,,,rack:palette.new
+Edit,,,rack:palette.edit
+Delete,,,rack:palette.delete
+General Rack Items,,,rack:palette.generalRackItems
+Add from Atlas,,,rack:palette.addFromAtlas
+Search Atlas tiles,,,rack:palette.searchAtlasTiles
+Search tiles...,,,rack:palette.searchTiles
+RELATED,,,rack:palette.related
+No matching Atlas tiles.,,,rack:palette.noMatchingAtlasTiles
+Rack Warnings,,,rack:palette.rackWarnings
+No rack warnings,,,rack:palette.noRackWarnings
+Create a rack to start an elevation.,,,rack:palette.createARackToStartAnElevation
+Already used in {{locations}},,,rack:palette.alreadyUsed
+Add {{title}},,,rack:palette.addTile
+Zoom out,,,rack:toolbar.zoomOut
+Fit Rack,,,rack:toolbar.fitRack
+Zoom in,,,rack:toolbar.zoomIn
+Connect Table,,,rack:toolbar.connectTable
+Show or hide the connection table,,,rack:toolbar.showOrHideTheConnectionTable
+Show Connections,,,rack:toolbar.showConnections
+Show or hide Rack connections,,,rack:toolbar.showOrHideRackConnections
+Rack elevation,,,rack:toolbar.rackElevation
+{{name}} controls,,,rack:toolbar.rackControls
+"TABLE
+HIDDEN",,,rack:toolbar.tableHidden
+"TABLE
+SHOWN",,,rack:toolbar.tableShown
+"CABLES
+HIDDEN",,,rack:toolbar.cablesHidden
+"CABLES
+OUT",,,rack:toolbar.cablesOut
+Rack presentation,,,rack:toolbar.rackPresentation
+Image rendering,,,rack:toolbar.imageRendering
+Schematic,,,rack:toolbar.schematic
+Images,,,rack:toolbar.images
+Presentation: Images. Switch to Schematic.,,,rack:toolbar.switchToSchematic
+Presentation: Schematic. Switch to Images.,,,rack:toolbar.switchToImages
+Rack elevation: {{face}},,,rack:elevation.viewLabel
+{{face}} Rack view,,,rack:elevation.viewAnnouncement
+Front-facing,,,rack:elevation.frontFacing
+Rear-facing,,,rack:elevation.rearFacing
+Mounting orientation: {{orientation}},,,rack:elevation.mountLabel
+"Mount {{orientation}}. Cycles Front-facing, Rear-facing.",,,rack:elevation.cycleMount
+{{orientation}} mounting,,,rack:elevation.mountAnnouncement
+Front,,,rack:elevation.front
+Rear,,,rack:elevation.rear
+Both,,,rack:elevation.both
+"Show {{face}}. Cycles Front, Rear, Both.",,,rack:elevation.cycleAll
+"Show {{face}}. Cycles Front, Rear.",,,rack:elevation.cycleSingle
+Close,,,rack:dialog.close
+Name,,,rack:dialog.name
+Width,,,rack:dialog.width
+Height,,,rack:dialog.height
+Custom,,,rack:dialog.custom
+Form factor,,,rack:dialog.formFactor
+Numbering,,,rack:dialog.numbering
+Bottom to top,,,rack:dialog.bottomToTop
+Top to bottom,,,rack:dialog.topToBottom
+Cancel,,,rack:dialog.cancel
+Edit Rack,,,rack:dialog.editRack
+Create Rack,,,rack:dialog.createRack
+Save changes,,,rack:dialog.saveChanges
+Custom height ({{min}}–{{max}}U),,,rack:dialog.customHeight
+{{width}}-inch,,,rack:settings.inches
+Edit Rack Settings,,,rack:settings.editRackSettings
+Name,,,rack:settings.name
+Height (U),,,rack:settings.heightU
+Height presets,,,rack:settings.heightPresets
+Width,,,rack:settings.width
+Form factor,,,rack:settings.formFactor
+Numbering,,,rack:settings.numbering
+Bottom to top,,,rack:settings.bottomToTop
+Top to bottom,,,rack:settings.topToBottom
+Mirror Rear Layout,,,rack:settings.mirrorRearLayout
+Mirror equipment positions in the Rear elevation and reverse schematic rear patch-panel ports. Other ports retain their alignment within the device; calibrated and uploaded images keep their socket positions.,,,rack:settings.mirrorEquipmentPositionsInTheRearElevation
+Appearance,,,rack:settings.appearance
+Frame,,,rack:settings.frame
+Background color,,,rack:settings.backgroundColor
+Automatically coordinates the workspace and Front/Rear elevation backgrounds.,,,rack:settings.automaticallyCoordinatesTheWorkspaceAndFrontRear
+Top Panel Pattern,,,rack:settings.topPanelPattern
+Handles,,,rack:settings.handles
+Handle color,,,rack:settings.handleColor
+Uses the frame color until customized.,,,rack:settings.usesTheFrameColorUntilCustomized
+Handles keep the frame finish.,,,rack:settings.handlesKeepTheFrameFinish
+Caster Wheels,,,rack:settings.casterWheels
+"Reset removes all Rack appearance customizations, including branding and accessories. Uploaded library files are kept.",,,rack:settings.resetRemovesAllRackAppearanceCustomizationsIncluding
+Reset Rack Appearance,,,rack:settings.resetRackAppearance
+Some connections on shared equipment have no assigned rack location. Assign their locations or disconnect them individually first.,,,rack:deletion.someConnectionsOnSharedEquipmentHaveNo
+"After removing the connections, review the rack and click Delete again to delete it.",,,rack:deletion.afterRemovingTheConnectionsReviewTheRack
+Cancel,,,rack:deletion.cancel
+Disconnect before deleting rack,,,rack:deletion.disconnectBeforeDeletingRack
+Delete rack,,,rack:deletion.deleteRack
+Saving…,,,rack:deletion.saving
+Delete all physical connections for this rack,,,rack:deletion.deleteAllPhysicalConnectionsForThisRack
+Disconnect all recorded physical connections before deleting rack “{{name}}”.,,,rack:deletion.disconnectFirst
+Delete rack “{{name}}” and all of its placements? Atlas tiles will remain.,,,rack:deletion.confirm
+"{{count}} cable connection associated with this rack will be removed from your documentation, including cables connecting to other racks. Equipment, ports and internal patch-panel pairings will remain.",,,rack:deletion.affected_one
+"{{count}} cable connections associated with this rack will be removed from your documentation, including cables connecting to other racks. Equipment, ports and internal patch-panel pairings will remain.",,,rack:deletion.affected_other
+Equipment visibility,,,rack:equipment.equipmentVisibility
+Temporary inspection · does not change occupancy,,,rack:equipment.temporaryInspectionDoesNotChangeOccupancy
+Hide in {{face}} elevation,,,rack:equipment.hideFace
+{{label}} picker,,,rack:appearance.picker
+{{label}} presets,,,rack:appearance.presets
+Legacy appearance until a color or finish is selected.,,,rack:appearance.unsetHint
+{{label}} color,,,rack:appearance.color
+{{label}} finish,,,rack:appearance.finish
+Selected Rack logo,,,rack:branding.selectedRackLogo
+The saved logo is unavailable on this installation. Choose or re-upload it; the saved reference has not changed.,,,rack:branding.theSavedLogoIsUnavailableOnThis
+Choose Rack Logo,,,rack:branding.chooseRackLogo
+Clear Logo,,,rack:branding.clearLogo
+Unavailable logo,,,rack:branding.unavailableLogo
+None,,,rack:branding.none
+Rack branding: {{selection}},,,rack:branding.selection
+Close logo picker,,,rack:branding.closeLogoPicker
+Branding mode,,,rack:branding.brandingMode
+None / Remove From Rack,,,rack:branding.noneRemoveFromRack
+Text Only,,,rack:branding.textOnly
+Add Logo,,,rack:branding.addLogo
+Upload Rack logo,,,rack:branding.uploadRackLogo
+Brand text,,,rack:branding.brandText
+1–48 characters. The Rack name stays separate.,,,rack:branding.textLength
+Search logos,,,rack:branding.searchLogos
+Built-in,,,rack:branding.builtIn
+My Logos,,,rack:branding.myLogos
+Loading My Logos…,,,rack:branding.loadingMyLogos
+No uploaded logos yet.,,,rack:branding.noUploadedLogosYet
+"Transparent PNG or WebP is best. Use about 1200 × 300 px (4:1) for a wordmark, 512 × 512 px for a square symbol, or 800–1600 px wide for other wordmarks. Keep the natural proportions and minimal transparent padding. Maximum 2 MiB, 4096 px per side, 8 megapixels; single-frame only. JPEG is accepted but lacks transparency. SVG uploads are not supported.",,,rack:branding.imageRequirements
+"Uploaded logos stay in My Logos for reuse, including after Cancel or Reset. Atlas JSON exports contain logo references, not the image files; copy the logo assets separately when moving installations.",,,rack:branding.libraryHelp
+This saved logo is unavailable. Its reference is preserved until you choose a replacement.,,,rack:branding.thisSavedLogoIsUnavailableItsReference
+Cancel,,,rack:branding.cancel
+Apply,,,rack:branding.apply
+Select {{name}},,,rack:branding.selectLogo
+{{width}}-inch Rack top-panel preview,,,rack:branding.preview
+Branding for {{name}},,,rack:branding.forRack
+Drive-owned port,,,rack:inspector.driveOwnedPort
+No rack selected,,,rack:inspector.noRackSelected
+Rack Settings,,,rack:inspector.rackSettings
+Width,,,rack:inspector.width
+Height,,,rack:inspector.height
+Edit Rack Settings,,,rack:inspector.editRackSettings
+"Select equipment to edit its identity, size, position, and physical ports.",,,rack:inspector.selectEquipmentToEditItsIdentitySize
+Remove Drive,,,rack:inspector.removeDrive
+INSIDE DRIVE BAY,,,rack:inspector.insideDriveBay
+Slot,,,rack:inspector.slot
+Missing Atlas Drive,,,rack:inspector.missingAtlasDrive
+No longer a Drive tile,,,rack:inspector.noLongerADriveTile
+Remove,,,rack:inspector.remove
+Drag Atlas Drives into this Drive Bay.,,,rack:inspector.dragAtlasDrivesIntoThisDriveBay
+Equipment,,,rack:inspector.equipment
+Remove equipment,,,rack:inspector.removeEquipment
+No drives configured,,,rack:inspector.noDrivesConfigured
+Atlas reference is missing. The cached title is preserved.,,,rack:inspector.atlasReferenceIsMissingTheCachedTitle
+Title,,,rack:inspector.title
+Component type,,,rack:inspector.componentType
+Equipment Icon,,,rack:inspector.equipmentIcon
+Remove all contained Drives before changing the component type.,,,rack:inspector.removeAllContainedDrivesBeforeChangingThe
+Location,,,rack:inspector.location
+Lowest U,,,rack:inspector.lowestU
+Width (cells),,,rack:inspector.widthCells
+Start cell (from Front),,,rack:inspector.startCellFromFront
+Full,,,rack:inspector.full
+Half,,,rack:inspector.half
+Third,,,rack:inspector.third
+Position (from Front),,,rack:inspector.positionFromFront
+Depth,,,rack:inspector.depth
+Full Depth,,,rack:inspector.fullDepth
+Half Depth,,,rack:inspector.halfDepth
+Half Depth occupies the selected Front/Rear depth region. Width and depth are visual Rack footprints.,,,rack:inspector.halfDepthOccupiesTheSelectedFrontRear
+Ports,,,rack:inspector.ports
+Mounting orientation,,,rack:inspector.mountingOrientation
+Equipment details,,,rack:inspector.equipmentDetails
+Front asset,,,rack:inspector.frontAsset
+Rear asset,,,rack:inspector.rearAsset
+Schematic Appearance,,,rack:inspector.schematicAppearance
+Applies to schematic equipment only; does not alter uploaded or automatic images.,,,rack:inspector.appliesToSchematicEquipmentOnlyDoesNot
+Reset Schematic Appearance,,,rack:inspector.resetSchematicAppearance
+Convert to Rack-local,,,rack:inspector.convertToRackLocal
+View On Canvas,,,rack:inspector.viewOnCanvas
+View In Handbook,,,rack:inspector.viewInHandbook
+Rack-local equipment,,,rack:inspector.rackLocalEquipment
+Add to Atlas,,,rack:inspector.addToAtlas
+Promotion is unsaved. Use Save to retry.,,,rack:inspector.promotionIsUnsavedUseSaveToRetry
+Backplane,,,rack:inspector.backplane
+Direct,,,rack:inspector.direct
+Empty,,,rack:inspector.empty
+Default,,,rack:inspector.default
+Planned,,,rack:inspector.planned
+Live,,,rack:inspector.live
+Default {{component}},,,rack:inspector.defaultIcon
+Unavailable icon · {{name}},,,rack:inspector.unavailableIcon
+Top-mounted · {{slot}} · fixed 1U / full depth,,,rack:inspector.topMount
+{{slots}} fixed slots,,,rack:inspector.fixedSlots
+Also placed in {{racks}}.,,,rack:inspector.otherRacks
+This early version of the RACK BUILDER is intentionally bare bones. Hoping to get YOUR feedback on what's important to you. Visual accuracy? Specific drive bay layouts? Or is your focus on depicting connections and port assignments? Would love to hear your ideas to make this feature work best for you.,,,rack:inspector.feedbackPrompt
+RACK FEEDBACK,,,rack:inspector.feedbackLink
+"Remove
+equipment",,,rack:inspector.removeEquipmentCaption
+PORTS,,,rack:tabs.ports
+FACEPLATE,,,rack:tabs.faceplate
+INSIDE,,,rack:tabs.inside
+DRIVES,,,rack:tabs.drives
+Rack workspace,,,rack:workspace.rackWorkspace
+Dismiss,,,rack:workspace.dismiss
+Rack viewport,,,rack:workspace.rackViewport
+No racks yet,,,rack:workspace.noRacksYet
+Create a 10-inch or 19-inch rack to start an elevation.,,,rack:workspace.createA10InchOr19Inch
+Create Rack,,,rack:workspace.createRack
+Choose Drive Bay slot,,,rack:workspace.chooseDriveBaySlot
+Choose slot,,,rack:workspace.chooseSlot
+Select the physical position for this Drive.,,,rack:workspace.selectThePhysicalPositionForThisDrive
+Cancel,,,rack:workspace.cancel
+"Delete ALL physical connections for rack ""{{name}}""?
+
+This will remove all records of cable and port connections associated with this rack from your documentation, including cables connecting to other racks. Equipment, ports and internal patch-panel pairings will remain.
+
+The rack will remain so you can review it before trying Delete again.",,,rack:workspace.confirmDisconnect
+Slot {{number}},,,rack:workspace.slotNumber
+Target {{position}},,,rack:workspace.target
+Placed at {{position}} (auto-fit).,,,rack:workspace.autoFit
+Already used in {{locations}}. Remove the original placement first.,,,rack:workspace.alreadyPlaced
+"All physical connections for rack ""{{name}}"" have been removed and saved. Review the rack, then click Delete again to delete it.",,,rack:workspace.disconnected
+"Rack ""{{name}}"" deleted.",,,rack:workspace.deleted
+The Rack is no longer available.,,,rack:errors.theRackIsNoLongerAvailable
+That placement is not legal.,,,rack:errors.thatPlacementIsNotLegal
+"This equipment cannot hold server Drives. Drop onto a Node, Generic Server or configured Drive Bay.",,,rack:errors.thisEquipmentCannotHoldServerDrivesDrop
+Unable to locate the Rack target. Try the drag again.,,,rack:errors.unableToLocateTheRackTargetTry
+Invalid drop; the previous position was restored.,,,rack:errors.invalidDropThePreviousPositionWasRestored
+No rack selected.,,,rack:errors.noRackSelected
+Schematic appearance is read-only in this mode.,,,rack:errors.schematicAppearanceIsReadOnlyInThis
+That equipment change is not legal.,,,rack:errors.thatEquipmentChangeIsNotLegal
+The rack action could not be completed. Check Save status and review the rack before trying again.,,,rack:errors.theRackActionCouldNotBeCompleted
+Select a server.,,,rack:errors.selectAServer
+Select a Drive Bay.,,,rack:errors.selectADriveBay
+Unable to load My Logos.,,,rack:errors.unableToLoadMyLogos
+"Choose a PNG, JPEG or WebP no larger than 2 MiB. SVG uploads are not supported.",,,rack:errors.chooseAPngJpegOrWebpNo
+Uploading logo…,,,rack:errors.uploadingLogo
+Logo added to My Logos. Apply to use it on this Rack.,,,rack:errors.logoAddedToMyLogosApplyTo
+Logo upload failed.,,,rack:errors.logoUploadFailed
+Enter # followed by six hexadecimal digits.,,,rack:errors.enterFollowedBySixHexadecimalDigits
+This rack is no longer available.,,,rack:errors.thisRackIsNoLongerAvailable
+Choose a logo or text-only branding.,,,rack:errors.chooseALogoOrTextOnlyBranding
+Choose valid Rack appearance settings.,,,rack:errors.chooseValidRackAppearanceSettings
+Enter a rack name.,,,rack:errors.enterARackName
+Choose a six-digit HEX color and a built-in finish.,,,rack:errors.chooseASixDigitHexColorAnd
+Remove all contained Drives before changing the Drive Bay component type.,,,rack:errors.removeAllContainedDrivesBeforeChangingThe
+Only Atlas Drive tiles can be attached to a Drive Bay.,,,rack:errors.onlyAtlasDriveTilesCanBeAttached
+Drive tiles must be dropped into a Drive Bay.,,,rack:errors.driveTilesMustBeDroppedIntoA
+This Atlas Drive is already used in this rack.,,,rack:errors.thisAtlasDriveIsAlreadyUsedIn
+Drive Bay was not found.,,,rack:errors.driveBayWasNotFound
+Atlas Drive Bay was not found.,,,rack:errors.atlasDriveBayWasNotFound
+Attaching this Drive would create a circular parent relationship.,,,rack:errors.attachingThisDriveWouldCreateACircular
+Rack or Atlas Drive is no longer available.,,,rack:errors.rackOrAtlasDriveIsNoLonger
+The Drive or Drive Bay is read-only in this mode.,,,rack:errors.theDriveOrDriveBayIsRead
+Add to Atlas canceled.,,,rack:errors.addToAtlasCanceled
+This Rack item changed or is no longer Rack-local. Select it again.,,,rack:errors.thisRackItemChangedOrIsNo
+This Rack component cannot be added to Atlas.,,,rack:errors.thisRackComponentCannotBeAddedTo
+Choose Node or Equipment for Generic Server; other eligible items require Equipment.,,,rack:errors.chooseNodeOrEquipmentForGenericServer
+The pointed cell is occupied on this mounting face. Choose an empty cell.,,,rack:errors.thePointedCellIsOccupiedOnThis
+ABS Blank Panel requires a valid span of 1–12 cells within the Rack.,,,rack:errors.absBlankPanelRequiresAValidSpan
+"ABS Blank Panel must be Rack-local, with fixed Half Depth and full/0 compatibility fields.",,,rack:errors.absBlankPanelMustBeRackLocal
+ABS Blank Panel supports only a mounted-face custom image. Remove the Rear image first.,,,rack:errors.absBlankPanelSupportsOnlyAMounted
+Remove incompatible storage or legacy hardware before converting to ABS. Explicit physical ports are retained.,,,rack:errors.removeIncompatibleStorageOrLegacyHardwareBefore
+Invalid ABS span.,,,rack:errors.invalidAbsSpan
+Legacy Blank Panels are no longer available for new creation.,,,rack:errors.legacyBlankPanelsAreNoLongerAvailable
+"Remove storage, legacy hardware and the Rear custom image before converting to ABS. Existing physical ports will be retained.",,,rack:errors.removeStorageLegacyHardwareAndTheRear
+Remove all faceplate graphics and choose Plain / Solid before converting. Conversion would discard the ABS design.,,,rack:errors.removeAllFaceplateGraphicsAndChoosePlain
+"Set the ABS panel to a standard Full, Half or Third Width position before converting.",,,rack:errors.setTheAbsPanelToAStandard
+The Atlas Drive is missing or no longer a Drive.,,,rack:errors.theAtlasDriveIsMissingOrNo
+This Drive has multiple plausible storage ports. Resolve its inventory before inserting it.,,,rack:errors.thisDriveHasMultiplePlausibleStoragePorts
+Slot membership requires a configured Drive Bay.,,,rack:errors.slotMembershipRequiresAConfiguredDriveBay
+Only canonical Drive Bays may have wiring configuration.,,,rack:errors.onlyCanonicalDriveBaysMayHaveWiring
+A Drive Bay requires a wiring mode and 1–12 fixed slots.,,,rack:errors.aDriveBayRequiresAWiringMode
+Drive Bay slot IDs must be unique and numbered in fixed order from 1.,,,rack:errors.driveBaySlotIdsMustBeUnique
+Direct slots cannot own BP ports.,,,rack:errors.directSlotsCannotOwnBpPorts
+Each backplane slot requires its own Bay-owned rear SATA BP port.,,,rack:errors.eachBackplaneSlotRequiresItsOwnBay
+Each Drive must occupy one distinct valid slot.,,,rack:errors.eachDriveMustOccupyOneDistinctValid
+A backplane Drive requires a compatible DATA SATA port without an external cable. Disconnect its cable first.,,,rack:errors.aBackplaneDriveRequiresACompatibleData
+"Place an empty, unconfigured Drive Bay, then confirm its setup.",,,rack:errors.placeAnEmptyUnconfiguredDriveBayThen
+New Drive Bays must be configured before adding wiring.,,,rack:errors.newDriveBaysMustBeConfiguredBefore
+"Configured wiring mode, slot identity/order and BP mapping are permanent.",,,rack:errors.configuredWiringModeSlotIdentityOrderAnd
+Generated BP ports are fixed hardware; remove the Bay to decommission them.,,,rack:errors.generatedBpPortsAreFixedHardwareRemove
+Backplane port order is fixed by its slots.,,,rack:errors.backplanePortOrderIsFixedByIts
+Disconnect the Drive end of its cable before removing or moving the Drive.,,,rack:errors.disconnectTheDriveEndOfItsCable
+Confirm the empty Bay configuration before inserting Drives.,,,rack:errors.confirmTheEmptyBayConfigurationBeforeInserting
+Remove Bay-owned backplane ports together with their configured slots.,,,rack:errors.removeBayOwnedBackplanePortsTogetherWith
+Disconnect attached Bay/Drive cables before removing this Drive Bay.,,,rack:errors.disconnectAttachedBayDriveCablesBeforeRemoving
+Server Drive Slots must be a configuration object.,,,rack:errors.serverDriveSlotsMustBeAConfiguration
+Unknown Server Drive Slots field.,,,rack:errors.unknownServerDriveSlotsField
+Choose a whole number of server slots from 1–24.,,,rack:errors.chooseAWholeNumberOfServerSlots
+Server accent color must use #RRGGBB.,,,rack:errors.serverAccentColorMustUseRrggbb
+Server assignments must be a list of at most 24 Drives.,,,rack:errors.serverAssignmentsMustBeAListOf
+Invalid server slot assignment.,,,rack:errors.invalidServerSlotAssignment
+Server slots must be unique and within the configured capacity.,,,rack:errors.serverSlotsMustBeUniqueAndWithin
+Assigned server Drive IDs must be nonempty and unique.,,,rack:errors.assignedServerDriveIdsMustBeNonempty
+Remove or move Drives above the proposed server slot capacity first.,,,rack:errors.removeOrMoveDrivesAboveTheProposed
+Server is missing or ineligible; remove its inventory or relink it to a server.,,,rack:errors.serverIsMissingOrIneligibleRemoveIts
+Only an existing Atlas Drive can be assigned to an eligible server.,,,rack:errors.onlyAnExistingAtlasDriveCanBe
+Choose the shared legacy port configuration before displaying a device image.,,,rack:errors.chooseTheSharedLegacyPortConfigurationBefore
+No compatible device image. Showing the schematic.,,,rack:errors.noCompatibleDeviceImageShowingTheSchematic
+Images are hidden. Choose Images in the Rack toolbar to view assigned artwork. Physical ports are unchanged.,,,rack:errors.imagesAreHiddenChooseImagesInThe
+Choose a valid ABS faceplate design.,,,rack:errors.chooseAValidAbsFaceplateDesign
+Choose a built-in ABS base surface.,,,rack:errors.chooseABuiltInAbsBaseSurface
+Invalid ABS graphic fields.,,,rack:errors.invalidAbsGraphicFields
+Graphic IDs must be unique safe identifiers (1–64 characters).,,,rack:errors.graphicIdsMustBeUniqueSafeIdentifiers
+Drive Bay is no longer available.,,,rack:errors.driveBayIsNoLongerAvailable
+Wiring mode and slots are permanent. Remove this Bay and create a different Bay.,,,rack:errors.wiringModeAndSlotsArePermanentRemove
+The Drive Bay is read-only in this mode.,,,rack:errors.theDriveBayIsReadOnlyIn
+Choose Direct or Backplane and 1–12 slots.,,,rack:errors.chooseDirectOrBackplaneAnd112
+Resolve conflicting physical inventories before configuration.,,,rack:errors.resolveConflictingPhysicalInventoriesBeforeConfiguration
+Backplane numbering is exhausted.,,,rack:errors.backplaneNumberingIsExhausted
+The server is no longer available.,,,rack:errors.theServerIsNoLongerAvailable
+The server is read-only in this mode.,,,rack:errors.theServerIsReadOnlyInThis
+Only a Node or Generic Server can hold Server Drive Slots.,,,rack:errors.onlyANodeOrGenericServerCan
+Only an existing Atlas Drive can be assigned to a server.,,,rack:errors.onlyAnExistingAtlasDriveCanBeDetail
+The Drive is read-only in this mode.,,,rack:errors.theDriveIsReadOnlyInThis
+Server Drive Slots are full.,,,rack:errors.serverDriveSlotsAreFull
+That server slot is occupied. Choose an empty slot.,,,rack:errors.thatServerSlotIsOccupiedChooseAn
+That server slot is empty.,,,rack:errors.thatServerSlotIsEmpty
+Physical port IDs must be nonempty and unique within their owner.,,,rack:errors.physicalPortIdsMustBeNonemptyAnd
+Port labels must contain 1–25 characters and no control characters.,,,rack:errors.portLabelsMustContain125Characters
+"Choose a valid physical face, connector and role.",,,rack:errors.chooseAValidPhysicalFaceConnectorAnd
+Unknown physical port field.,,,rack:errors.unknownPhysicalPortField
+Power over Ethernet must be a Boolean.,,,rack:errors.powerOverEthernetMustBeABoolean
+Clear Power over Ethernet before changing this port. Only DATA-capable device RJ45 network ports can supply PoE; Patch Panels inherit it.,,,rack:errors.clearPowerOverEthernetBeforeChangingThis
+"Drive associations require a Drive Bay, one port per Drive, and a valid naming mode.",,,rack:errors.driveAssociationsRequireADriveBayOne
+Choose a valid physical port origin.,,,rack:errors.chooseAValidPhysicalPortOrigin
+Video connectors require a data or Patch Panel role.,,,rack:errors.videoConnectorsRequireADataOrPatch
+Port mapping and peer identifiers must be valid nonempty identifiers.,,,rack:errors.portMappingAndPeerIdentifiersMustBe
+A faceplate socket cannot be assigned to multiple ports.,,,rack:errors.aFaceplateSocketCannotBeAssignedTo
+Power connector and inlet/outlet role must agree.,,,rack:errors.powerConnectorAndInletOutletRoleMust
+Power outlets must be between 0 and 12.,,,rack:errors.powerOutletsMustBeBetween0And
+Patch Panel terminations require symmetric front/rear pairs.,,,rack:errors.patchPanelTerminationsRequireSymmetricFrontRear
+Patch Panel pairs require the same DATA/VIDEO categories on both faces.,,,rack:errors.patchPanelPairsRequireTheSameData
+Internal peers are reserved for Patch Panel terminations.,,,rack:errors.internalPeersAreReservedForPatchPanel
+Patch Panel data ports must belong to a front/rear pair.,,,rack:errors.patchPanelDataPortsMustBelongTo
+"Only Node, Equipment and Drive Tiles may own physical ports.",,,rack:errors.onlyNodeEquipmentAndDriveTilesMay
+Linked Rack placements cannot own local physical ports.,,,rack:errors.linkedRackPlacementsCannotOwnLocalPhysical
+Physical connections must be a list of at most 10000 connections.,,,rack:errors.physicalConnectionsMustBeAListOf
+Physical connection IDs must be nonempty and unique.,,,rack:errors.physicalConnectionIdsMustBeNonemptyAnd
+Invalid physical connection kind or lifecycle.,,,rack:errors.invalidPhysicalConnectionKindOrLifecycle
+Physical connections cannot link a device to itself.,,,rack:errors.physicalConnectionsCannotLinkADeviceTo
+Physical connection references a missing explicit owner or port. Disconnect it before removing that device or port.,,,rack:errors.physicalConnectionReferencesAMissingExplicitOwner
+A physical port is occupied by more than one connection.,,,rack:errors.aPhysicalPortIsOccupiedByMore
+Disconnect this cable end before attaching it to another port.,,,rack:errors.disconnectThisCableEndBeforeAttachingIt
+Attach the loose end before disconnecting the remaining end.,,,rack:errors.attachTheLooseEndBeforeDisconnectingThe
+Remove the Drive from its bay to remove its associated port. Disconnect any cable first.,,,rack:errors.removeTheDriveFromItsBayTo
+Disconnect the cable from this Drive's associated port before removing the Drive from its bay.,,,rack:errors.disconnectTheCableFromThisDrivesAssociated
+Disconnect physical connections before deleting a device.,,,rack:errors.disconnectPhysicalConnectionsBeforeDeletingADevice
+Disconnect physical connections before removing a port.,,,rack:errors.disconnectPhysicalConnectionsBeforeRemovingAPort
+Disconnect physical connections before changing device type or classification.,,,rack:errors.disconnectPhysicalConnectionsBeforeChangingDeviceType
+This physical device is missing or not eligible. Select it again.,,,rack:errors.thisPhysicalDeviceIsMissingOrNot
+Patch Panels do not use external power inlets.,,,rack:errors.patchPanelsDoNotUseExternalPower
+Legacy Rack settings disagree. Review and explicitly choose a source before editing ports; all original settings will be retained as read-only compatibility records.,,,rack:errors.legacyRackSettingsDisagreeReviewAndExplicitly
+Choose a valid physical face and port group.,,,rack:errors.chooseAValidPhysicalFaceAndPort
+Preset layouts use fixed socket positions. Only custom layouts can be reordered.,,,rack:errors.presetLayoutsUseFixedSocketPositionsOnly
+Port order must contain every port in this face and group exactly once. Refresh the selection and try again.,,,rack:errors.portOrderMustContainEveryPortIn
+The legacy source changed. Review it again.,,,rack:errors.theLegacySourceChangedReviewItAgain
+Cannot remove occupied power outlets. Disconnect them first.,,,rack:errors.cannotRemoveOccupiedPowerOutletsDisconnectThem
+This port has no associated Drive.,,,rack:errors.thisPortHasNoAssociatedDrive
+This port no longer exists. Select it again.,,,rack:errors.thisPortNoLongerExistsSelectIt
+This port property cannot be edited.,,,rack:errors.thisPortPropertyCannotBeEdited
+The paired termination is missing.,,,rack:errors.thePairedTerminationIsMissing
+Only Patch Panels support paired counts.,,,rack:errors.onlyPatchPanelsSupportPairedCounts
+This Drive port is internally mated. Connect to its Bay BP port instead.,,,rack:errors.thisDrivePortIsInternallyMatedConnect
+This physical device no longer exists.,,,rack:errors.thisPhysicalDeviceNoLongerExists
+Legacy Rack settings disagree. Explicitly adopt a port inventory before connecting.,,,rack:errors.legacyRackSettingsDisagreeExplicitlyAdoptA
+Choose the physical Rack location for this endpoint.,,,rack:errors.chooseThePhysicalRackLocationForThis
+The ABS panel changed. Select it again.,,,rack:errors.theAbsPanelChangedSelectItAgain
+The saved design is invalid. Correct the imported design before editing.,,,rack:errors.theSavedDesignIsInvalidCorrectThe
+This graphic is no longer available. Select another graphic.,,,rack:errors.thisGraphicIsNoLongerAvailableSelect
+Drag an Atlas Drive onto a server slot.,,,rack:errors.dragAnAtlasDriveOntoAServer
+The dragged Atlas Drive could not be read.,,,rack:errors.theDraggedAtlasDriveCouldNotBe
+Configure Server Drive Slots in the Inspector before assigning a Drive.,,,rack:errors.configureServerDriveSlotsInTheInspector
+Unable to upload faceplate image.,,,rack:errors.unableToUploadFaceplateImage
+Image upload failed.,,,rack:errors.imageUploadFailed
+Physical ports are read-only in this mode.,,,rack:errors.physicalPortsAreReadOnlyInThis
+Custom layout. No exact image for this classification and physical port layout. Showing the schematic.,,,rack:errors.customLayoutNoExactImageForThis
+Choose a valid cable category and #RRGGBB color.,,,rack:errors.chooseAValidCableCategoryAndRrggbb
+This cable no longer exists. Select its port again.,,,rack:errors.thisCableNoLongerExistsSelectIts
+Choose the cable end to disconnect.,,,rack:errors.chooseTheCableEndToDisconnect
+This cable is already partially connected. Attach its loose end or use Remove Cable.,,,rack:errors.thisCableIsAlreadyPartiallyConnectedAttach
+This cable end is no longer loose. Select it again.,,,rack:errors.thisCableEndIsNoLongerLoose
+The destination port is unavailable. Review its inventory.,,,rack:errors.theDestinationPortIsUnavailableReviewIts
+Choose a valid physical Rack location for the destination.,,,rack:errors.chooseAValidPhysicalRackLocationFor
+Use Disconnect and the loose end to change a cable attachment.,,,rack:errors.useDisconnectAndTheLooseEndTo
+That port is unavailable in this mode.,,,rack:errors.thatPortIsUnavailableInThisMode
+That port is already connected.,,,rack:errors.thatPortIsAlreadyConnected
+The cable or its attached end changed or is read-only. Select the loose end again.,,,rack:errors.theCableOrItsAttachedEndChanged
+Choose a port on another device.,,,rack:errors.chooseAPortOnAnotherDevice
+The source port is no longer available.,,,rack:errors.theSourcePortIsNoLongerAvailable
+"Incompatible signal categories or POWER directions. Choose ports with a shared category and, for POWER, opposite input/output directions.",,,rack:errors.incompatibleSignalCategoriesOrPowerDirectionsChoose
+Tracing physical cable. Escape returns to overview.,,,rack:errors.tracingPhysicalCableEscapeReturnsToOverview
+Cable editing is unavailable.,,,rack:errors.cableEditingIsUnavailable
+Cable connected.,,,rack:errors.cableConnected
+Cable attached; its ID and label are unchanged.,,,rack:errors.cableAttachedItsIdAndLabelAre
+Cable end unplugged. The cable remains partially connected.,,,rack:errors.cableEndUnpluggedTheCableRemainsPartially
+No verified port inventory,,,rack:errors.noVerifiedPortInventory
+Explicitly empty port inventory,,,rack:errors.explicitlyEmptyPortInventory
+Rack-derived legacy inventory · unverified,,,rack:errors.rackDerivedLegacyInventoryUnverified
+Legacy Rack inventories conflict. No authoritative inventory has been selected.,,,rack:errors.legacyRackInventoriesConflictNoAuthoritativeInventory
+Missing device record,,,rack:errors.missingDeviceRecord
+This Tile type does not own a physical port inventory.,,,rack:errors.thisTileTypeDoesNotOwnA
+Closed wiring loop; no unique end-to-end destination.,,,rack:errors.closedWiringLoopNoUniqueEndTo
+Partial path: an external cable is not recorded at one termination.,,,rack:errors.partialPathAnExternalCableIsNot
+Conflicting cable labels. Rename in Rack Builder.,,,rack:errors.conflictingCableLabelsRenameInRackBuilder
+Missing or inconsistent internal pair,,,rack:errors.missingOrInconsistentInternalPair
+Recorded socket numbers disagree,,,rack:errors.recordedSocketNumbersDisagree
+Duplicate recorded socket number,,,rack:errors.duplicateRecordedSocketNumber
+Missing or unverified port,,,rack:errors.missingOrUnverifiedPort
+Partially connected cable,,,rack:errors.partiallyConnectedCable
+Missing Atlas Drive,,,rack:errors.missingAtlasDrive
+No longer a Drive tile,,,rack:errors.noLongerADriveTile
+Drive Bay setup,,,rack:bay.driveBaySetup
+Configure Drive Bay,,,rack:bay.configureDriveBay
+Legacy wiring — replace/configure after disconnecting or safely decommissioning old connections.,,,rack:bay.legacyWiringReplaceConfigureAfterDisconnectingOr
+"Choose permanent hardware before editing or inserting Drives. To change these choices later, remove this Bay and create another.",,,rack:bay.choosePermanentHardwareBeforeEditingOrInserting
+Open setup,,,rack:bay.openSetup
+Wiring mode,,,rack:bay.wiringMode
+Direct wiring,,,rack:bay.directWiring
+Backplane,,,rack:bay.backplane
+Fixed slot count,,,rack:bay.fixedSlotCount
+Slots (1–12),,,rack:bay.slots112
+Confirm configuration,,,rack:bay.confirmConfiguration
+Cancel setup,,,rack:bay.cancelSetup
+Choose 1–12 slots,,,rack:bay.choose112Slots
+{{count}} permanent rear SATA BP ports; Drives mate internally without cables.,,,rack:bay.backplanePorts
+Each installed Drive exposes its own rear storage port.,,,rack:bay.eachInstalledDriveExposesItsOwnRear
+Remove legacy Bay,,,rack:bay.removeLegacy
+Remove unconfigured Bay,,,rack:bay.removeUnconfigured
+{{installed}} installed Drives / {{slots}} slots,,,rack:bay.installedSlots
+Slot {{number}} · {{title}},,,rack:bay.slotDetail
+{{description}}. Select equipment for numbered slot details.,,,rack:bay.selectNumbered
+Slot {{number}}: {{title}},,,rack:bay.slotIdentity
+Slot {{number}} · {{title}}{{port}},,,rack:bay.slotAndPort
+· Missing or type-changed Drive,,,rack:bay.missingDrive
+Server Drive Slots,,,rack:storage.serverDriveSlots
+Server Drive Slots (optional),,,rack:storage.serverDriveSlotsOptional
+Dismiss server drive setup,,,rack:storage.dismissServerDriveSetup
+Inventory changes are unsaved. Use Save to retry.,,,rack:storage.inventoryChangesAreUnsavedUseSaveTo
+The server reference is missing. Remove assignments or relink it to a server.,,,rack:storage.theServerReferenceIsMissingRemoveAssignments
+Slot preset,,,rack:storage.slotPreset
+Server slot preset,,,rack:storage.serverSlotPreset
+Custom slots (1–24),,,rack:storage.customSlots124
+Drive Indicator Color,,,rack:storage.driveIndicatorColor
+Drag an Atlas Drive onto an empty slot or onto the server to use its first empty slot.,,,rack:storage.dragAnAtlasDriveOntoAnEmpty
+Move to,,,rack:storage.moveTo
+Empty slot…,,,rack:storage.emptySlot
+Remove,,,rack:storage.remove
+Remove slot configuration,,,rack:storage.removeSlotConfiguration
+Remove all assigned Drives before removing the configuration.,,,rack:storage.removeAllAssignedDrivesBeforeRemovingThe
+Custom,,,rack:storage.custom
+Choose a capacity…,,,rack:storage.chooseACapacity
+Set capacity,,,rack:storage.setCapacity
+Configure slots,,,rack:storage.configureSlots
+Move Drive from slot {{slot}},,,rack:storage.moveFromSlot
+Remove Drive from slot {{slot}},,,rack:storage.removeFromSlot
+Installed {{installed}} / {{capacity}},,,rack:storage.installed
+{{count}} unresolved reference,,,rack:storage.unresolved_one
+{{count}} unresolved references,,,rack:storage.unresolved_other
+{{slots}} slots,,,rack:storage.presetCount
+{{installed}} installed Drives / {{slots}} server slots{{warning}},,,rack:storage.serverSlotSummary
+{{warnings}} unresolved references,,,rack:storage.warningCount
+Server slot {{number}} — {{title}},,,rack:storage.slotDescription
+Mounting orientation,,,rack:hardware.mountingOrientation
+Physical rear · Power,,,rack:hardware.physicalRearPower
+Power inlet,,,rack:hardware.powerInlet
+On,,,rack:hardware.on
+Off,,,rack:hardware.off
+Power outlets (0–12),,,rack:hardware.powerOutlets012
+Inlet receives power; outlets supply power. Connector artwork only.,,,rack:hardware.inletReceivesPowerOutletsSupplyPowerConnector
+Physical rear · Data connectors,,,rack:hardware.physicalRearDataConnectors
+One count for both physical faces. Front jacks and rear terminations always match.,,,rack:hardware.oneCountForBothPhysicalFacesFront
+Patch panel port count (0–48),,,rack:hardware.patchPanelPortCount048
+Rear data port count (0–48),,,rack:hardware.rearDataPortCount048
+Port {{number}} label,,,rack:hardware.portLabel
+Port {{number}} connector,,,rack:hardware.connectorNumber
+{{total}} rear data ports: {{ports}},,,rack:hardware.rearData
+{{total}} power outlets,,,rack:hardware.outlets
+Power outlet {{number}},,,rack:hardware.outlet
+{{total}} Drives inside Drive Bay,,,rack:hardware.bayDrives
+"{{ports}} decorative data ports, {{outlets}} power outlets, {{inlets}} power inlets",,,rack:hardware.hardwareSummary
+Add Generic Server to Atlas,,,rack:promotion.addGenericServerToAtlas
+Node,,,rack:promotion.node
+Equipment,,,rack:promotion.equipment
+Cancel,,,rack:promotion.cancel
+Create “{{title}}” as a Node or Equipment classified Generic Server.,,,rack:promotion.chooseType
+Invalid ABS panel span or design. Review the Rack warning before editing.,,,rack:designer.invalidAbsPanelSpanOrDesignReview
+ABS Faceplate Designer,,,rack:designer.absFaceplateDesigner
+Graphics are decorative. Use Ports for real connectors. Grid rows start at the top; cells start at the Front left edge.,,,rack:designer.graphicsAreDecorativeUsePortsForReal
+"Faceplate design preview, from Front",,,rack:designer.faceplateDesignPreviewFromFront
+Drag to move,,,rack:designer.dragToMove
+Keep the whole graphic inside the panel. Release to restore its position.,,,rack:designer.keepTheWholeGraphicInsideThePanel
+Graphic size,,,rack:designer.graphicSize
+Base Surface,,,rack:designer.baseSurface
+Placed Graphics,,,rack:designer.placedGraphics
+Placed graphics,,,rack:designer.placedGraphicList
+Blank until you add a surface pattern or graphic.,,,rack:designer.blankUntilYouAddASurfacePattern
+Move / Resize Graphic,,,rack:designer.moveResizeGraphic
+Advanced Positioning,,,rack:designer.advancedPositioning
+Graphic start cell,,,rack:designer.graphicStartCell
+Graphic width (cells),,,rack:designer.graphicWidthCells
+Graphic start row (from top),,,rack:designer.graphicStartRowFromTop
+Graphic height (U),,,rack:designer.graphicHeightU
+Graphic variant,,,rack:designer.graphicVariant
+Graphic color,,,rack:designer.graphicColor
+Graphic frame color,,,rack:designer.graphicFrameColor
+Move Back,,,rack:designer.moveBack
+Move Forward,,,rack:designer.moveForward
+Remove Graphic,,,rack:designer.removeGraphic
+Mounted Face Custom Image,,,rack:designer.mountedFaceCustomImage
+Remove Mounted Image,,,rack:designer.removeMountedImage
+Select {{graphic}} {{number}},,,rack:designer.selectGraphic
+Fit {{graphic}} to available space,,,rack:designer.fitGraphic
+Make {{graphic}} {{direction}},,,rack:designer.resizeGraphic
+− Smaller,,,rack:designer.smaller
++ Larger,,,rack:designer.larger
+Fit Available,,,rack:designer.fitAvailable
+Add {{graphic}},,,rack:designer.addGraphic
+Remove {{graphic}} {{number}},,,rack:designer.removeNumbered
+Mounted image assigned. Physical ports remain above the image.,,,rack:designer.mountedImageAssignedPhysicalPortsRemainAbove
+Unavailable image reference retained; vector fallback.,,,rack:designer.unavailableImageReferenceRetainedVectorFallback
+Add Graphic · {{used}}/{{limit}},,,rack:designer.graphicCount
+"PNG/JPEG/WebP · 5 MB maximum. In Images mode, the {{face}} mounting face uses this image; its opposite face keeps the vector design. Keep uploaded files with Atlas backups.",,,rack:designer.imageHelp
+Axial Fan (5 blades),,,rack:graphic.5-blade
+Axial Fan (7 blades),,,rack:graphic.7-blade
+Horizontal Slot Grille,,,rack:graphic.horizontal-slots
+Vertical Slot Grille,,,rack:graphic.vertical-slots
+Circular Fan Guard,,,rack:graphic.circular
+Plain / Solid,,,rack:surface.solid
+Horizontal Slots,,,rack:surface.horizontal-slots
+Vertical Slots,,,rack:surface.vertical-slots
+Honeycomb Vents,,,rack:surface.honeycomb
+Faceplate presentation,,,rack:faceplate.faceplatePresentation
+Images match the device's ports and mounting requirements automatically. This control never changes physical ports.,,,rack:faceplate.imagesMatchTheDevicesPortsAndMounting
+Advanced / Custom Image,,,rack:faceplate.advancedCustomImage
+PNG/JPEG/WebP · 5 MB maximum. Custom images override automatic artwork on that face in Images mode. Uploads remain assigned while Schematic is selected. They have no calibrated socket map or verified mounting dimensions. Retain uploaded files alongside Atlas backups.,,,rack:faceplate.pngJpegWebp5MbMaximumCustom
+Custom image (uncalibrated).,,,rack:faceplate.customImageUncalibrated
+Custom image overrides this face. Uncalibrated: use the port picker.,,,rack:faceplate.customImageOverridesThisFaceUncalibratedUse
+Legacy asset reference retained; schematic fallback.,,,rack:faceplate.legacyAssetReferenceRetainedSchematicFallback
+{{matched}} / {{total}} bundled image sockets mapped · {{unmapped}} ports unmapped on pictured faces,,,rack:faceplate.socketCoverage
+Saved profile reference retained: {{profile}},,,rack:faceplate.savedProfile
+{{face}} custom image,,,rack:faceplate.customImage
+Remove {{face}} image,,,rack:faceplate.removeImage
+Automatic image: {{profile}}.,,,rack:faceplate.automaticImage
+Close port picker,,,rack:picker.closePortPicker
+Find a port,,,rack:picker.findAPort
+No matching ports.,,,rack:picker.noMatchingPorts
+Mapped,,,rack:picker.mapped
+Unmapped / schematic,,,rack:picker.unmappedSchematic
+Cable actions for {{label}},,,rack:picker.cableActionsFor
+{{face}} physical ports ({{total}}),,,rack:picker.heading
+Cable actions,,,rack:picker.cableActions
+Physical Ports,,,rack:ports.physicalPorts
+Legacy defaults · saved only when you edit ports.,,,rack:ports.legacyDefaultsSavedOnlyWhenYouEdit
+Legacy Rack settings disagree,,,rack:ports.legacyRackSettingsDisagree
+Review the sources below. Choose the configuration to adopt for the shared Atlas device. All original Rack settings remain archived as read-only compatibility data.,,,rack:ports.reviewTheSourcesBelowChooseTheConfiguration
+Connector presets,,,rack:ports.connectorPresets
+LC duplex pairs,,,rack:ports.lcDuplexPairs
+Copper pairs,,,rack:ports.copperPairs
+Power inlet,,,rack:ports.powerInlet
+On,,,rack:ports.on
+Off,,,rack:ports.off
+Power outlets (0–12),,,rack:ports.powerOutlets012
+Advanced / custom physical ports,,,rack:ports.advancedCustomPhysicalPorts
+Physical device face,,,rack:ports.physicalDeviceFace
+Find physical port,,,rack:ports.findPhysicalPort
+No matching ports on this physical face.,,,rack:ports.noMatchingPortsOnThisPhysicalFace
+New port connector,,,rack:ports.newPortConnector
+"Fixed backplane hardware · slot, reference, connector and order are locked.",,,rack:ports.fixedBackplaneHardwareSlotReferenceConnectorAnd
+Use Drive name,,,rack:ports.useDriveName
+Port order,,,rack:ports.portOrder
+Move Earlier,,,rack:ports.moveEarlier
+Move Later,,,rack:ports.moveLater
+Clear search to reorder.,,,rack:ports.clearSearchToReorder
+Port name,,,rack:ports.portName
+Connector,,,rack:ports.connector
+Role,,,rack:ports.role
+Signal categories,,,rack:ports.signalCategories
+Updates both paired terminations.,,,rack:ports.updatesBothPairedTerminations
+Power direction,,,rack:ports.powerDirection
+Choose direction,,,rack:ports.chooseDirection
+Input,,,rack:ports.input
+Output,,,rack:ports.output
+Physical face,,,rack:ports.physicalFace
+Front,,,rack:ports.front
+Rear,,,rack:ports.rear
+Mapped image socket,,,rack:ports.mappedImageSocket
+Automatic,,,rack:ports.automatic
+Remove the Drive from its bay to remove this port. Disconnect any cable first.,,,rack:ports.removeTheDriveFromItsBayTo
+Inspect connection,,,rack:ports.inspectConnection
+Choose a physical port,,,rack:ports.chooseAPhysicalPort
+"Apply this port preset? Surviving IDs are preserved, extra bank ports are removed, and bank connector types use the preset. Other roles remain. Undo restores the previous configuration.",,,rack:ports.applyThisPortPresetSurvivingIdsAre
+Linked Atlas device · one rack placement,,,rack:ports.linkedAtlasDeviceOneRackPlacement
+Rack-local equipment,,,rack:ports.rackLocalEquipment
+Adopt {{name}}'s port configuration for this shared device? Other legacy configurations remain archived.,,,rack:ports.confirmAdoption
+Patch panel presets,,,rack:ports.patchPanelPresets
+Switch access port presets,,,rack:ports.switchAccessPortPresets
+Paired positions (0–256),,,rack:ports.pairedPositions0256
+Access ports (0–512),,,rack:ports.accessPorts0512
+{{pairs}} front + {{pairs}} rear terminations,,,rack:ports.pairCounts
+{{access}} access · {{uplinks}} uplinks,,,rack:ports.accessCounts
+{{face}} physical ports,,,rack:ports.faceList
+Image-mapped,,,rack:ports.mappedSuffix
+Copper pair (RJ45 / IDC),,,rack:ports.copperPairRj45Idc
+Add paired position,,,rack:ports.addPairedPosition
+Add port,,,rack:ports.addPort
+Name follows the Drive,,,rack:ports.nameFollowsTheDrive
+Custom port name,,,rack:ports.customPortName
+Preset layout · fixed socket positions,,,rack:ports.presetLayoutFixedSocketPositions
+Custom layout · reorder ports within this face and group,,,rack:ports.customLayoutReorderPortsWithinThisFace
+Supports {{category}},,,rack:ports.supports
+{{method}} image socket: {{socket}},,,rack:ports.imageSocket
+No compatible image socket. This port remains available in the port picker.,,,rack:ports.noCompatibleImageSocketThisPortRemains
+Remove paired position,,,rack:ports.removePairedPosition
+Remove port,,,rack:ports.removePort
+Adopt {{rack}} settings,,,rack:ports.adopt
+{{total}} total ports including power,,,rack:ports.totalIncludingPower
+New pair connector,,,rack:ports.newPairConnector
+Associated Drive: {{drive}},,,rack:ports.associatedDrive
+Unavailable in this profile · {{socket}},,,rack:ports.unavailableSocket
+Internally paired with {{port}} on the opposite physical face.,,,rack:ports.pairedWith
+Explicit,,,rack:ports.explicit
+Power over Ethernet,,,rack:poe.powerOverEthernet
+This port supplies PoE along its DATA cable when this device has a POWER input.,,,rack:poe.thisPortSuppliesPoeAlongItsData
+Off,,,rack:poe.off
+On,,,rack:poe.on
+Power over Ethernet: {{status}},,,rack:poe.status
+Inactive — no POWER input on this device.,,,rack:poe.dormant
+PoE source · Active,,,rack:poe.activeSource
+PoE source · Inactive — no POWER input on this device.,,,rack:poe.dormantSource
+front,,,rack:physicalFace.front
+rear,,,rack:physicalFace.rear
+{{name}} {{face}} elevation,,,rack:scene.elevation
+Top mounting position {{id}},,,rack:scene.topSlot
+{{count}} Rack warning,,,rack:scene.warning_one
+{{count}} Rack warnings,,,rack:scene.warning_other
+"{{title}}, hidden in {{face}} elevation",,,rack:scene.hiddenEquipment
+"{{slot}}, fixed 1U / full depth",,,rack:scene.topMount
+{{cells}} cells,,,rack:scene.cellWidth
+{{ports}} front data ports,,,rack:scene.frontPorts
+{{drives}} Drives inside Drive Bay,,,rack:scene.enclosedDrives
+{{total}} Drives: {{drives}},,,rack:scene.driveSummary
+{{title}} · Hidden in {{face}} elevation. Restore in the Inspector or equipment menu.,,,rack:scene.restoreHidden
+missing Atlas reference,,,rack:scene.missingReference
+ · Associated Drive: {{drive}},,,rack:overlay.associatedDrive
+ · {{marker}} paired-port marker · Cable connected on {{side}} face,,,rack:overlay.pairedMarker
+{{action}} {{face}} physical ports — {{total}} ports,,,rack:overlay.openSummary
+{{total}} {{face}} physical ports · {{connected}} connected,,,rack:overlay.connectedSummary
+Open,,,rack:overlay.open
+Copper,,,rack:connectorGroup.copper
+Pluggable cages,,,rack:connectorGroup.pluggableCages
+Fiber,,,rack:connectorGroup.fiber
+Console,,,rack:connectorGroup.console
+Video,,,rack:connectorGroup.video
+Power,,,rack:connectorGroup.power
+Storage,,,rack:connectorGroup.storage
+Other,,,rack:connectorGroup.other
+RJ45 Keystone / feed-through,,,rack:connector.rj45-keystone
+110 Punch-down / IDC,,,rack:connector.110-punch-down
+LC duplex,,,rack:connector.fiber-lc-duplex
+RJ45 Console / Serial,,,rack:connector.rj45-console
+USB console,,,rack:connector.usb-console
+DC Barrel / DC Input,,,rack:connector.dc-barrel
+External SAS,,,rack:connector.external-sas
+IEC-style inlet,,,rack:connector.iec-inlet
+IEC-style outlet,,,rack:connector.iec-outlet
+Other / Custom,,,rack:connector.other
+data,,,rack:portRole.data
+management,,,rack:portRole.management
+uplink,,,rack:portRole.uplink
+console,,,rack:portRole.console
+patch-front,,,rack:portRole.patch-front
+patch-rear,,,rack:portRole.patch-rear
+power-in,,,rack:portRole.power-in
+power-out,,,rack:portRole.power-out
+storage-host,,,rack:portRole.storage-host
+other,,,rack:portRole.other
+User-added,,,rack:origin.manual
+Preset-origin,,,rack:origin.preset
+Origin unspecified,,,rack:origin.unknown
+Find destination port,,,rack:cables.findDestinationPort
+Search devices and ports,,,rack:cables.searchDevicesAndPorts
+No compatible available ports found in your Racks.,,,rack:cables.noCompatibleAvailablePortsFoundInYour
+Rename cable,,,rack:cables.renameCable
+Cable color,,,rack:cables.cableColor
+Trace,,,rack:cables.trace
+Partially connected · Attach the loose end before disconnecting the remaining end.,,,rack:cables.partiallyConnectedAttachTheLooseEndBefore
+Disconnect end,,,rack:cables.disconnectEnd
+Choose attached end,,,rack:cables.chooseAttachedEnd
+Disconnect,,,rack:cables.disconnect
+Remove Cable,,,rack:cables.removeCable
+Choose connection,,,rack:cables.chooseConnection
+Choose rack placement,,,rack:cables.chooseRackPlacement
+Signal category,,,rack:cables.signalCategory
+Cable type,,,rack:cables.cableType
+Custom cable type description,,,rack:cables.customCableTypeDescription
+Connect,,,rack:cables.connect
+Cable actions,,,rack:cables.cableActions
+Cable interaction,,,rack:cables.cableInteraction
+Find destination,,,rack:cables.findDestination
+Cancel wiring,,,rack:cables.cancelWiring
+End trace,,,rack:cables.endTrace
+Port actions,,,rack:cables.portActions
+Remove Cable {{label}}? This deletes its documentation record and retires its cable number.,,,rack:cables.confirmRemoval
+Use Default Color,,,rack:cables.defaultColor
+Source placement,,,rack:cables.sourcePlacement
+Destination placement,,,rack:cables.destinationPlacement
+Signal category: {{category}},,,rack:cables.categoryValue
+{{endpoint}} — select a destination port. Escape cancels.,,,rack:cables.armed
+{{cable}} loose end — select a destination port. Escape cancels.,,,rack:cables.looseArmed
+Cable,,,rack:cables.fallback
+"Tracing cable on the paired {{face}} port, {{port}}. Select a destination to connect the empty port. Escape cancels.",,,rack:cables.pairedArmed
+"Tracing cable on the paired {{face}} port, {{port}}. Escape returns to overview.",,,rack:cables.pairedTrace
+{{cable}} · Loose end,,,rack:cables.looseStatus
+{{endpoint}} — select a destination port.,,,rack:cables.armedStatus
+Tracing: {{from}} → {{to}},,,rack:cables.tracing
+{{from}} → {{to}},,,rack:cables.selected
+Close {{title}},,,rack:cables.closePopover
+Cable label,,,rack:cables.cableLabel
+Custom cable type,,,rack:cables.customCableType
+Save cable label,,,rack:cables.saveCableLabel
+Cable Colors,,,rack:cablePalette.cableColors
+Cable colors apply to this Atlas across all Racks.,,,rack:cablePalette.cableColorsApplyToThisAtlasAcross
+{{category}} default cable color,,,rack:cablePalette.defaultColor
+Reset {{category}},,,rack:cablePalette.reset
+Change physical location,,,rack:cableInfo.changePhysicalLocation
+Ambiguous location — choose placement,,,rack:cableInfo.ambiguousLocationChoosePlacement
+Trace path,,,rack:cableInfo.tracePath
+Trace hops,,,rack:cableInfo.traceHops
+Loose end,,,rack:cableInfo.looseEnd
+Slot {{slot}} internal mate (no cable),,,rack:cableInfo.slotMate
+Internal Patch Panel pair,,,rack:cableInfo.internalPatchPanelPair
+External cable,,,rack:cableInfo.externalCable
+Source Rack placement,,,rack:cableInfo.sourceRack
+Destination Rack placement,,,rack:cableInfo.destinationRack
+Rack connection IDs,,,rack:strip.rackConnectionIds
+Scroll connection IDs left,,,rack:strip.scrollConnectionIdsLeft
+Scroll connection IDs,,,rack:strip.scrollConnectionIds
+Scroll connection IDs right,,,rack:strip.scrollConnectionIdsRight
+Loose end,,,rack:cableLayer.looseEnd
+Select {{description}},,,rack:cableLayer.selectCable
+Partially connected,,,rack:cableLayer.partiallyConnected
+select destination port,,,rack:cableLayer.selectDestinationPort
+{{total}} physical cable legs on this face,,,rack:cableLayer.legs
+{{label}} · Partially connected,,,rack:cableLayer.partial
+{{label}} · virtual breakout,,,rack:cableLayer.breakout
+{{label}}: {{from}} → {{to}},,,rack:cableLayer.description
+Legacy cable,,,rack:cableLayer.legacyCable
+Connection table,,,rack:table.connectionTable
+No physical circuits on this view.,,,rack:table.noPhysicalCircuitsOnThisView
+No cable,,,rack:table.noCable
+Unlabeled cable,,,rack:table.unlabeledCable
+{{label}} · Right-click or Shift+F10 for cable actions,,,rack:table.actionsHint
+Loose end,,,rack:table.looseEnd
+Missing device,,,rack:table.missingDevice
+Trace circuit containing {{label}},,,rack:table.traceCircuit
+Connections,,,rack:table.connections
+Connect Table,,,rack:table.connectTable
+(DATA segments only),,,rack:table.dataOnly
+Not recorded,,,rack:table.notRecorded
+unlabeled cable,,,rack:table.unlabeledLower
+Slot {{slot}} · Internal mate,,,rack:table.internalMate
+Physical cable · {{lifecycle}},,,rack:table.physicalCable
+From,,,rack:table.from
+To,,,rack:table.to
+Cable Type,,,rack:table.cableType
+Path,,,rack:table.path
+Hide {{total}} cables,,,rack:table.hideCables
+Show {{total}} cables,,,rack:table.showCables
+Hide path,,,rack:table.hidePath
+Show path,,,rack:table.showPath
+live,,,rack:lifecycle.live
+planned,,,rack:lifecycle.planned
+Ambiguous location,,,rack:endpoint.ambiguous
+Not placed in a Rack,,,rack:endpoint.unplaced
+Available · Paired {{face}} port {{port}} is connected,,,rack:endpoint.paired
+Available,,,rack:endpoint.available
+Connected → {{endpoint}},,,rack:endpoint.connected
+Unknown face,,,rack:endpoint.unknownFace
+Unplugged · Rack gutter beside the exposed attached port,,,rack:endpoint.looseLocation
+Invalid recorded location,,,rack:endpoint.invalid
+Direct,,,rack:endpoint.direct
+Unplugged · Loose end,,,rack:endpoint.loosePath
+Mixed ({{types}}),,,rack:endpoint.mixed
+Via {{device}} / Slot {{slot}} / {{from}} ⇄ {{to}} (internal mate; no cable),,,rack:endpoint.via
+Bay,,,rack:endpoint.bay
+Other / Custom,,,rack:endpoint.other
+Not recorded,,,rack:endpoint.notRecorded
+Missing device,,,rack:documentation.missingDevice
+Loose end,,,rack:documentation.looseEnd
+Partially connected · Unplugged,,,rack:documentation.partiallyConnectedUnplugged
+PLANNED,,,rack:documentation.planned
+Port,,,rack:documentation.port
+Connector / Role,,,rack:documentation.connectorRole
+Direct destination,,,rack:documentation.directDestination
+Direct physical connections,,,rack:documentation.directPhysicalConnections
+Local port,,,rack:documentation.localPort
+Remote device / port,,,rack:documentation.remoteDevicePort
+Cable,,,rack:documentation.cable
+Recorded path,,,rack:documentation.recordedPath
+Position,,,rack:documentation.position
+Front port / external cable,,,rack:documentation.frontPortExternalCable
+Paired rear / external cable,,,rack:documentation.pairedRearExternalCable
+Internal pair / path,,,rack:documentation.internalPairPath
+No external path recorded,,,rack:documentation.noExternalPathRecorded
+Patch-panel schedule,,,rack:documentation.patchPanelSchedule
+"Recorded equipment, physical ports and cables across all Racks and Atlas devices.",,,rack:documentation.recordedEquipmentPhysicalPortsAndCablesAcross
+Find physical wiring,,,rack:documentation.findPhysicalWiring
+"Device, Rack, port or cable",,,rack:documentation.deviceRackPortOrCable
+No physical cables documented.,,,rack:documentation.noPhysicalCablesDocumented
+No matching physical wiring records.,,,rack:documentation.noMatchingPhysicalWiringRecords
+Rack equipment inventory,,,rack:documentation.rackEquipmentInventory
+No Rack equipment to display.,,,rack:documentation.noRackEquipmentToDisplay
+Patch-panel schedules,,,rack:documentation.patchPanelSchedules
+No documented patch-panel schedules to display.,,,rack:documentation.noDocumentedPatchPanelSchedulesToDisplay
+Cable schedule,,,rack:documentation.cableSchedule
+Cable ID,,,rack:documentation.cableId
+Endpoint A,,,rack:documentation.endpointA
+Endpoint B,,,rack:documentation.endpointB
+Recorded cable details,,,rack:documentation.recordedCableDetails
+No cables to display.,,,rack:documentation.noCablesToDisplay
+Unconnected,,,rack:documentation.unconnected
+{{face}} physical ports,,,rack:documentation.physicalPortRegion
+Physical Connections · {{total}},,,rack:documentation.physicalConnections
+Slot {{slot}} internal mate (no cable),,,rack:documentation.internalMate
+Internal pair,,,rack:documentation.internalPair
+External cable,,,rack:documentation.externalCable
+{{device}} patch-panel schedule,,,rack:documentation.panelSchedule
+Not recorded,,,rack:documentation.notRecorded
+Missing rear termination,,,rack:documentation.missingRearTermination
+Internal pair (not a cable),,,rack:documentation.internalPairNotACable
+Unresolved pair,,,rack:documentation.unresolvedPair
+Physical Ports · {{total}},,,rack:documentation.physicalPorts
+Show all {{total}} physical ports,,,rack:documentation.showPorts
+Conflicting legacy source: {{name}},,,rack:documentation.legacySource
+{{total}} internal pairs,,,rack:documentation.pairCount
+Atlas linked,,,rack:documentation.atlasLinked
+Rack-local equipment,,,rack:documentation.rackLocalEquipment
+Backplane,,,rack:documentation.backplane
+Direct wiring,,,rack:documentation.directWiring
+Module: {{module}},,,rack:documentation.module
+Label: {{label}} · Length: {{length}},,,rack:documentation.labelAndLength
+Custom type: {{description}},,,rack:documentation.customType
+Missing cable {{id}},,,rack:documentation.missingCable
+{{face}} · {{total}} ports,,,rack:documentation.facePorts
+Internal pair: {{port}},,,rack:documentation.internalPeer
+Reference,,,rack:documentation.reference
+Physical Wiring,,,rack:documentation.physicalWiring
+LIVE,,,rack:documentation.live
+{{ports}} documented ports · {{cables}} direct cables,,,rack:documentation.deviceCounts
+Server Drive Slots: {{installed}} / {{total}} installed,,,rack:documentation.serverSlots
+Slot {{number}} · {{drive}},,,rack:documentation.slot
+(Drive tile),,,rack:documentation.driveTile
+(internal mate; no cable),,,rack:documentation.internalMateSuffix
+{{mode}} · {{total}} fixed slots,,,rack:documentation.fixedSlots
+Cable schedule · {{shown}} / {{total}},,,rack:documentation.scheduleCount
+Front / external destination,,,rack:documentation.frontExternalDestination
+Paired rear / external destination,,,rack:documentation.pairedRearExternalDestination
+Rack PNG Export Options,,,rack:png.heading
+Elevation,,,rack:png.elevation
+Include Connection Table,,,rack:png.includeConnectionTable
+Yes,,,rack:png.yes
+No,,,rack:png.no
+"Export Front, Rear, or both elevations in one image. Turn off the title block to omit the label area.",,,rack:png.description
+RJ45 Ethernet,,,rack:rearConnector.rj45-ethernet
+RJ45 Keystone / feed-through,,,rack:rearConnector.rj45-keystone
+110 Punch-down termination,,,rack:rearConnector.110-punch-down
+SFP slot,,,rack:rearConnector.sfp
+SFP+ slot,,,rack:rearConnector.sfp-plus
+SFP28 slot,,,rack:rearConnector.sfp28
+QSFP+ slot,,,rack:rearConnector.qsfp-plus
+QSFP28 slot,,,rack:rearConnector.qsfp28
+Fiber LC (duplex),,,rack:rearConnector.fiber-lc-duplex
+Fiber SC,,,rack:rearConnector.fiber-sc
+Fiber MPO/MTP,,,rack:rearConnector.fiber-mpo-mtp
+RJ45 Console / Serial,,,rack:rearConnector.rj45-console
+Other / Custom,,,rack:rearConnector.other
+Copper,,,rack:rearGroup.copper
+Transceiver slots,,,rack:rearGroup.transceiverSlots
+Optical connectors,,,rack:rearGroup.opticalConnectors
+Console,,,rack:rearGroup.console
+Other,,,rack:rearGroup.other
+Ethernet,,,rack:category.ethernet
+Fiber,,,rack:category.fiber
+Console,,,rack:category.console
+Storage,,,rack:category.storage
+Power,,,rack:category.power
+Other,,,rack:category.other
+ethernet,,,rack:categoryValue.ethernet
+fiber,,,rack:categoryValue.fiber
+console,,,rack:categoryValue.console
+storage,,,rack:categoryValue.storage
+power,,,rack:categoryValue.power
+other,,,rack:categoryValue.other
